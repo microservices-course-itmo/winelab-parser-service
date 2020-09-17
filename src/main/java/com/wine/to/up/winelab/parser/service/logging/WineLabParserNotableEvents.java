@@ -1,15 +1,14 @@
-package com.wine.to.up.demo.service.logging;
+package com.wine.to.up.winelab.parser.service.logging;
 
 import com.wine.to.up.commonlib.logging.NotableEvent;
 
-//TODO create-service: rename to reflect your service name. F.e OrderServiceNotableEvents
-public enum DemoServiceNotableEvents implements NotableEvent {
+public enum WineLabParserNotableEvents implements NotableEvent {
     //TODO create-service: replace
     SOME_DEMO_EVENT("Something happened");
 
     private final String template;
 
-    DemoServiceNotableEvents(String template) {
+    WineLabParserNotableEvents(String template) {
         this.template = template;
     }
 

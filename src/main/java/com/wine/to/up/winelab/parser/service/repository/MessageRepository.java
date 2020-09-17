@@ -1,6 +1,6 @@
-package com.wine.to.up.demo.service.repository;
+package com.wine.to.up.winelab.parser.service.repository;
 
-import com.wine.to.up.demo.service.domain.entity.Message;
+import com.wine.to.up.winelab.parser.service.domain.entity.Message;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

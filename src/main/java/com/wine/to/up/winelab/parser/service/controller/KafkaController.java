@@ -1,4 +1,4 @@
-package com.wine.to.up.demo.service.controller;
+package com.wine.to.up.winelab.parser.service.controller;
 
 import com.google.protobuf.ByteString;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;

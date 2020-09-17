@@ -5,8 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.wine.to.up</groupId>
-<!--    TODO create-service: rename artifact-->
-    <artifactId>demo-service</artifactId>
+    <artifactId>winelab-parser-service</artifactId>
 <!--    "current-version" is used for building image and should not include a "SNAPSHOT" word. -->
     <version>${current-version}-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -19,7 +18,7 @@
 
     <properties>
 <!--        TODO create-service: set version to initial (0.1.0)-->
-        <current-version>0.1.3</current-version>
+        <current-version>0.1.0</current-version>
         <!-- Нужен для scm -->
 <!--        TODO create-service: change repo-->
         <git.username>andrsuh</git.username>
