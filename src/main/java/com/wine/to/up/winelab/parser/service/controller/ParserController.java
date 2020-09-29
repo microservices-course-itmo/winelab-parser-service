@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.domain.entity.Message;
+import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class ParserController {
 
         String url = "https://www.winelab.ru/product/" + productID;
 
+        Wine resultWine = new Wine();
         try {
             Document document = Jsoup.connect(url).get();
 
@@ -46,7 +48,10 @@ public class ParserController {
 
             String description = document.select("div.product_description div.description").first().ownText();
 
-            System.out.println("Description: " + description);
+            log.info("Description: " + description);
+
+            // todo parse brand from description
+            resultWine.setBrand(description);
 
             for (Element filter: document.select("div.product_description div.filters > span")){
                 String tag = filter.ownText();
@@ -57,6 +62,7 @@ public class ParserController {
                     tag = tag.replaceAll("[ мМлЛ]", "").replaceAll(",", ".");
                     volume = (int) (Double.parseDouble(tag));
                     log.info("Volume: " + volume + " ml");
+                    resultWine.setVolume(BigDecimal.valueOf(volume));
                 }
                 if (tag.matches(patternVolumeInLiters)){
                     tag = tag.replaceAll("[ лЛ]", "").replaceAll(",", ".");
@@ -67,6 +73,7 @@ public class ParserController {
                     tag = tag.replaceAll("[ %]", "").replaceAll(",", ".");
                     alcoholPerecentage = new BigDecimal(Double.parseDouble(tag));
                     log.info("Alcohol percentage: " + alcoholPerecentage + "%");
+                    resultWine.setAlcoholPercentage(alcoholPerecentage);
                 }
                 else{
                     log.info("Tag: " + tag);
@@ -83,12 +90,15 @@ public class ParserController {
                 Integer price = (int) (Double.parseDouble(element.select("span").get(1).ownText().replaceAll(" ", "")) * 100);
                 prices.put(quantity, price);
                 log.info("Price for " + quantity + " item(s): " + price + " cents");
+                resultWine.setPrice(price);
             }
 
         }
         catch (IOException ex){
             ex.printStackTrace();
         }
+
+        log.info("result: " + resultWine);
     }
 
     @GetMapping("/home")
