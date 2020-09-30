@@ -99,7 +99,7 @@ public class ParserController {
 
         }
         catch (IOException ex){
-            log.info("Error: couldn't load the web page.");
+            log.error("Error: couldn't load the web page.");
         }
 
         log.info("result: " + resultWine);
@@ -128,7 +128,7 @@ public class ParserController {
 
         }
         catch (IOException ex){
-            log.info("Error: couldn't load the web page.");
+            log.error("Error: couldn't load the web page.");
         }
     }
 
@@ -160,7 +160,7 @@ public class ParserController {
 
             } catch (IOException ex) {
                 isLastPage = true;
-                log.info("Error: couldn't load the web page.");
+                log.error("Couldn't load the web page.");
             }
 
         }
