@@ -33,8 +33,7 @@
         <micrometer.version>1.5.2</micrometer.version>
         <simpleclient.version>0.8.1</simpleclient.version>
         <postgres.driver.version>42.2.14</postgres.driver.version>
-<!--        TODO create-service: replace-->
-        <demo.service.api.version>0.2.0-SNAPSHOT</demo.service.api.version>
+        <parser.common.api.version>0.2.0-SNAPSHOT</parser.common.api.version>
         <service.commonlib.version>0.1.0-SNAPSHOT</service.commonlib.version>
 
         <buildnumber-maven-plugin.version>1.4</buildnumber-maven-plugin.version>
@@ -143,11 +142,10 @@
             <artifactId>simpleclient_httpserver</artifactId>
             <version>${simpleclient.version}</version>
         </dependency>
-<!--        TODO create-service: replace-->
         <dependency>
             <groupId>com.wine.to.up</groupId>
-            <artifactId>demo-service-api</artifactId>
-            <version>${demo.service.api.version}</version>
+            <artifactId>parser-common-api</artifactId>
+            <version>${parser.common.api.version}</version>
         </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
@@ -241,4 +239,4 @@
             </plugin>
         </plugins>
     </build>
-</project>
+</project>  
