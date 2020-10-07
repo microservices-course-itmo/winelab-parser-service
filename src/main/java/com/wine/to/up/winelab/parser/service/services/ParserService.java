@@ -20,16 +20,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Service
-public class Parser {
-    private static Parser instance = new Parser();
+public class ParserService {
     @Value("${parser.siteURL}")
     private String siteURL;
 
-    private Parser() {
-    }
-
-    public static Parser getInstance() {
-        return instance;
+    public ParserService() {
     }
 
     public Wine parseProduct(int productID) {
