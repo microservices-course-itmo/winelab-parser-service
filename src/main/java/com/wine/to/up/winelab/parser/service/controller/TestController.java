@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     @Autowired
-    private MessageRepository messageRepository;
+    MessageRepository messageRepository;
 
     @GetMapping
     public void test(@RequestParam String message) {
