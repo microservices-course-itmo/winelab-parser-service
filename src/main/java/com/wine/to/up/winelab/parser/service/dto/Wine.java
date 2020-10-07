@@ -4,7 +4,9 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Wine {
@@ -20,5 +22,4 @@ public class Wine {
     private Integer grapeSortId;
     //Price in cents
     private Integer price;
-
 }
