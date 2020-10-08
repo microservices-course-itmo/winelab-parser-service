@@ -1,6 +1,12 @@
 package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -8,16 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Service
 public class ParserService {
@@ -27,7 +23,7 @@ public class ParserService {
     public ParserService() {
     }
 
-    public Wine parseProduct(int productID) {
+    public Wine parseProduct(int productID) throws IOException {
         final String url = siteURL + "product/" + productID;
         final String patternVolumeInMilliliters = "\\d+ ?([мМ][лЛ])";
         final String patternVolumeInLiters = "\\d*([.,]\\d+)? ?[лЛ]";
@@ -39,79 +35,71 @@ public class ParserService {
         final String priceSelector = "div.product_description div.prices_main";
         final String discountPriceSelector = "div.prices_cart_price";
 
+        Document document = Jsoup.connect(url).get();
+
         Wine wine = new Wine();
-        try {
-            Document document = Jsoup.connect(url).get();
+        String description = document.select(descriptionSelector).first().ownText();
+        // todo parse brand from description
+        wine.setBrand(description);
 
-            String description = document.select(descriptionSelector).first().ownText();
+        for (Element filter : document.select(tagSelector)) {
+            String tag = filter.ownText();
+            int volume;
+            BigDecimal alcoholPercentage;
 
-            // todo parse brand from description
-            wine.setBrand(description);
-
-            for (Element filter : document.select(tagSelector)) {
-                String tag = filter.ownText();
-                int volume;
-                BigDecimal alcoholPercentage;
-
-                if (tag.matches(patternVolumeInMilliliters)) {
-                    tag = tag.replaceAll("[ мМлЛ]", "");
-                    volume = Integer.parseInt(tag);
-                    wine.setVolume(BigDecimal.valueOf(volume));
-                } else if (tag.matches(patternVolumeInLiters)) {
-                    tag = tag.replaceAll("[ лЛ]", "").replaceAll(",", ".");
-                    volume = (int) (Double.parseDouble(tag) * millilitersInLiter);
-                    wine.setVolume(BigDecimal.valueOf(volume));
-                } else if (tag.matches(patternAlcoholPercentage)) {
-                    tag = tag.replaceAll("[ %]", "").replaceAll(",", ".");
-                    alcoholPercentage = new BigDecimal(Double.parseDouble(tag));
-                    wine.setAlcoholPercentage(alcoholPercentage);
-                }
+            if (tag.matches(patternVolumeInMilliliters)) {
+                tag = tag.replaceAll("[ мМлЛ]", "");
+                volume = Integer.parseInt(tag);
+                wine.setVolume(BigDecimal.valueOf(volume));
             }
-
-            int oldPrice = Integer.parseInt(document.select(priceSelector).first().ownText().replaceAll(" ", "")) * 100;
-            wine.setPrice(oldPrice);
-
-            Map<Integer, Integer> prices = new HashMap<>();
-            for (Element element : document.select(discountPriceSelector)) {
-                int quantity = Integer.parseInt(element.select("span").get(0).html().replaceAll("[x шт]", ""));
-                int price = (int) (Double.parseDouble(element.select("span").get(1).ownText().replaceAll(" ", "")) * 100);
-                prices.put(quantity, price);
-                if (quantity == 1) {
-                    wine.setPrice(price);
-                }
+            else if (tag.matches(patternVolumeInLiters)) {
+                tag = tag.replaceAll("[ лЛ]", "").replaceAll(",", ".");
+                volume = (int) (Double.parseDouble(tag) * millilitersInLiter);
+                wine.setVolume(BigDecimal.valueOf(volume));
             }
-
-            return wine;
-        } catch (IOException ex) {
-            return null;
+            else if (tag.matches(patternAlcoholPercentage)) {
+                tag = tag.replaceAll("[ %]", "").replaceAll(",", ".");
+                alcoholPercentage = new BigDecimal(Double.parseDouble(tag));
+                wine.setAlcoholPercentage(alcoholPercentage);
+            }
+            // todo parse other properties
         }
+
+        int oldPrice = Integer.parseInt(document.select(priceSelector).first().ownText().replaceAll(" ", "")) * 100;
+        wine.setPrice(oldPrice);
+
+        Map<Integer, Integer> prices = new HashMap<>();
+        for (Element element : document.select(discountPriceSelector)) {
+            int quantity = Integer.parseInt(element.select("span").get(0).html().replaceAll("[x шт]", ""));
+            int price = (int) (Double.parseDouble(element.select("span").get(1).ownText().replaceAll(" ", "")) * 100);
+            prices.put(quantity, price);
+            if (quantity == 1) {
+                wine.setPrice(price);
+            }
+        }
+        return wine;
     }
 
-    public List<Integer> parseHome() {
+    public List<Integer> parseHome() throws IOException {
         final String cardSelector = "a.product_card.js-product-click";
         final String idSelector = "data-id";
 
-        try {
-            Document document = Jsoup.connect(siteURL).get();
+        Document document = Jsoup.connect(siteURL).get();
 
-            Elements elementsWithId = document.select(cardSelector);
-            List<Integer> ids = new ArrayList<>();
-            for (Element item : elementsWithId) {
-                String idStr = item.attr(idSelector);
-                int id = Integer.parseInt(idStr);
-                if (ids.contains(id)) {
-                    continue;
-                }
-                ids.add(id);
+        Elements elementsWithId = document.select(cardSelector);
+        List<Integer> ids = new ArrayList<>();
+        for (Element item : elementsWithId) {
+            String idStr = item.attr(idSelector);
+            int id = Integer.parseInt(idStr);
+            if (ids.contains(id)) {
+                continue;
             }
-
-            return ids;
-        } catch (IOException ex) {
-            return null;
+            ids.add(id);
         }
+        return ids;
     }
 
-    public List<Integer> parseCatalog() {
+    public List<Integer> parseCatalog() throws IOException {
         final String cardSelector = "div.container a.product_card";
         final String idSelector = "data-id";
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
@@ -122,23 +110,19 @@ public class ParserService {
         List<Integer> ids = new ArrayList<>();
 
         while (!isLastPage) {
-            try {
-                Document document = Jsoup.connect(url).get();
+            Document document = Jsoup.connect(url).get();
 
-                Elements productCards = document.select(cardSelector);
-                for (Element element : productCards) {
-                    ids.add(Integer.parseInt(element.attr(idSelector)));
-                }
+            Elements productCards = document.select(cardSelector);
+            for (Element element : productCards) {
+                ids.add(Integer.parseInt(element.attr(idSelector)));
+            }
 
-                Element nextPage = document.select(nextPageSelector).first();
-                if (nextPage == null) {
-                    isLastPage = true;
-                } else {
-                    url = siteURL + nextPage.attr("href").substring(1);
-                }
-
-            } catch (IOException ex) {
+            Element nextPage = document.select(nextPageSelector).first();
+            if (nextPage == null) {
                 isLastPage = true;
+            }
+            else {
+                url = siteURL + nextPage.attr("href").substring(1);
             }
         }
         return ids;
