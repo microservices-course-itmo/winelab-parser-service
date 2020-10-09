@@ -32,8 +32,7 @@ public class ParserController {
         try {
             Wine wine = parserService.parseProduct(productID);
             log.info(wine.toString());
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             log.error(ex.getMessage());
         }
     }
@@ -43,19 +42,17 @@ public class ParserController {
         try {
             List<Integer> ids = parserService.parseHome();
             log.info(ids.toString());
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             log.error(ex.getMessage());
         }
     }
 
     @GetMapping("/catalog")
-    public void parseCatalog() {
+    public void parseCatalogs() {
         try {
-            List<Integer> ids = parserService.parseCatalog();
+            List<Integer> ids = parserService.parseCatalogs();
             log.info(ids.toString());
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             log.error(ex.getMessage());
         }
     }

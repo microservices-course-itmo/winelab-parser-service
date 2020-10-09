@@ -10,16 +10,32 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Wine {
+    // wine name as it is on product page
+    private String name;
+    // site address
+    private String site;
+    // price without discount in rubles
+    private BigDecimal oldPrice;
+    // product page address
+    private String link;
+    // new price accounting the discount
+    private BigDecimal newPrice;
+    // product image
+    private String image;
+    private String manufacturer;
     private String brand;
     private String country;
-    //Needs further discussion. Originally suggested float might cause artifacts
+    private String region;
+    // volume in liters
     private BigDecimal volume;
     private BigDecimal alcoholPercentage;
+    // is wine sparkling
+    private boolean sparkling;
     //TODO: Enum of colors
     private String color;
     //TODO: Enum of possible sugar concentration values
-    private String sugarConcentration;
-    private Integer grapeSortId;
-    //Price in cents
-    private Integer price;
+    private String sugar;
+    private String grapeSort;
+    private String description;
+    private String gastronomy;
 }
