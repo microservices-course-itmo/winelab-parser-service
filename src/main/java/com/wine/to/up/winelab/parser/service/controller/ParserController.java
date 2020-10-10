@@ -28,7 +28,7 @@ public class ParserController {
     }
 
     @GetMapping
-    public void parseProductPage(@RequestParam int productID) {
+    public void parseWine(@RequestParam int productID) {
         try {
             Wine wine = parserService.parseProduct(productID);
             log.info(wine.toString());
@@ -51,7 +51,10 @@ public class ParserController {
     public void parseCatalogs() {
         try {
             List<Integer> ids = parserService.parseCatalogs();
-            log.info(ids.toString());
+            log.info(new Integer(ids.size()).toString());
+            for (Integer id : ids) {
+                parseWine(id);
+            }
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }

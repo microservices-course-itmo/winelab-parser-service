@@ -24,6 +24,9 @@ public class ParserService {
     public ParserService() {
     }
 
+    /* TODO
+        parse description, parse gastronomy, parse region(?), maybe parse bigger version of image instead
+     */
     public Wine parseProduct(int productID) throws IOException {
         final String productURL = protocol + siteURL + "/product/" + productID;
         final String searchURL = protocol + siteURL + "/search/?text=" + productID;
@@ -37,9 +40,11 @@ public class ParserService {
         final String priceSelector = "div.product_description div.prices_main";
         final String discountPriceSelector = "div.prices_cart_price";
         final String imageSelector = "div.image-zoom.js-zoom-product img";
+        final String cardSelector = "div.container a.product_card.js-product-click";
+        final String cardCountrySelector = "div.country_wrapper h3";
 
         final String filterSelectorStart = "div.filter_block__container.js-facet.js-facet-values div[data-code=";
-        final String filterSelectorEnd = "] span";
+        final String filterSelectorEnd = "] span.text";
         final String colorSelector = "Color";
         final String sugarSelector = "SugarAmount";
         final String countrySelector = "countryfiltr";
@@ -49,6 +54,7 @@ public class ParserService {
         final String categorySelector = "category";
 
         Document document = Jsoup.connect(productURL).get();
+
 
         Wine wine = new Wine();
 
@@ -61,6 +67,10 @@ public class ParserService {
         Element img = document.selectFirst(imageSelector);
         String image = protocol + siteURL + img.attr("src");
         wine.setImage(image);
+
+        if (isSparkling(name)) {
+            wine.setSparkling(true);
+        }
 
         for (Element filter : document.select(tagSelector)) {
             String tag = filter.ownText();
@@ -89,56 +99,61 @@ public class ParserService {
 
         document = Jsoup.connect(searchURL).get();
 
-        // TODO create enum instead
-        Element colorSpan = document.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
-        if (colorSpan != null) {
-            String color = colorSpan.html();
-            wine.setColor(color);
-        }
+        Elements cards = document.select(cardSelector);
+        if(cards.size() == 1) {
+            // TODO create enum instead
+            Element colorSpan = document.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
+            if (colorSpan != null) {
+                String color = colorSpan.html();
+                wine.setColor(color);
+            }
 
-        // TODO create enum instead
-        Element sugarSpan = document.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
-        if (sugarSpan != null) {
-            String sugar = sugarSpan.html();
-            wine.setSugar(sugar);
-        }
+            // TODO create enum instead
+            Element sugarSpan = document.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
+            if (sugarSpan != null) {
+                String sugar = sugarSpan.html();
+                wine.setSugar(sugar);
+            }
 
-        Element countrySpan = document.selectFirst(filterSelectorStart + countrySelector + filterSelectorEnd);
-        if (countrySpan != null) {
-            String country = countrySpan.html();
-            wine.setCountry(country);
-        }
+            Element countrySpan = document.selectFirst(filterSelectorStart + countrySelector + filterSelectorEnd);
+            if (countrySpan != null) {
+                String country = countrySpan.html();
+                wine.setCountry(country);
+            }
 
-        Element grapeSpan = document.selectFirst(filterSelectorStart + grapeSelector + filterSelectorEnd);
-        if (grapeSpan != null) {
-            String grapeSort = grapeSpan.html();
-            wine.setGrapeSort(grapeSort);
-        }
+            Element grapeSpan = document.selectFirst(filterSelectorStart + grapeSelector + filterSelectorEnd);
+            if (grapeSpan != null) {
+                String grapeSort = grapeSpan.html();
+                wine.setGrapeSort(grapeSort);
+            }
 
-        Element brandSpan = document.selectFirst(filterSelectorStart + brandSelector + filterSelectorEnd);
-        if (brandSpan != null) {
-            String brand = brandSpan.html();
-            wine.setBrand(brand);
-        }
+            Element brandSpan = document.selectFirst(filterSelectorStart + brandSelector + filterSelectorEnd);
+            if (brandSpan != null) {
+                String brand = brandSpan.html();
+                wine.setBrand(brand);
+            }
 
-        Element manufacturerSpan = document.selectFirst(filterSelectorStart + manufacturerSelector + filterSelectorEnd);
-        if (manufacturerSpan != null) {
-            String manufacturer = manufacturerSpan.html();
-            wine.setManufacturer(manufacturer);
-        }
+            Element manufacturerSpan = document.selectFirst(filterSelectorStart + manufacturerSelector + filterSelectorEnd);
+            if (manufacturerSpan != null) {
+                String manufacturer = manufacturerSpan.html();
+                wine.setManufacturer(manufacturer);
+            }
 
-        Elements categories = document.select(filterSelectorStart + categorySelector + filterSelectorEnd);
-        if (categories.contains(sparklingCategory)) {
-            wine.setSparkling(true);
-        } else {
-            wine.setSparkling(false);
-        }
+            Elements categories = document.select(filterSelectorStart + categorySelector + filterSelectorEnd);
+            for(Element category : categories) {
+                if (category.html().equals(sparklingCategory)) {
+                    wine.setSparkling(true);
+                    break;
+                }
+            }
 
-        /* TODO
-            parse description, parse gastronomy, parse region(?), maybe parse bigger version of image instead
-            maybe try parsing country from both filters and product name (in case one of these is missing)
-            maybe try parseing sparklingness from the product name as well (sometimes sparkling filter just isn't there)
-         */
+            if(wine.getCountry() == null) {
+                Element countryWrapper = document.selectFirst(cardCountrySelector);
+                if (countryWrapper != null) {
+                    wine.setCountry(countryWrapper.html());
+                }
+            }
+        }
 
         return wine;
     }
@@ -189,10 +204,11 @@ public class ParserService {
             Document document = Jsoup.connect(url).get();
 
             Elements productCards = document.select(cardSelector);
-            for (Element element : productCards) {
-                String name = productCards.select(nameSelector).last().html();
+            for (Element card : productCards) {
+                String name = card.select(nameSelector).last().html();
                 if (isWine(name)) {
-                    ids.add(Integer.parseInt(element.attr(idSelector)));
+                    System.out.println(name);
+                    ids.add(Integer.parseInt(card.attr(idSelector)));
                 }
             }
 
@@ -200,14 +216,19 @@ public class ParserService {
             if (nextPage == null) {
                 isLastPage = true;
             } else {
-                url = siteURL + nextPage.attr("href").substring(1);
+                url = protocol + siteURL + nextPage.attr("href");
             }
         }
         return ids;
     }
 
     private boolean isWine(String name) {
-        final String isWineRegex = "^(Вино|Винный|Шампанское).*";
-        return name.matches(isWineRegex);
+        final String isWinePattern = ".*((В|в)ино|(В|в)инный|(Ш|ш)ампанское|(П|п)ортвейн|(В|в)ермут).*";
+        return name.matches(isWinePattern);
+    }
+
+    private boolean isSparkling(String name) {
+        final String isSparklingPattern = ".*((И|и)грист(ый|ое)|(Ш|ш)ампанское).*";
+        return name.matches(isSparklingPattern);
     }
 }
