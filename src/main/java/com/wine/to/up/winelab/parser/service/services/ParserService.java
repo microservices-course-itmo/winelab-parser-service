@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
-
-import static java.util.Map.entry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class ParserService {
@@ -54,21 +54,6 @@ public class ParserService {
         final String brandSelector = "brands";
         final String manufacturerSelector = "manufacture";
         final String categorySelector = "category";
-
-        final Map<String, Wine.Color> colorMap = Map.ofEntries(
-            entry("Красное", Wine.Color.RED),
-            entry("Розовое", Wine.Color.ROSE),
-            entry("Белое", Wine.Color.WHITE),
-            entry("Светлое", Wine.Color.WHITE)
-        );
-
-        final Map<String, Wine.Sugar> sugarMap = Map.ofEntries(
-            entry("Брют", Wine.Sugar.DRY),
-            entry("Сухое", Wine.Sugar.DRY),
-            entry("Полусухое", Wine.Sugar.MEDIUM_DRY),
-            entry("Полусладкое", Wine.Sugar.MEDIUM),
-            entry("Сладкое", Wine.Sugar.SWEET)
-        );
 
         Document document = Jsoup.connect(productURL).get();
 
@@ -124,20 +109,14 @@ public class ParserService {
         if (cards.size() == 1) {
             Element colorSpan = document.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
             if (colorSpan != null) {
-                String colorText = colorSpan.html();
-                Wine.Color color = colorMap.get(colorText);
-                if (color != null) {
-                    wine.setColor(color);
-                }
+                String color = colorSpan.html();
+                wine.setColor(color);
             }
 
             Element sugarSpan = document.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
             if (sugarSpan != null) {
-                String sugarText = sugarSpan.html();
-                Wine.Sugar sugar = sugarMap.get(sugarText);
-                if (sugar != null) {
-                    wine.setSugar(sugar);
-                }
+                String sugar = sugarSpan.html();
+                wine.setSugar(sugar);
             }
 
             Element countrySpan = document.selectFirst(filterSelectorStart + countrySelector + filterSelectorEnd);
@@ -186,8 +165,9 @@ public class ParserService {
     public List<Integer> parseHome() throws IOException {
         final String cardSelector = "a.product_card.js-product-click";
         final String idSelector = "data-id";
+        final String url = protocol + siteURL;
 
-        Document document = Jsoup.connect(siteURL).get();
+        Document document = Jsoup.connect(url).get();
 
         Elements elementsWithId = document.select(cardSelector);
         List<Integer> ids = new ArrayList<>();
@@ -248,12 +228,12 @@ public class ParserService {
     }
 
     private boolean isWine(String name) {
-        final String isWinePattern = ".*((В|в)ино|(В|в)инный|(Ш|ш)ампанское|(П|п)ортвейн|(Г|г)линтвейн|(В|в)ермут|(К|к)агор).*";
-        return name.matches(isWinePattern);
+        final String isWinePattern = ".*(вино|винный|шампанское|портвейн|глинтвейн|вермут|кагор).*";
+        return name.toLowerCase().matches(isWinePattern);
     }
 
     private boolean isSparkling(String name) {
-        final String isSparklingPattern = ".*((И|и)грист(ый|ое)|(Ш|ш)ампанское).*";
-        return name.matches(isSparklingPattern);
+        final String isSparklingPattern = ".*(игрист(ый|ое)|шампанское).*";
+        return name.toLowerCase().matches(isSparklingPattern);
     }
 }

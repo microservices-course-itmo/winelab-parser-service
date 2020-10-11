@@ -27,6 +27,7 @@ public class ApiWine {
     private String flavor;
     private float rating;
     private boolean sparkling;
+0
     public ApiWine(Wine dto) {
         this.name = dto.getName();
         this.brand = dto.getBrand();
