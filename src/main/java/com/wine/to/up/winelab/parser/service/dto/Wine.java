@@ -3,12 +3,9 @@ package com.wine.to.up.winelab.parser.service.dto;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class Wine {
     // wine name as it is on product page
     private String name;
@@ -31,25 +28,21 @@ public class Wine {
     private BigDecimal alcoholPercentage;
     // is wine sparkling
     private boolean sparkling;
+    //should enums really be private? We can't access any methods that way.
     private enum Color{
         RED, ROSE, WHITE
     }
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Map<String, Color> colorMap = Map.of("красное", Color.RED, "розовое",
+            Color.ROSE, "белое", Color.WHITE, "светлое", Color.WHITE);
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Map<String, Sugar> sugarMap = Map.of("брют", Sugar.DRY, "сухое", Sugar.DRY,
+            "полусухое", Sugar.MEDIUM_DRY, "полусладкое", Sugar.MEDIUM, "сладкое", Sugar.SWEET);
     private Color color;
     public Color setColor(String value) {
-        switch (value) {
-            case "Красное":
-                this.color = Color.RED;
-                break;
-            case "Розовое":
-                this.color = Color.ROSE;
-                break;
-            case "Белое":
-            case "Светлое":
-                this.color = Color.WHITE;
-                break;
-            default:
-                return null;
-        }
+        this.color = colorMap.get(value.toLowerCase());
         return this.color;
     }
     private enum Sugar{
@@ -57,26 +50,16 @@ public class Wine {
     }
     Sugar sugar;
     public Sugar setSugar(String value) {
-        switch (value) {
-            case "Брют":
-            case "Сухое":
-                this.sugar = Sugar.DRY;
-                break;
-            case "Полусухое":
-                this.sugar = Sugar.MEDIUM_DRY;
-                break;
-            case "Полусладкое":
-                this.sugar = Sugar.MEDIUM;
-                break;
-            case "Сладкое":
-                this.sugar = Sugar.SWEET;
-                break;
-            default:
-                return null;
-        }
+        this.sugar = sugarMap.get(value.toLowerCase());
         return this.sugar;
     }
     private String grapeSort;
     private String description;
     private String gastronomy;
+    public int getColorValue() {
+        return this.color.ordinal();
+    }
+    public int getSugarValue() {
+        return this.sugar.ordinal();
+    }
 }
