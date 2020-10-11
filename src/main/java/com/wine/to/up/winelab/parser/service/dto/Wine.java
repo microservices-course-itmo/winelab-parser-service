@@ -32,8 +32,14 @@ public class Wine {
     // is wine sparkling
     private boolean sparkling;
     //TODO: Enum of colors
+    private enum Color{
+        RED, ROSE, WHITE
+    }
     private String color;
     //TODO: Enum of possible sugar concentration values
+    private enum Sugar{
+        DRY, MEDIUM_DRY, MEDIUM, SWEET
+    }
     private String sugar;
     private String grapeSort;
     private String description;
