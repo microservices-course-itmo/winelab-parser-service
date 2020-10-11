@@ -5,7 +5,11 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.Map;
 
-@Data
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
 public class Wine {
     // wine name as it is on product page
     private String name;
