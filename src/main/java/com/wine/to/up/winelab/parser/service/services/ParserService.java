@@ -68,6 +68,7 @@ public class ParserService {
         Element img = document.selectFirst(imageSelector);
         String image = protocol + siteURL + img.attr("src");
         wine.setImage(image);
+        wine.setImageTransparent(true);
 
         if (isSparkling(name)) {
             wine.setSparkling(true);
@@ -228,7 +229,7 @@ public class ParserService {
     }
 
     private boolean isWine(String name) {
-        final String isWinePattern = ".*((В|в)ино|(В|в)инный|(Ш|ш)ампанское|(П|п)ортвейн|(В|в)ермут).*";
+        final String isWinePattern = ".*((В|в)ино|(В|в)инный|(Ш|ш)ампанское|(П|п)ортвейн|(Г|г)линтвейн|(В|в)ермут).*";
         return name.matches(isWinePattern);
     }
 

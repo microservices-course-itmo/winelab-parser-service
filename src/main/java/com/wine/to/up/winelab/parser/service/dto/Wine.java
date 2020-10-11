@@ -22,6 +22,7 @@ public class Wine {
     private BigDecimal newPrice;
     // product image
     private String image;
+    private boolean imageTransparent;
     private String manufacturer;
     private String brand;
     private String country;
