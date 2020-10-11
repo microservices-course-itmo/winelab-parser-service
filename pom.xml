@@ -13,6 +13,7 @@
         <groupId>com.wine.to.up</groupId>
         <artifactId>wine-app-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
+        <relativePath></relativePath>
     </parent>
 
     <properties>
