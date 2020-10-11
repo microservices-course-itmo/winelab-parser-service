@@ -25,7 +25,7 @@ public class ParserService {
     }
 
     /* TODO
-        parse description, parse gastronomy, parse region(?), maybe parse bigger version of image instead
+        parse region(?), maybe parse bigger version of image instead
      */
     public Wine parseProduct(int productID) throws IOException {
         final String productURL = protocol + siteURL + "/product/" + productID;
@@ -40,8 +40,10 @@ public class ParserService {
         final String priceSelector = "div.product_description div.prices_main";
         final String discountPriceSelector = "div.prices_cart_price";
         final String imageSelector = "div.image-zoom.js-zoom-product img";
-        final String cardSelector = "div.container a.product_card.js-product-click";
+        final String cardSelector = "div.container div.row.filtered_items_row.js-infinite-scroll a.product_card.js-product-click";
         final String cardCountrySelector = "div.country_wrapper h3";
+        final String gastronomySelector = "div.product_description_card:contains(Рекомендуемое употребление) p";
+        final String descriptionSelector = "div.product_description_card:contains(Электронный сомелье) p";
 
         final String filterSelectorStart = "div.filter_block__container.js-facet.js-facet-values div[data-code=";
         final String filterSelectorEnd = "] span.text";
@@ -54,7 +56,6 @@ public class ParserService {
         final String categorySelector = "category";
 
         Document document = Jsoup.connect(productURL).get();
-
 
         Wine wine = new Wine();
 
@@ -97,18 +98,22 @@ public class ParserService {
             }
         }
 
+        String gastronomy = document.selectFirst(gastronomySelector).html();
+        wine.setGastronomy(gastronomy);
+
+        String description = document.selectFirst(descriptionSelector).html();
+        wine.setDescription(description);
+
         document = Jsoup.connect(searchURL).get();
 
         Elements cards = document.select(cardSelector);
-        if(cards.size() == 1) {
-            // TODO create enum instead
+        if (cards.size() == 1) {
             Element colorSpan = document.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
             if (colorSpan != null) {
                 String color = colorSpan.html();
                 wine.setColor(color);
             }
 
-            // TODO create enum instead
             Element sugarSpan = document.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
             if (sugarSpan != null) {
                 String sugar = sugarSpan.html();
@@ -140,14 +145,14 @@ public class ParserService {
             }
 
             Elements categories = document.select(filterSelectorStart + categorySelector + filterSelectorEnd);
-            for(Element category : categories) {
+            for (Element category : categories) {
                 if (category.html().equals(sparklingCategory)) {
                     wine.setSparkling(true);
                     break;
                 }
             }
 
-            if(wine.getCountry() == null) {
+            if (wine.getCountry() == null) {
                 Element countryWrapper = document.selectFirst(cardCountrySelector);
                 if (countryWrapper != null) {
                     wine.setCountry(countryWrapper.html());

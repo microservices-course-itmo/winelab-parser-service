@@ -51,7 +51,6 @@ public class ParserController {
     public void parseCatalogs() {
         try {
             List<Integer> ids = parserService.parseCatalogs();
-            log.info(new Integer(ids.size()).toString());
             for (Integer id : ids) {
                 parseWine(id);
             }

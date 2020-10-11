@@ -31,16 +31,51 @@ public class Wine {
     private BigDecimal alcoholPercentage;
     // is wine sparkling
     private boolean sparkling;
-    //TODO: Enum of colors
     private enum Color{
         RED, ROSE, WHITE
     }
-    private String color;
-    //TODO: Enum of possible sugar concentration values
+    private Color color;
+    public Color setColor(String value) {
+        switch (value) {
+            case "Красное":
+                this.color = Color.RED;
+                break;
+            case "Розовое":
+                this.color = Color.ROSE;
+                break;
+            case "Белое":
+            case "Светлое":
+                this.color = Color.WHITE;
+                break;
+            default:
+                return null;
+        }
+        return this.color;
+    }
     private enum Sugar{
         DRY, MEDIUM_DRY, MEDIUM, SWEET
     }
-    private String sugar;
+    Sugar sugar;
+    public Sugar setSugar(String value) {
+        switch (value) {
+            case "Брют":
+            case "Сухое":
+                this.sugar = Sugar.DRY;
+                break;
+            case "Полусухое":
+                this.sugar = Sugar.MEDIUM_DRY;
+                break;
+            case "Полусладкое":
+                this.sugar = Sugar.MEDIUM;
+                break;
+            case "Сладкое":
+                this.sugar = Sugar.SWEET;
+                break;
+            default:
+                return null;
+        }
+        return this.sugar;
+    }
     private String grapeSort;
     private String description;
     private String gastronomy;
