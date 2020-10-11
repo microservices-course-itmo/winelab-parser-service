@@ -3,16 +3,14 @@ package com.wine.to.up.winelab.parser.service.dto;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class Wine {
     // wine name as it is on product page
     private String name;
     // site address
+    private String site;
     // price without discount in rubles
     private BigDecimal oldPrice;
     // product page address
@@ -30,15 +28,38 @@ public class Wine {
     private BigDecimal alcoholPercentage;
     // is wine sparkling
     private boolean sparkling;
-    public enum Color{
+    //should enums really be private? We can't access any methods that way.
+    private enum Color{
         RED, ROSE, WHITE
     }
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Map<String, Color> colorMap = Map.of("красное", Color.RED, "розовое",
+            Color.ROSE, "белое", Color.WHITE, "светлое", Color.WHITE);
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Map<String, Sugar> sugarMap = Map.of("брют", Sugar.DRY, "сухое", Sugar.DRY,
+            "полусухое", Sugar.MEDIUM_DRY, "полусладкое", Sugar.MEDIUM, "сладкое", Sugar.SWEET);
     private Color color;
-    public enum Sugar{
+    public Color setColor(String value) {
+        this.color = colorMap.get(value.toLowerCase());
+        return this.color;
+    }
+    private enum Sugar{
         DRY, MEDIUM_DRY, MEDIUM, SWEET
     }
-    private Sugar sugar;
+    Sugar sugar;
+    public Sugar setSugar(String value) {
+        this.sugar = sugarMap.get(value.toLowerCase());
+        return this.sugar;
+    }
     private String grapeSort;
     private String description;
     private String gastronomy;
+    public int getColorValue() {
+        return this.color.ordinal();
+    }
+    public int getSugarValue() {
+        return this.sugar.ordinal();
+    }
 }
