@@ -1,6 +1,8 @@
 package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.utils.enums.Color;
+import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -109,14 +111,20 @@ public class ParserService {
         if (cards.size() == 1) {
             Element colorSpan = document.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
             if (colorSpan != null) {
-                String color = colorSpan.html();
-                wine.setColor(color);
+                String colorText = colorSpan.html();
+                Color color = Color.fromString(colorText);
+                if(color != null) {
+                    wine.setColor(color);
+                }
             }
 
             Element sugarSpan = document.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
             if (sugarSpan != null) {
-                String sugar = sugarSpan.html();
-                wine.setSugar(sugar);
+                String sugarText = sugarSpan.html();
+                Sugar sugar = Sugar.fromString(sugarText);
+                if(sugar != null) {
+                    wine.setSugar(sugar);
+                }
             }
 
             Element countrySpan = document.selectFirst(filterSelectorStart + countrySelector + filterSelectorEnd);

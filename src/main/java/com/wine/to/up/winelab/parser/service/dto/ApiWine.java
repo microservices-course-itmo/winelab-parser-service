@@ -27,7 +27,7 @@ public class ApiWine {
     private String flavor;
     private float rating;
     private boolean sparkling;
-0
+
     public ApiWine(Wine dto) {
         this.name = dto.getName();
         this.brand = dto.getBrand();
@@ -45,8 +45,8 @@ public class ApiWine {
         this.gastronomy = dto.getGastronomy();
         this.rating = 0;
         this.sparkling = dto.isSparkling();
-        this.color = dto.getColorValue();
-        this.sugar = dto.getSugarValue();
+        this.color = dto.getColor().ordinal();
+        this.sugar = dto.getSugar().ordinal();
         this.country = dto.getCountry();
         this.description = dto.getDescription();
         //TODO: discuss what should we send as flavor and/or taste
