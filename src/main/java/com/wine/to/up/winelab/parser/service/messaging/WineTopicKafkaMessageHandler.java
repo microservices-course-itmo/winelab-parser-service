@@ -3,6 +3,7 @@ package com.wine.to.up.winelab.parser.service.messaging;
 import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
 import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
 import com.wine.to.up.winelab.parser.service.domain.entity.Message;
+import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,20 +13,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @Slf4j
-public class TestTopicKafkaMessageHandler implements KafkaMessageHandler<KafkaMessageSentEvent> {
-    private final MessageRepository messageRepository;
-
+public class WineTopicKafkaMessageHandler implements KafkaMessageHandler<Wine> {
     private final AtomicInteger counter = new AtomicInteger(0);
 
-    @Autowired
-    public TestTopicKafkaMessageHandler(MessageRepository messageRepository) {
-        this.messageRepository = messageRepository;
-    }
-
     @Override
-    public void handle(KafkaMessageSentEvent message) {
+    public void handle(Wine wine) {
         counter.incrementAndGet();
-        log.info("Message received message of type {}, number of messages: {}", message.getClass().getSimpleName(), counter.get());
-        messageRepository.save(new Message(message.getMessage()));
+        log.info("Wine received wine with name {}, number of messages: {}", wine.getClass().getName(), counter.get());
     }
 }

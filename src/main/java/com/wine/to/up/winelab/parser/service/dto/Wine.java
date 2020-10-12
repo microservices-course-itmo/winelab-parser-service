@@ -4,6 +4,7 @@ import com.wine.to.up.winelab.parser.service.utils.enums.Color;
 import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @AllArgsConstructor
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 @Setter
 @ToString
 @NoArgsConstructor
-public class Wine {
+public class Wine implements Serializable {
     // wine name as it is on product page
     private String name;
     // site address
