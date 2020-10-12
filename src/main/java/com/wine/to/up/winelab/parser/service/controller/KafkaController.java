@@ -49,19 +49,9 @@ public class KafkaController {
      * In fact now this service listen to that topic too. That means that it causes sending and reading messages
      */
     @PostMapping(value = "/send")
-    public void sendMessage(@RequestBody String name) {
+    public void sendWineWithName(@RequestBody String name) {
         Wine wine = new Wine();
         wine.setName(name);
-        sendMessageWithHeaders(wine);
-    }
-
-    /**
-     * See {@link #sendMessage(String)}
-     * Sends message with headers
-     */
-    @PostMapping(value = "/send/headers")
-    public void sendMessageWithHeaders(@RequestBody Wine wine) {
-
         kafkaSendMessageService.sendMessage(wine);
     }
 }
