@@ -18,7 +18,7 @@ public class UpdateWineLabJob {
     /**
      * Каждый день обновляет список вин
      */
-    @Scheduled(fixedRate = 24*60*60*1000)
+    @Scheduled(fixedRate = 24*60*60*1000, initialDelay = 24*60*60*1000)
     public void runJob() {
         long startDate = new Date().getTime();
         log.info("start UpdateWineLabJob run job method at " + startDate);
