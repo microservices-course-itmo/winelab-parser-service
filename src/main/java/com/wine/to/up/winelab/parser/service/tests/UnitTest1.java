@@ -13,15 +13,15 @@ public class UnitTest1 {
             ParserService parserService = new ParserService();
 
 
-            Assert.assertNotNull(parserService.parseProduct(1009581).name);           //test the fields are not null/null (depends on the field)
-            Assert.assertNull(parserService.parseProduct(1009581).site);
-            Assert.assertNotNull(parserService.parseProduct(1009581).link);
-            Assert.assertNotNull(parserService.parseProduct(1009581).image);
-            Assert.assertNotNull(parserService.parseProduct(1009581).manufacturer);
-            Assert.assertNotNull(parserService.parseProduct(1009581).brand);
-            Assert.assertNotNull(parserService.parseProduct(1009581).country);
-            Assert.assertNull(parserService.parseProduct(1009581).region);
-            Assert.assertNotNull(parserService.parseProduct(1009581).description);
+            Assert.assertNotNull(parserService.parseProduct(1009581).getName());           //test the fields are not null/null (depends on the field)
+            Assert.assertNull(parserService.parseProduct(1009581).getSite());
+            Assert.assertNotNull(parserService.parseProduct(1009581).getLink());
+            Assert.assertNotNull(parserService.parseProduct(1009581).getImage());
+            Assert.assertNotNull(parserService.parseProduct(1009581).getManufacturer());
+            Assert.assertNotNull(parserService.parseProduct(1009581).getBrand());
+            Assert.assertNotNull(parserService.parseProduct(1009581).getCountry());
+            Assert.assertNull(parserService.parseProduct(1009581).getRegion());
+            Assert.assertNotNull(parserService.parseProduct(1009581).getDescription());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
