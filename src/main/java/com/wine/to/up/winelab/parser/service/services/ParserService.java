@@ -13,8 +13,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ParserService {
@@ -22,14 +23,32 @@ public class ParserService {
     private String siteURL;
     @Value("${parser.protocolPrefix}")
     private String protocol;
+    @Value("${parser.catalogs}")
+    String[] catalogs;
+
+    @Value("${parser.selector.filter.start}")
+    private String filterSelectorStart;
+    @Value("${parser.selector.filter.end}")
+    private String filterSelectorEnd;
+    @Value("${parser.selector.filter.color}")
+    private String colorSelector;
+    @Value("${parser.selector.filter.sugar}")
+    private String sugarSelector;
+    @Value("${parser.selector.filter.country}")
+    private String countrySelector;
+    @Value("${parser.selector.filter.grape}")
+    private String grapeSelector;
+    @Value("${parser.selector.filter.brand}")
+    private String brandSelector;
+    @Value("${parser.selector.filter.manufacturer}")
+    private String manufacturerSelector;
+    @Value("${parser.selector.filter.category}")
+    private String categorySelector;
 
     public ParserService() {
     }
 
-    /* TODO
-        parse region(?), maybe parse bigger version of image instead
-     */
-    public Wine parseProduct(int productID) throws IOException {
+    public Wine parseProduct(int productID, List<String> countryList, List<String> grapeList) throws IOException {
         final String productURL = protocol + siteURL + "/product/" + productID;
         final String searchURL = protocol + siteURL + "/search/?text=" + productID;
 
@@ -40,22 +59,14 @@ public class ParserService {
         final String nameSelector = "div.product_description div.description";
         final String tagSelector = "div.product_description div.filters > span";
         final String priceSelector = "div.product_description div.prices_main";
-        final String discountPriceSelector = "div.prices_cart_price";
+        final String discountPriceSelector = "div.prices_cart_price.tooltip";
         final String imageSelector = "div.image-zoom.js-zoom-product img";
         final String cardSelector = "div.container div.row.filtered_items_row.js-infinite-scroll a.product_card.js-product-click";
         final String cardCountrySelector = "div.country_wrapper h3";
         final String gastronomySelector = "div.product_description_card:contains(Рекомендуемое употребление) p";
         final String descriptionSelector = "div.product_description_card:contains(Электронный сомелье) p";
-
-        final String filterSelectorStart = "div.filter_block__container.js-facet.js-facet-values div[data-code=";
-        final String filterSelectorEnd = "] span.text";
-        final String colorSelector = "Color";
-        final String sugarSelector = "SugarAmount";
-        final String countrySelector = "countryfiltr";
-        final String grapeSelector = "Sort";
-        final String brandSelector = "brands";
-        final String manufacturerSelector = "manufacture";
-        final String categorySelector = "category";
+        final String breadcrumbSelector = "ol.breadcrumb li a";
+        final String idSelector = "data-id";
 
         Document document = Jsoup.connect(productURL).get();
 
@@ -74,15 +85,23 @@ public class ParserService {
             wine.setSparkling(true);
         }
 
-        for (Element filter : document.select(tagSelector)) {
+        Elements breadcrumb = document.select(breadcrumbSelector);
+        int bcCount = breadcrumb.size();
+        String subcategory = breadcrumb.get(bcCount - 2).html();
+        if (isRegion(subcategory)) {
+            wine.setRegion(subcategory);
+        }
+
+        Elements filters = document.select(tagSelector);
+        for (Element filter : filters) {
             String tag = filter.ownText();
 
             if (tag.matches(patternVolume)) {
-                tag = tag.replaceAll("[ лЛ]", "").replaceAll(",", ".");
+                tag = tag.replaceAll("[ Л]", "");
                 BigDecimal volume = new BigDecimal(tag);
                 wine.setVolume(volume);
             } else if (tag.matches(patternAlcoholPercentage)) {
-                tag = tag.replaceAll("[ %]", "").replaceAll(",", ".");
+                tag = tag.replaceAll("[ %]", "");
                 BigDecimal alcoholPercentage = new BigDecimal(tag);
                 wine.setAlcoholPercentage(alcoholPercentage);
             }
@@ -91,12 +110,11 @@ public class ParserService {
         BigDecimal oldPrice = new BigDecimal(document.selectFirst(priceSelector).ownText().replaceAll(" ", ""));
         wine.setOldPrice(oldPrice);
 
-        for (Element element : document.select(discountPriceSelector)) {
-            int quantity = Integer.parseInt(element.select("span").get(0).html().replaceAll("[x шт]", ""));
-            if (quantity == 1) {
-                BigDecimal price = new BigDecimal(element.select("span").get(1).ownText().replaceAll(" ", ""));
-                wine.setNewPrice(price);
-            }
+        try {
+            BigDecimal price = new BigDecimal(document.selectFirst(discountPriceSelector).select("span").get(1).ownText().replaceAll(" ", ""));
+            wine.setNewPrice(price);
+        } catch (Exception ex) { // means that item is out of stock and there's no discount price mentioned
+            wine.setNewPrice(oldPrice);
         }
 
         String gastronomy = document.selectFirst(gastronomySelector).html();
@@ -105,53 +123,58 @@ public class ParserService {
         String description = document.selectFirst(descriptionSelector).html();
         wine.setDescription(description);
 
-        document = Jsoup.connect(searchURL).get();
-
-        Elements cards = document.select(cardSelector);
-        if (cards.size() == 1) {
-            Element colorSpan = document.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
+        Document searchPage;
+        Elements cards;
+        try {
+            searchPage = Jsoup.connect(searchURL).get();
+            cards = searchPage.select(cardSelector);
+            // TODO change to asserts(?)
+            if (cards.size() != 1 || Integer.parseInt(cards.first().attr(idSelector)) != productID) {
+                throw new IOException("Search results doesn't contain exclusively this wine!");
+            }
+            Element colorSpan = searchPage.selectFirst(filterSelectorStart + colorSelector + filterSelectorEnd);
             if (colorSpan != null) {
                 String colorText = colorSpan.html();
                 Color color = Color.fromString(colorText);
-                if(color != null) {
+                if (color != null) {
                     wine.setColor(color);
                 }
             }
 
-            Element sugarSpan = document.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
+            Element sugarSpan = searchPage.selectFirst(filterSelectorStart + sugarSelector + filterSelectorEnd);
             if (sugarSpan != null) {
                 String sugarText = sugarSpan.html();
                 Sugar sugar = Sugar.fromString(sugarText);
-                if(sugar != null) {
+                if (sugar != null) {
                     wine.setSugar(sugar);
                 }
             }
 
-            Element countrySpan = document.selectFirst(filterSelectorStart + countrySelector + filterSelectorEnd);
+            Element countrySpan = searchPage.selectFirst(filterSelectorStart + countrySelector + filterSelectorEnd);
             if (countrySpan != null) {
                 String country = countrySpan.html();
                 wine.setCountry(country);
             }
 
-            Element grapeSpan = document.selectFirst(filterSelectorStart + grapeSelector + filterSelectorEnd);
+            Element grapeSpan = searchPage.selectFirst(filterSelectorStart + grapeSelector + filterSelectorEnd);
             if (grapeSpan != null) {
                 String grapeSort = grapeSpan.html();
                 wine.setGrapeSort(grapeSort);
             }
 
-            Element brandSpan = document.selectFirst(filterSelectorStart + brandSelector + filterSelectorEnd);
+            Element brandSpan = searchPage.selectFirst(filterSelectorStart + brandSelector + filterSelectorEnd);
             if (brandSpan != null) {
                 String brand = brandSpan.html();
                 wine.setBrand(brand);
             }
 
-            Element manufacturerSpan = document.selectFirst(filterSelectorStart + manufacturerSelector + filterSelectorEnd);
+            Element manufacturerSpan = searchPage.selectFirst(filterSelectorStart + manufacturerSelector + filterSelectorEnd);
             if (manufacturerSpan != null) {
                 String manufacturer = manufacturerSpan.html();
                 wine.setManufacturer(manufacturer);
             }
 
-            Elements categories = document.select(filterSelectorStart + categorySelector + filterSelectorEnd);
+            Elements categories = searchPage.select(filterSelectorStart + categorySelector + filterSelectorEnd);
             for (Element category : categories) {
                 if (category.html().equals(sparklingCategory)) {
                     wine.setSparkling(true);
@@ -160,9 +183,26 @@ public class ParserService {
             }
 
             if (wine.getCountry() == null) {
-                Element countryWrapper = document.selectFirst(cardCountrySelector);
+                Element countryWrapper = searchPage.selectFirst(cardCountrySelector);
                 if (countryWrapper != null) {
                     wine.setCountry(countryWrapper.html());
+                }
+            }
+        } catch (IOException ex) {
+            wine.setBrand(filters.get(filters.size() - 2).ownText());
+            wine.setManufacturer(filters.last().ownText());
+            for (Element filter : filters) {
+                String tag = filter.ownText();
+                Color color = Color.fromString(tag);
+                Sugar sugar = Sugar.fromString(tag);
+                if (color != null) {
+                    wine.setColor(color);
+                } else if (sugar != null) {
+                    wine.setSugar(sugar);
+                } else if (countryList != null && countryList.contains(tag)) {
+                    wine.setCountry(tag);
+                } else if (grapeList != null && grapeList.contains(tag)) {
+                    wine.setGrapeSort(tag);
                 }
             }
         }
@@ -170,39 +210,15 @@ public class ParserService {
         return wine;
     }
 
-    public List<Integer> parseHome() throws IOException {
-        final String cardSelector = "a.product_card.js-product-click";
-        final String idSelector = "data-id";
-        final String url = protocol + siteURL;
-
-        Document document = Jsoup.connect(url).get();
-
-        Elements elementsWithId = document.select(cardSelector);
-        List<Integer> ids = new ArrayList<>();
-        for (Element item : elementsWithId) {
-            String idStr = item.attr(idSelector);
-            int id = Integer.parseInt(idStr);
-            if (ids.contains(id)) {
-                continue;
-            }
-            ids.add(id);
-        }
-
-        return ids;
-    }
-
-    public List<Integer> parseCatalogs() throws IOException {
-        final List<String> catalogs = new ArrayList<>(Arrays.asList("vino", "shampanskie-i-igristye-vina"));
-
-        List<Integer> ids = new ArrayList<>();
+    public Map<Integer, Wine> parseCatalogs() throws IOException {
+        Map<Integer, Wine> wines = new HashMap<>();
         for (String catalog : catalogs) {
-            ids.addAll(parseCatalog(catalog));
+            parseCatalog(catalog, wines);
         }
-
-        return ids;
+        return wines;
     }
 
-    public List<Integer> parseCatalog(String category) throws IOException {
+    private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
         final String cardSelector = "div.container a.product_card";
         final String idSelector = "data-id";
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
@@ -210,18 +226,25 @@ public class ParserService {
         final String startPage = "/catalog/" + category;
 
         String url = protocol + siteURL + startPage;
+        Document document = Jsoup.connect(url).get();
         boolean isLastPage = false;
-        List<Integer> ids = new ArrayList<>();
+
+        List<String> countryList = loadCountries(document);
+        List<String> grapeList = loadGrapes(document);
 
         while (!isLastPage) {
-            Document document = Jsoup.connect(url).get();
-
             Elements productCards = document.select(cardSelector);
             for (Element card : productCards) {
                 String name = card.select(nameSelector).last().html();
                 if (isWine(name)) {
-                    System.out.println(name);
-                    ids.add(Integer.parseInt(card.attr(idSelector)));
+                    int id = Integer.parseInt(card.attr(idSelector));
+                    if (!wines.containsKey(id)) {
+                        try {
+                            wines.put(id, parseProduct(id, countryList, grapeList));
+                        } catch (IOException ex) { // for some reason wine is in catalog, but product page doesn't exist
+                            ; // TODO decide what we do in this case
+                        }
+                    }
                 }
             }
 
@@ -230,18 +253,67 @@ public class ParserService {
                 isLastPage = true;
             } else {
                 url = protocol + siteURL + nextPage.attr("href");
+                document = Jsoup.connect(url).get();
             }
         }
-        return ids;
+    }
+
+    /* Utility */
+
+    private List<String> loadCountries(Document document) {
+        List<String> countryList = new ArrayList<>();
+
+        Elements countrySpans = document.select(filterSelectorStart + countrySelector + filterSelectorEnd);
+        for (Element span : countrySpans) {
+            countryList.add(span.html());
+        }
+
+        return countryList;
+    }
+
+    private List<String> loadGrapes(Document document) {
+        List<String> grapeList = new ArrayList<>();
+
+        Elements grapeSpans = document.select(filterSelectorStart + grapeSelector + filterSelectorEnd);
+        for (Element span : grapeSpans) {
+            grapeList.add(span.html());
+        }
+
+        return grapeList;
     }
 
     private boolean isWine(String name) {
-        final String isWinePattern = ".*(вино|винный|шампанское|портвейн|глинтвейн|вермут|кагор).*";
-        return name.toLowerCase().matches(isWinePattern);
+        final String[] wineStrings = {"вино", "винный", "шампанское", "портвейн", "глинтвейн", "вермут", "кагор", "сангрия"};
+        name = name.toLowerCase();
+        for (String wineString : wineStrings) {
+            if (name.contains(wineString)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isSparkling(String name) {
-        final String isSparklingPattern = ".*(игрист(ый|ое)|шампанское).*";
-        return name.toLowerCase().matches(isSparklingPattern);
+        final String[] sparklingStrings = {"игрист", "шампанское"};
+        name = name.toLowerCase();
+        for (String sparklingString : sparklingStrings) {
+            if (name.contains(sparklingString)) {
+                return true;
+            }
+        }
+        return false;
     }
+
+    private boolean isRegion(String subcategory) {
+        final String[] regions = {"бордо", "венето", "тоскана", "риоха", "кастилья ла манча", "бургундия", "долина луары",
+                "кампо де борха", "риберо дель дуэро", "пьемонт", "долина роны", "сицилия", "другие регионы"};
+        subcategory = subcategory.toLowerCase();
+        for (String region : regions) {
+            if (subcategory.contains(region)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

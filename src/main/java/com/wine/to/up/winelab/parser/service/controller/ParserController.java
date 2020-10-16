@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/parser")
@@ -27,33 +27,29 @@ public class ParserController {
         this.parserService = parserService;
     }
 
-    @GetMapping
+    @GetMapping("/wine")
     public void parseWine(@RequestParam int productID) {
         try {
-            Wine wine = parserService.parseProduct(productID);
+            Wine wine = parserService.parseProduct(productID, null, null);
             log.info(wine.toString());
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }
     }
 
-    @GetMapping("/home")
-    public void parseHomePage() {
-        try {
-            List<Integer> ids = parserService.parseHome();
-            log.info(ids.toString());
-        } catch (IOException ex) {
-            log.error(ex.getMessage());
-        }
-    }
-
-    @GetMapping("/catalog")
+    @GetMapping
     public void parseCatalogs() {
+        log.info("Parsing started!");
         try {
-            List<Integer> ids = parserService.parseCatalogs();
-            for (Integer id : ids) {
-                parseWine(id);
+            Map<Integer, Wine> wines = parserService.parseCatalogs();
+            for (Map.Entry<Integer, Wine> entry : wines.entrySet()) {
+                log.info(entry.getValue().toString());
+                /* TODO
+                    Transalte to ApiWine
+                    Message class (https://github.com/microservices-course-itmo/parser-common-api/blob/dev/src/main/java/com/wine/to/up/parser/common/api/schema/parser_api.proto)
+                 */
             }
+            log.info("Parsing done!");
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }

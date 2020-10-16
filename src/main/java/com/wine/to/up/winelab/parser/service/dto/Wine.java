@@ -4,6 +4,7 @@ import com.wine.to.up.winelab.parser.service.utils.enums.Color;
 import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @AllArgsConstructor
@@ -11,11 +12,9 @@ import java.math.BigDecimal;
 @Setter
 @ToString
 @NoArgsConstructor
-public class Wine {
+public class Wine implements Serializable {
     // wine name as it is on product page
     private String name;
-    // site address
-    private String site;
     // price without discount in rubles
     private BigDecimal oldPrice;
     // product page address
@@ -33,7 +32,6 @@ public class Wine {
     private BigDecimal alcoholPercentage;
     // is wine sparkling
     private boolean sparkling;
-    //should enums really be private? We can't access any methods that way.
     private Color color;
     private Sugar sugar;
     private String grapeSort;
