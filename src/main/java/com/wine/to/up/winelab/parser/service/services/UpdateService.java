@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -19,16 +21,9 @@ public class UpdateService {
 
     public void updateCatalog() {
         try {
-            List<Integer> ids = parserService.parseCatalogs();
-            ids.forEach(id -> {
-                try {
-                    Wine wine = parserService.parseProduct(id);
-                    kafkaService.sendWine(wine);
-                } catch (IOException e) {
-                    log.error("Parse product with id = {} error, {}", id, e.toString());
-
-                }
-            });
+            Map<Integer, Wine> wines = parserService.parseCatalogs();
+            List<Wine> wineList = new ArrayList<>(wines.values());
+            kafkaService.sendWineList(wineList);
         } catch(IOException e) {
             log.error("Update catalog error, {}",e.toString());
         }

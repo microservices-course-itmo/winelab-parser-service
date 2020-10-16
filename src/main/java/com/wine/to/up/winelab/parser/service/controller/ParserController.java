@@ -30,7 +30,7 @@ public class ParserController {
     @GetMapping("/wine")
     public void parseWine(@RequestParam int productID) {
         try {
-            Wine wine = parserService.parseProduct(productID, null, null);
+            Wine wine = parserService.parseProduct(productID, null, null, null, null);
             log.info(wine.toString());
         } catch (IOException ex) {
             log.error(ex.getMessage());
