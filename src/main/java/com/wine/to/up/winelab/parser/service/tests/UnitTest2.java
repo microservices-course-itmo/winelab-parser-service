@@ -17,7 +17,7 @@ public class UnitTest2 {
             Assert.assertEquals(parserService.parseProduct(1009581).getOldPrice(), 750);
             Assert.assertEquals(parserService.parseProduct(1009581).getLink(), "https://www.winelab.ru/product/1009581");
             Assert.assertEquals(parserService.parseProduct(1009581).getNewPrice(), 675);
-            Assert.assertEquals(parserService.parseProduct(1009581).getImage(),"https://www.winelab.ru/medias/1009583.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0MDQwN3xpbWFnZS9wbmd8aW1hZ2VzL2g0Ny9oZmUvODgzMjYxODEzNTU4Mi5wbmd8NzJlOWYzYjJkMjNiNjc2ZTMzMDNiMjMyNTUxZWJkYWJlODBkYWZlMDI1MjAzMDE2NTYyMTAyYTU3ODVlNThkOQ";);
+            Assert.assertEquals(parserService.parseProduct(1009581).getImage(),"https://www.winelab.ru/medias/1009583.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0MDQwN3xpbWFnZS9wbmd8aW1hZ2VzL2g0Ny9oZmUvODgzMjYxODEzNTU4Mi5wbmd8NzJlOWYzYjJkMjNiNjc2ZTMzMDNiMjMyNTUxZWJkYWJlODBkYWZlMDI1MjAzMDE2NTYyMTAyYTU3ODVlNThkOQ");
             Assert.assertEquals(parserService.parseProduct(1009581).getManufacturer(),"Berton Vineyards") ;
             Assert.assertEquals(parserService.parseProduct(1009581).getBrand(),"Berton Vinyard Reserve");
             Assert.assertEquals(parserService.parseProduct(1009581).getCountry(),"Австралия") ;
