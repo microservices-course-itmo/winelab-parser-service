@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class UnitTest1 {
     @Test
-    public static void testParser(String[] args) {
+    public void testParser() {
         try {
             ParserService parserService = new ParserService();
 

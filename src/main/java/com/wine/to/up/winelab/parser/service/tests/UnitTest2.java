@@ -6,7 +6,7 @@ import org.junit.Assert;
 
 public class UnitTest2 {
     @Test
-    public static void testParser(String[] args) {
+    public void testParser() {
         try {
 
             ParserService parserService = new ParserService();
