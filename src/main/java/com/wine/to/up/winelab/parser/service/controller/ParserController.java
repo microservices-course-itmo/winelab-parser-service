@@ -1,7 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +16,10 @@ import java.util.List;
 @RequestMapping("/parser")
 @Slf4j
 public class ParserController {
-
-    private final MessageRepository messageRepository;
     private final ParserService parserService;
 
     @Autowired
-    public ParserController(MessageRepository messageRepository, ParserService parserService) {
-        this.messageRepository = messageRepository;
+    public ParserController(ParserService parserService) {
         this.parserService = parserService;
     }
 
