@@ -4,8 +4,6 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/parser")
@@ -44,8 +41,8 @@ public class ParserController {
     public void parseCatalogs() {
         log.info("Parsing started!");
         try {
-            Map<Integer, Wine> wines  = parserService.parseCatalogs();
-            for (Wine wine: wines.values()) {
+            Map<Integer, Wine> wines = parserService.parseCatalogs();
+            for (Wine wine : wines.values()) {
                 log.info(wine.toString());
                 /* TODO
                     Transalte to api wine

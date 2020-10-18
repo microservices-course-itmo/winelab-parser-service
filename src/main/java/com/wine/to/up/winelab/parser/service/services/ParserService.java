@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -93,7 +96,7 @@ public class ParserService {
         wine.setLink(productURL);
 
         Element img = document.selectFirst(imageSelector);
-        if(img != null) {
+        if (img != null) {
             String image = protocol + siteURL + img.attr("src");
             wine.setImage(image);
         }
@@ -272,8 +275,7 @@ public class ParserService {
                         wines.put(id, parseProduct(id, countrySet, grapeSet, brandSet, manufacturerSet));
                         long finish = System.currentTimeMillis();
                         log.info("Time elapsed parsing wine with id {} = {} ms", id, finish - start);
-                    }
-                    catch (IOException ex) {
+                    } catch (IOException ex) {
                         log.error("Error while parsing wine with id {}", id, ex);
                     }
                 }
