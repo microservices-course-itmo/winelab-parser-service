@@ -13,10 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -265,21 +263,24 @@ public class ParserService {
         Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
 
         while (!isLastPage) {
-            Elements productCards = document.select(cardSelector);
-            for (Element card : productCards) {
-                String name = card.select(nameSelector).last().html();
-                if (isWine(name)) {
-                    int id = Integer.parseInt(card.attr(idSelector));
-                    try { // TODO log time spent for parsing one position
-                        long start = System.currentTimeMillis();
-                        wines.put(id, parseProduct(id, countrySet, grapeSet, brandSet, manufacturerSet));
-                        long finish = System.currentTimeMillis();
-                        log.info("Time elapsed parsing wine with id {} = {} ms", id, finish - start);
-                    } catch (IOException ex) {
-                        log.error("Error while parsing wine with id {}", id, ex);
-                    }
-                }
-            }
+            document.select(cardSelector)
+                    .parallelStream()
+                    .forEach(card -> {
+                        String name = card.select(nameSelector).last().html();
+                        if (isWine(name)) {
+                            int id = Integer.parseInt(card.attr(idSelector));
+                            try { // TODO log time spent for parsing one position
+                                long start = System.currentTimeMillis();
+                                if (!wines.containsKey(id)) {
+                                    wines.put(id, parseProduct(id, countrySet, grapeSet, brandSet, manufacturerSet));
+                                }
+                                long finish = System.currentTimeMillis();
+                                log.info("Time elapsed parsing wine with id {} = {} ms", id, finish - start);
+                            } catch (IOException ex) {
+                                log.error("Error while parsing wine with id {}", id, ex);
+                            }
+                        }
+                    });
 
             Element nextPage = document.select(nextPageSelector).first();
             if (nextPage == null) {
@@ -294,46 +295,32 @@ public class ParserService {
     /* Utility */
 
     private Set<String> loadAttributes(Document document, String attrSelector) {
-        Set<String> set = new HashSet<>();
-        Elements spans = document.select(String.format(filterSelector, attrSelector));
-        for (Element span : spans) {
-            set.add(span.html());
-        }
-        return set;
+        return document.select(String.format(filterSelector, attrSelector))
+                .stream()
+                .map(Element::html)
+                .collect(Collectors.toSet());
     }
 
     private boolean isWine(String name) {
         final String[] wineStrings = {"вино", "винный", "шампанское", "портвейн", "глинтвейн", "вермут", "кагор", "сангрия"};
-        name = name.toLowerCase();
-        for (String wineString : wineStrings) {
-            if (name.contains(wineString)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(wineStrings).reduce(false,
+                (a, b) -> a || name.toLowerCase().contains(b),
+                (a, b) -> a || b);
     }
 
     private boolean isSparkling(String name) {
         final String[] sparklingStrings = {"игрист", "шампанское"};
-        name = name.toLowerCase();
-        for (String sparklingString : sparklingStrings) {
-            if (name.contains(sparklingString)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(sparklingStrings).reduce(false,
+                (a, b) -> a || name.toLowerCase().contains(b),
+                (a, b) -> a || b);
     }
 
     private boolean isRegion(String subcategory) {
         final String[] regions = {"бордо", "венето", "тоскана", "риоха", "кастилья ла манча", "бургундия", "долина луары",
                 "кампо де борха", "риберо дель дуэро", "пьемонт", "долина роны", "сицилия", "другие регионы"};
-        subcategory = subcategory.toLowerCase();
-        for (String region : regions) {
-            if (subcategory.contains(region)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(regions).reduce(false,
+                (a, b) -> a || subcategory.toLowerCase().contains(b),
+                (a, b) -> a || b);
     }
 
     private String countryFix(String country) { // fix double names for countries
@@ -342,9 +329,6 @@ public class ParserService {
                 "Южная Африка", "ЮАР",
                 "Соединенные Штаты Америки", "США",
                 "Соед. Королев.", "Великобритания");
-        if (countries.containsKey(country)) {
-            return countries.get(country);
-        }
-        return country;
+        return countries.getOrDefault(country, country);
     }
 }
