@@ -4,14 +4,17 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/parser")
@@ -27,25 +30,25 @@ public class ParserController {
         this.parserService = parserService;
     }
 
-    @GetMapping("/wine")
-    public void parseWine(@RequestParam int productID) {
+    @GetMapping("/wine/{id}")
+    public void parseWine(@PathVariable(value = "id") int productID) {
         try {
-            Wine wine = parserService.parseProduct(productID, null, null, null, null);
+            Wine wine = parserService.parseProduct(productID);
             log.info(wine.toString());
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }
     }
 
-    @GetMapping
+    @GetMapping("/catalogs")
     public void parseCatalogs() {
         log.info("Parsing started!");
         try {
-            Map<Integer, Wine> wines = parserService.parseCatalogs();
-            for (Map.Entry<Integer, Wine> entry : wines.entrySet()) {
-                log.info(entry.getValue().toString());
+            Map<Integer, Wine> wines  = parserService.parseCatalogs();
+            for (Wine wine: wines.values()) {
+                log.info(wine.toString());
                 /* TODO
-                    Transalte to ApiWine
+                    Transalte to api wine
                     Message class (https://github.com/microservices-course-itmo/parser-common-api/blob/dev/src/main/java/com/wine/to/up/parser/common/api/schema/parser_api.proto)
                  */
             }
