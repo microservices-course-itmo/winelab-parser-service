@@ -23,10 +23,10 @@ public class ParseJob {
     }
 
     @Scheduled(cron = "${job.cron.parse}")
-    public void parseHomePage() {
+    public void parseCatalogs() {
         var dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        log.info("Catalogs parser starter at {}", dateFormat.format(new Date()));
+        log.info("Catalogs parsing starter at {}", dateFormat.format(new Date()));
 
         try {
             Map<Integer, Wine> wines = parserService.parseCatalogs();
