@@ -270,12 +270,13 @@ public class ParserService {
                         if (isWine(name)) {
                             int id = Integer.parseInt(card.attr(idSelector));
                             try { // TODO log time spent for parsing one position
-                                long start = System.currentTimeMillis();
                                 if (!wines.containsKey(id)) {
+                                    long start = System.currentTimeMillis();
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, brandSet, manufacturerSet));
+                                    long finish = System.currentTimeMillis();
+                                    long timeElapsed = finish - start;
+                                    log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
-                                long finish = System.currentTimeMillis();
-                                log.info("Time elapsed parsing wine with id {} = {} ms", id, finish - start);
                             } catch (IOException ex) {
                                 log.error("Error while parsing wine with id {}", id, ex);
                             }
