@@ -49,7 +49,7 @@ public class ParserController {
                     Message class (https://github.com/microservices-course-itmo/parser-common-api/blob/dev/src/main/java/com/wine/to/up/parser/common/api/schema/parser_api.proto)
                  */
             }
-            log.info("Parsing done!");
+            log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }

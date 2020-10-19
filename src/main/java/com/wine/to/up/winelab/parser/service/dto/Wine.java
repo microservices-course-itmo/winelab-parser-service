@@ -29,7 +29,7 @@ public class Wine implements Serializable {
     private String region;
     // volume in liters
     private BigDecimal volume;
-    private BigDecimal alcoholPercentage;
+    private BigDecimal alcoholContent;
     // is wine sparkling
     private boolean sparkling;
     private Color color;

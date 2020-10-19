@@ -38,8 +38,6 @@ public class ParserService {
     private String countrySelector;
     @Value("${parser.selector.filter.grape}")
     private String grapeSelector;
-    @Value("${parser.selector.filter.brand}")
-    private String brandSelector;
     @Value("${parser.selector.filter.manufacturer}")
     private String manufacturerSelector;
     @Value("${parser.selector.filter.category}")
@@ -51,7 +49,6 @@ public class ParserService {
     public Wine parseProduct(int productID) throws IOException {
         Set<String> countrySet = new HashSet<>();
         Set<String> grapeSet = new HashSet<>();
-        Set<String> brandSet = new HashSet<>();
         Set<String> manufacturerSet = new HashSet<>();
         for (String catalog : catalogs) {
             String url = protocol + siteURL + "/catalog/" + catalog;
@@ -59,29 +56,30 @@ public class ParserService {
 
             countrySet.addAll(loadAttributes(document, countrySelector));
             grapeSet.addAll(loadAttributes(document, grapeSelector));
-            brandSet.addAll(loadAttributes(document, brandSelector));
             manufacturerSet.addAll(loadAttributes(document, manufacturerSelector));
         }
-        return parseProduct(productID, countrySet, grapeSet, brandSet, manufacturerSet);
+        return parseProduct(productID, countrySet, grapeSet, manufacturerSet);
     }
 
-    private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> brandSet, Set<String> manufacturerSet) throws IOException {
+    private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
         final String productURL = protocol + siteURL + "/product/" + productID;
 
         final String patternVolume = "\\d+([,.]\\d+)? [Лл]";
-        final String patternAlcoholPercentage = "\\d{0,2}(.\\d+)? %";
+        final String patternAlcoholContent = "\\d{0,2}(.\\d+)? %";
         final String sparklingCategory = "Шампанские и игристые вина";
 
         final String nameSelector = "div.product_description div.description";
+        final String detailsSelector = "div.container div.row.product-detail-page.product_card_row.js-add-recent-list";
+        final String brandSelector = "data-brand";
         final String tagSelector = "div.product_description div.filters > span";
-        final String priceSelector = "div.product_description div.prices_main";
-        final String discountPriceSelector = "div.prices_cart_price.tooltip";
+        final String oldPriceSelector = "div.product_description div.prices_main";
+        final String newPriceSelector = "data-price";
         final String imageSelector = "div.image-zoom.js-zoom-product img";
         final String cardSelector = "div.container div.row.filtered_items_row.js-infinite-scroll a.product_card.js-product-click";
         final String cardCountrySelector = "div.container div.country_wrapper h3";
         final String gastronomySelector = "div.product_description_card:contains(Рекомендуемое употребление) p";
         final String descriptionSelector = "div.product_description_card:contains(Электронный сомелье) p";
-        final String breadcrumbSelector = "ol.breadcrumb li a";
+        final String regionSelector = "data-category";
         final String idSelector = "data-id";
 
         Document document = Jsoup.connect(productURL).cookies(cookies).get();
@@ -93,6 +91,21 @@ public class ParserService {
 
         wine.setLink(productURL);
 
+        Element details = document.selectFirst(detailsSelector);
+        String brand = details.attr(brandSelector);
+        if (!brand.isEmpty()) {
+            wine.setBrand(brand);
+        }
+        String newPriceString = details.attr(newPriceSelector);
+        if (!newPriceString.isEmpty()) {
+            BigDecimal newPrice = new BigDecimal(newPriceString);
+            wine.setNewPrice(newPrice);
+        }
+        String region = details.attr(regionSelector);
+        if (isRegion(region)) {
+            wine.setRegion(region);
+        }
+
         Element img = document.selectFirst(imageSelector);
         if (img != null) {
             String image = protocol + siteURL + img.attr("src");
@@ -103,39 +116,24 @@ public class ParserService {
             wine.setSparkling(true);
         }
 
-        Elements breadcrumb = document.select(breadcrumbSelector);
-        int bcCount = breadcrumb.size();
-        String subcategory = breadcrumb.get(bcCount - 2).html();
-        if (isRegion(subcategory)) {
-            wine.setRegion(subcategory);
-        }
-
-        Elements filters = document.select(tagSelector);
-        for (Element filter : filters) {
-            String tag = filter.ownText();
+        Elements tags = document.select(tagSelector);
+        for (Element tagEl : tags) {
+            String tag = tagEl.ownText();
             if (tag.matches(patternVolume)) {
                 tag = tag.replaceAll("[ Л]", "");
                 BigDecimal volume = new BigDecimal(tag);
                 wine.setVolume(volume);
-            } else if (tag.matches(patternAlcoholPercentage)) {
+            } else if (tag.matches(patternAlcoholContent)) {
                 tag = tag.replaceAll("[ %]", "");
-                BigDecimal alcoholPercentage = new BigDecimal(tag);
-                wine.setAlcoholPercentage(alcoholPercentage);
+                BigDecimal alcoholContent = new BigDecimal(tag);
+                wine.setAlcoholContent(alcoholContent);
             }
         }
 
-        Element oldPriceSpan = document.selectFirst(priceSelector);
+        Element oldPriceSpan = document.selectFirst(oldPriceSelector);
         if (oldPriceSpan != null) {
             BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replaceAll(" ", ""));
             wine.setOldPrice(oldPrice);
-        }
-
-        Element discountPrices = document.selectFirst(discountPriceSelector);
-        if (discountPrices != null) {
-            BigDecimal price = new BigDecimal(discountPrices.select("span").get(1).ownText().replaceAll(" ", ""));
-            wine.setNewPrice(price);
-        } else { // means that item is out of stock and there's no discount price mentioned
-            wine.setNewPrice(wine.getOldPrice());
         }
 
         String gastronomy = document.selectFirst(gastronomySelector).html();
@@ -146,8 +144,8 @@ public class ParserService {
 
         final String searchURL = protocol + siteURL + "/search?q=" +
                 productID + "%3Arelevance" +
-                (wine.getAlcoholPercentage() != null ? "%3AAlcoholContent%3A%255B" + wine.getAlcoholPercentage() + "%2BTO%2B" + wine.getAlcoholPercentage() + "%255D" : "") +
-                (wine.getOldPrice() != wine.getNewPrice() ? "%3Aprice%3A%5B" + wine.getNewPrice() + "%20TO%20" + wine.getNewPrice() + "%5D" : "");
+                (wine.getAlcoholContent() != null ? "%3AAlcoholContent%3A%255B" + wine.getAlcoholContent() + "%2BTO%2B" + wine.getAlcoholContent() + "%255D" : "") +
+                (wine.getNewPrice() != null ? "%3Aprice%3A%5B" + wine.getNewPrice() + "%20TO%20" + wine.getNewPrice() + "%5D" : "");
         Document searchPage;
         Elements cards;
         try {
@@ -185,12 +183,6 @@ public class ParserService {
                 wine.setGrapeSort(grapeSort);
             }
 
-            Element brandSpan = searchPage.selectFirst(String.format(filterSelector, brandSelector));
-            if (brandSpan != null) {
-                String brand = brandSpan.html();
-                wine.setBrand(brand);
-            }
-
             Element manufacturerSpan = searchPage.selectFirst(String.format(filterSelector, manufacturerSelector));
             if (manufacturerSpan != null) {
                 String manufacturer = manufacturerSpan.html();
@@ -215,8 +207,8 @@ public class ParserService {
                 }
             }
         } catch (Exception ex) {
-            for (Element filter : filters) {
-                String tag = filter.ownText();
+            for (Element tagEl : tags) {
+                String tag = tagEl.ownText();
                 Color color = Color.fromString(tag);
                 Sugar sugar = Sugar.fromString(tag);
                 if (color != null) {
@@ -227,8 +219,6 @@ public class ParserService {
                     wine.setCountry(countryFix(tag));
                 } else if (grapeSet.contains(tag)) {
                     wine.setGrapeSort(tag);
-                } else if (wine.getBrand() == null && brandSet.contains(tag)) { // to prevent overwriting brand with manufacturer in case of the same names
-                    wine.setBrand(tag);
                 } else if (manufacturerSet.contains(tag)) {
                     wine.setManufacturer(tag);
                 }
@@ -259,7 +249,6 @@ public class ParserService {
 
         Set<String> countrySet = loadAttributes(document, countrySelector);
         Set<String> grapeSet = loadAttributes(document, grapeSelector);
-        Set<String> brandSet = loadAttributes(document, brandSelector);
         Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
 
         while (!isLastPage) {
@@ -272,13 +261,13 @@ public class ParserService {
                             try { // TODO log time spent for parsing one position
                                 if (!wines.containsKey(id)) {
                                     long start = System.currentTimeMillis();
-                                    wines.put(id, parseProduct(id, countrySet, grapeSet, brandSet, manufacturerSet));
+                                    wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
                                     long finish = System.currentTimeMillis();
                                     long timeElapsed = finish - start;
                                     log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
-                            } catch (IOException ex) {
-                                log.error("Error while parsing wine with id {}", id, ex);
+                            } catch (Exception ex) {
+                                log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
                     });
