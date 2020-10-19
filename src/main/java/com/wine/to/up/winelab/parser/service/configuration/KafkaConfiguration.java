@@ -1,28 +1,18 @@
 package com.wine.to.up.winelab.parser.service.configuration;
 
-import com.wine.to.up.commonlib.messaging.BaseKafkaHandler;
-import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
-import com.wine.to.up.demo.service.api.DemoServiceApiProperties;
-import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
-import com.wine.to.up.winelab.parser.service.api.WineLabServiceApiProperties;
+import com.wine.to.up.parser.common.api.ParserCommonApiProperties;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
-import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.messaging.WineTopicKafkaMessageHandler;
-import com.wine.to.up.winelab.parser.service.messaging.serialization.EventDeserializer;
 import com.wine.to.up.winelab.parser.service.messaging.serialization.EventSerializer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 
 import java.util.Properties;
 
@@ -54,21 +44,6 @@ public class KafkaConfiguration {
     }
 
     /**
-     * Creating general consumer properties. Common for all the consumers
-     */
-    @Bean
-    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-    Properties consumerProperties() {
-        Properties properties = new Properties();
-        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
-        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, applicationConsumerGroupId);
-        //in case of consumer crashing, new consumer will read all messages from committed offset
-        properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, OffsetResetStrategy.EARLIEST.name().toLowerCase());
-        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        return properties;
-    }
-
-    /**
      * Creates sender based on general properties. It helps to send single message to designated topic.
      * <p>
      * Uses custom serializer as the messages within single topic should be the same type. And
@@ -79,12 +54,12 @@ public class KafkaConfiguration {
      * @param metricsCollector         class encapsulating the logic of the metrics collecting and publishing
      */
     @Bean
-    KafkaMessageSender<Wine> wineTopicKafkaMessageSender(Properties producerProperties,
-                                                         WineLabServiceApiProperties wineLabServiceApiProperties,
+    KafkaMessageSender<ParserApi.Wine> wineTopicKafkaMessageSender(Properties producerProperties,
+                                                         ParserCommonApiProperties wineLabServiceApiProperties,
                                                          WineLabParserMetricsCollector metricsCollector) {
         // set appropriate serializer for value
         producerProperties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EventSerializer.class.getName());
 
-        return new KafkaMessageSender<>(new KafkaProducer<>(producerProperties), wineLabServiceApiProperties.getMessageSentEventsTopicName(), metricsCollector);
+        return new KafkaMessageSender<ParserApi.Wine>(new KafkaProducer<>(producerProperties), wineLabServiceApiProperties.getWineParsedEventsTopicName(), metricsCollector);
     }
 }

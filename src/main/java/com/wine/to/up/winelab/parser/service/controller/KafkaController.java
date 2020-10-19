@@ -5,6 +5,7 @@ import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
 import com.wine.to.up.demo.service.api.dto.DemoServiceMessage;
 import com.wine.to.up.demo.service.api.message.KafkaMessageHeaderOuterClass;
 import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +38,10 @@ public class KafkaController {
     /**
      * Service for sending messages
      */
-    private KafkaMessageSender<Wine> kafkaSendMessageService;
+    private KafkaMessageSender<ParserApi.Wine> kafkaSendMessageService;
 
     @Autowired
-    public KafkaController(KafkaMessageSender<Wine> kafkaSendMessageService) {
+    public KafkaController(KafkaMessageSender<ParserApi.Wine> kafkaSendMessageService) {
         this.kafkaSendMessageService = kafkaSendMessageService;
     }
 
@@ -52,6 +53,6 @@ public class KafkaController {
     public void sendWineWithName(@RequestBody String name) {
         Wine wine = new Wine();
         wine.setName(name);
-        kafkaSendMessageService.sendMessage(wine);
+        kafkaSendMessageService.sendMessage(wine.toParserWine());
     }
 }
