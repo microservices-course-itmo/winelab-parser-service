@@ -23,7 +23,7 @@ public class UpdateWineLabJob {
          long startDate = System.currentTimeMillis();
         log.info("start UpdateWineLabJob run job method at " + startDate);
         updateService.updateCatalog();
-        log.info("end UpdateWineLabJob run job method at " + System.currentTimeMillis() + " duration = " + (System.currentTimeMillis() - startDate));
+        log.info("end UpdateWineLabJob run job method at {}, duration = {}", System.currentTimeMillis(), System.currentTimeMillis() - startDate);
     }
 
 }
