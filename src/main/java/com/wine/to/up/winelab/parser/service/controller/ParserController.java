@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
+import com.wine.to.up.winelab.parser.service.dto.ApiWine;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -31,7 +32,7 @@ public class ParserController {
     public void parseWine(@PathVariable(value = "id") int productID) {
         try {
             Wine wine = parserService.parseProduct(productID);
-            log.info(wine.toString());
+            log.info(ApiWine.dtoToApi(wine).toString());
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }
@@ -43,11 +44,7 @@ public class ParserController {
         try {
             Map<Integer, Wine> wines = parserService.parseCatalogs();
             for (Wine wine : wines.values()) {
-                log.info(wine.toString());
-                /* TODO
-                    Transalte to api wine
-                    Message class (https://github.com/microservices-course-itmo/parser-common-api/blob/dev/src/main/java/com/wine/to/up/parser/common/api/schema/parser_api.proto)
-                 */
+                log.info(ApiWine.dtoToApi(wine).toString());
             }
             log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {
