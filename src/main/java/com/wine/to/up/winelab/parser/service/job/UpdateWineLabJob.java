@@ -20,10 +20,10 @@ public class UpdateWineLabJob {
      */
     @Scheduled(fixedRate = 24*60*60*1000, initialDelay = 24*60*60*1000)
     public void runJob() {
-        long startDate = new Date().getTime();
+         long startDate = System.currentTimeMillis();
         log.info("start UpdateWineLabJob run job method at " + startDate);
         updateService.updateCatalog();
-        log.info("end UpdateWineLabJob run job method at " + new Date().getTime() + " duration = " + (new Date().getTime() - startDate));
+        log.info("end UpdateWineLabJob run job method at " + System.currentTimeMillis() + " duration = " + (System.currentTimeMillis() - startDate));
     }
 
 }
