@@ -7,6 +7,7 @@ import java.io.IOException;
 public class Test2 {
     @Test
     public void testParser() {
+
         try {
             ParserService parserService = new ParserService();
 
