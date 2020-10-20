@@ -241,7 +241,7 @@ public class ParserService {
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
         final String nameSelector = "div.product_card--header div"; // last in the list
         final String startPage = "/catalog/" + category;
-
+        long begin = System.currentTimeMillis();
         Map<Integer, Wine> ids = new HashMap<>();
         String url = protocol + siteURL + startPage;
         Document document = Jsoup.connect(url).cookies(cookies).get();
@@ -280,6 +280,10 @@ public class ParserService {
                 document = Jsoup.connect(url).cookies(cookies).get();
             }
         }
+
+        long end = System.currentTimeMillis();
+        long timeElapsedTotal = end - begin;
+        log.info("Time elapsed total:", timeElapsedTotal);
     }
 
     /* Utility */
