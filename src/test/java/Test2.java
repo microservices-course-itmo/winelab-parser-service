@@ -1,4 +1,5 @@
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.dto.Wine;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -10,16 +11,17 @@ public class Test2 {
 
         try {
             ParserService parserService = new ParserService();
+            Wine wine = parserService.parseProduct(1009581);
 
 
-            Assert.assertNotNull(parserService.parseProduct(1009581).getName());           //test the fields are not null/null (depends on the field)
-            Assert.assertNotNull(parserService.parseProduct(1009581).getLink());
-            Assert.assertNotNull(parserService.parseProduct(1009581).getImage());
-            Assert.assertNotNull(parserService.parseProduct(1009581).getManufacturer());
-            Assert.assertNotNull(parserService.parseProduct(1009581).getBrand());
-            Assert.assertNotNull(parserService.parseProduct(1009581).getCountry());
-            Assert.assertNull(parserService.parseProduct(1009581).getRegion());
-            Assert.assertNotNull(parserService.parseProduct(1009581).getDescription());
+            Assert.assertNotNull(wine.getName());           //test the fields are not null/null (depends on the field)
+            Assert.assertNotNull(wine.getLink());
+            Assert.assertNotNull(wine.getImage());
+            Assert.assertNotNull(wine.getManufacturer());
+            Assert.assertNotNull(wine.getBrand());
+            Assert.assertNotNull(wine.getCountry());
+            Assert.assertNull(wine.getRegion());
+            Assert.assertNotNull(wine.getDescription());
 
 
         } catch (Exception e) {
