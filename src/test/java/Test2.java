@@ -3,16 +3,14 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import org.junit.Test;
 import org.junit.Assert;
 
-import java.io.IOException;
-
+@RunWith(ParserService.class)
+@SpringBootTest
 public class Test2 {
     @Test
     public void testParser() {
-
         try {
             ParserService parserService = new ParserService();
             Wine wine = parserService.parseProduct(1009581);
-
 
             Assert.assertNotNull(wine.getName());           //test the fields are not null/null (depends on the field)
             Assert.assertNotNull(wine.getLink());
@@ -22,13 +20,8 @@ public class Test2 {
             Assert.assertNotNull(wine.getCountry());
             Assert.assertNull(wine.getRegion());
             Assert.assertNotNull(wine.getDescription());
-
-
         } catch (Exception e) {
-
             System.out.println(e.getMessage());
-
         }
-
     }
 }
