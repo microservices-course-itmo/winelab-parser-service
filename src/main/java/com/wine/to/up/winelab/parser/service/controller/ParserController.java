@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/parser")
@@ -41,11 +42,22 @@ public class ParserController {
     @GetMapping("/catalogs")
     public void parseCatalogs() {
         log.info("Parsing started!");
+        long begin = System.currentTimeMillis();
         try {
             Map<Integer, Wine> wines = parserService.parseCatalogs();
             for (Wine wine : wines.values()) {
                 log.info(ApiWine.dtoToApi(wine).toString());
             }
+            long end = System.currentTimeMillis();
+            long timeElapsedTotal = end - begin;
+            log.info("Time elapsed total: {} ",String.format("%d min %d sec",
+                    TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal),
+                    TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
+            ));
+
+            long quantity = (wines.size())/(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal));
+log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {
             log.error(ex.getMessage());

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -241,7 +242,7 @@ public class ParserService {
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
         final String nameSelector = "div.product_card--header div"; // last in the list
         final String startPage = "/catalog/" + category;
-        long begin = System.currentTimeMillis();
+
         Map<Integer, Wine> ids = new HashMap<>();
         String url = protocol + siteURL + startPage;
         Document document = Jsoup.connect(url).cookies(cookies).get();
@@ -250,7 +251,7 @@ public class ParserService {
         Set<String> countrySet = loadAttributes(document, countrySelector);
         Set<String> grapeSet = loadAttributes(document, grapeSelector);
         Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
-
+//AtomicInteger count = new AtomicInteger();
         while (!isLastPage) {
             document.select(cardSelector)
                     .parallelStream()
@@ -272,7 +273,7 @@ public class ParserService {
                         }
                     });
 
-            Element nextPage = document.select(nextPageSelector).first();
+Element nextPage = document.select(nextPageSelector).first();
             if (nextPage == null) {
                 isLastPage = true;
             } else {
@@ -281,9 +282,7 @@ public class ParserService {
             }
         }
 
-        long end = System.currentTimeMillis();
-        long timeElapsedTotal = end - begin;
-        log.info("Time elapsed total:", timeElapsedTotal);
+
     }
 
     /* Utility */
