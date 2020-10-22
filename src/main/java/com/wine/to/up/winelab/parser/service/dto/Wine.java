@@ -4,7 +4,6 @@ import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.utils.enums.Color;
 import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 import lombok.*;
-import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

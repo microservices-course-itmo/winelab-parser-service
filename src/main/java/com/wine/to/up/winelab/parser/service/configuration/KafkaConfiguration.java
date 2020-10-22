@@ -2,6 +2,7 @@ package com.wine.to.up.winelab.parser.service.configuration;
 
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
 import com.wine.to.up.parser.common.api.ParserCommonApiProperties;
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.messaging.serialization.EventSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-import com.wine.to.up.parser.common.api.schema.ParserApi;
 
 import java.util.Properties;
 

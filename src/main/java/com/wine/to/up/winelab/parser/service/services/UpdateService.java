@@ -1,6 +1,5 @@
 package com.wine.to.up.winelab.parser.service.services;
 
-import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
