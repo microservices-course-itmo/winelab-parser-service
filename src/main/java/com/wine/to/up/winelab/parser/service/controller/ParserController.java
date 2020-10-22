@@ -39,7 +39,7 @@ public class ParserController {
             List<Integer> ids = parserService.parseHome();
             log.info(ids.toString());
         } catch (IOException ex) {
-            log.error(ex.getMessage());
+            log.error("Error while parsing home page", ex);
         }
     }
 
