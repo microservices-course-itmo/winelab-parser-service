@@ -2,103 +2,90 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-<artifactId>winelab-parser-service</artifactId>
+    <artifactId>winelab-parser-service</artifactId>
         <!--    "current-version" is used for building image and should not include a "SNAPSHOT" word. -->
-<version>${current-version}-SNAPSHOT</version>
-<packaging>jar</packaging>
+    <version>${current-version}-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-<parent>
-<groupId>com.wine.to.up</groupId>
-<artifactId>wine-app-parent</artifactId>
-<version>0.1.0-SNAPSHOT</version>
-<relativePath></relativePath>
-</parent>
-
-<properties>
-<current-version>0.2.0</current-version>
-<service.commonlib.version>0.2.1-SNAPSHOT</service.commonlib.version>
-<parser.common.api.version>0.2.2-SNAPSHOT</parser.common.api.version>
-<demo.service.api.version>0.3.0-SNAPSHOT</demo.service.api.version>
-<jsoup.version>1.13.1</jsoup.version>
-</properties>
-
-<dependencies>
-    <dependency>
+    <parent>
         <groupId>com.wine.to.up</groupId>
-        <artifactId>service-common-lib</artifactId>
-        <version>${service.commonlib.version}</version>
-    </dependency>
+        <artifactId>wine-app-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath></relativePath>
+    </parent>
 
-    <!-- Required: Spring-->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-test</artifactId>
-        <scope>test</scope>
-    </dependency>
+    <properties>
+        <current-version>0.3.0</current-version>
+        <service.commonlib.version>0.2.1-SNAPSHOT</service.commonlib.version>
+        <parser.common.api.version>0.2.2-SNAPSHOT</parser.common.api.version>
+        <demo.service.api.version>0.3.0-SNAPSHOT</demo.service.api.version>
+        <jsoup.version>1.13.1</jsoup.version>
+        <junit.version>4.12</junit.version>
+        <hamcrest.core.version>2.2</hamcrest.core.version>
+    </properties>
 
-    <!-- Db -->
-    <dependency>
-        <groupId>org.flywaydb</groupId>
-        <artifactId>flyway-core</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-    </dependency>
-
-    <!-- Recommended-->
-    <dependency>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.modelmapper</groupId>
-        <artifactId>modelmapper</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>javax.validation</groupId>
-        <artifactId>validation-api</artifactId>
-    </dependency>
-    <!--Our custom artifacts-->
-    <dependency>
-        <groupId>com.wine.to.up</groupId>
-        <artifactId>demo-service-api</artifactId>
-        <version>${demo.service.api.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.wine.to.up</groupId>
-        <artifactId>parser-common-api</artifactId>
-        <version>${parser.common.api.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jsoup</groupId>
-        <artifactId>jsoup</artifactId>
-        <version>${jsoup.version}</version>
-    </dependency>
+    <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <groupId>com.wine.to.up</groupId>
+            <artifactId>service-common-lib</artifactId>
+            <version>${service.commonlib.version}</version>
+        </dependency>
+
+        <!-- Required: Spring-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-            <version>1.3</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Db -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <!-- Recommended-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!--Our custom artifacts-->
+        <dependency>
+            <groupId>com.wine.to.up</groupId>
+            <artifactId>demo-service-api</artifactId>
+            <version>${demo.service.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.wine.to.up</groupId>
+            <artifactId>parser-common-api</artifactId>
+            <version>${parser.common.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
         </dependency>
     </dependencies>
 </project>

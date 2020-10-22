@@ -220,7 +220,6 @@ public class ParserService {
             for (Element card : productCards) {
                 String name = card.select(nameSelector).last().html();
                 if (isWine(name)) {
-                    System.out.println(name);
                     ids.add(Integer.parseInt(card.attr(idSelector)));
                 }
             }
