@@ -269,7 +269,7 @@ public class ParserService {
         Set<String> countrySet = loadAttributes(document, countrySelector);
         Set<String> grapeSet = loadAttributes(document, grapeSelector);
         Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
-//AtomicInteger count = new AtomicInteger();
+        //AtomicInteger count = new AtomicInteger();
         while (!isLastPage) {
             document.select(cardSelector)
                     .parallelStream()
@@ -291,7 +291,7 @@ public class ParserService {
                         }
                     });
 
-Element nextPage = document.select(nextPageSelector).first();
+            Element nextPage = document.select(nextPageSelector).first();
             if (nextPage == null) {
                 isLastPage = true;
             } else {

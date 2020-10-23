@@ -15,6 +15,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The controller for parser REST endpoints
+ *
+ * @author Somov Artyom
+ * */
 @RestController
 @RequestMapping("/parser")
 @Slf4j
@@ -29,6 +34,11 @@ public class ParserController {
         this.parserService = parserService;
     }
 
+    /**
+     * Endpoint for parsing one specific wine by id given
+     *
+     * @param productID a product id on winelab.ru of wine to be parsed
+     */
     @GetMapping("/wine/{id}")
     public void parseWine(@PathVariable(value = "id") int productID) {
         try {
@@ -39,6 +49,9 @@ public class ParserController {
         }
     }
 
+    /**
+     * Endpoint for parsing all the wine-related catalogs
+     */
     @GetMapping("/catalogs")
     public void parseCatalogs() {
         log.info("Parsing started!");
@@ -57,7 +70,7 @@ public class ParserController {
             ));
 
             long quantity = (wines.size())/(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal));
-log.info("Wines parsed quantity every minute {} ", quantity);
+            log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {
             log.error(ex.getMessage());
