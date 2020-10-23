@@ -16,6 +16,11 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Class containing methods for parsing product pages and catalog pages
+ *
+ * @author : Somov Artyom
+ */
 @Service
 @Slf4j
 public class ParserService {
@@ -46,6 +51,13 @@ public class ParserService {
     public ParserService() {
     }
 
+    /**
+     * Parsing wine from winelab web site by the id given
+     *
+     * @param productID a product id on winelab.ru of wine to be parsed
+     * @return parsed wine object
+     * @throws IOException in case method couldn't reach web page
+     */
     public Wine parseProduct(int productID) throws IOException {
         Set<String> countrySet = new HashSet<>();
         Set<String> grapeSet = new HashSet<>();
@@ -227,6 +239,12 @@ public class ParserService {
         return wine;
     }
 
+    /**
+     * Parsing all wine-related catalogs from winelab web site
+     *
+     * @return map of parsed wines in format (product id, parsed wine object)
+     * @throws IOException in case method couldn't reach web page
+     */
     public Map<Integer, Wine> parseCatalogs() throws IOException {
         Map<Integer, Wine> wines = new HashMap<>();
         for (String catalog : catalogs) {
