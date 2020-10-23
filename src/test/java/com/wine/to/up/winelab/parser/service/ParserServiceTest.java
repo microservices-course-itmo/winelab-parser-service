@@ -33,17 +33,16 @@ public class ParserServiceTest {
     public void testParsedValuesEqualExpected() {
         try {
             Wine wine = parserService.parseProduct(1009581);
-            Assertions.assertEquals(wine.getName(), "Вино Berton Foundstone Shiraz красное сухое 0,75 л");             //test the fields are being parsed correctly
-            Assertions.assertEquals(wine.getOldPrice(), BigDecimal.valueOf(750));
-            Assertions.assertEquals(wine.getLink(), "https://www.winelab.ru/product/1009581");
-            Assertions.assertEquals(wine.getNewPrice(), BigDecimal.valueOf(529.0));
-            Assertions.assertEquals(wine.getImage(), "https://www.winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ");
-            Assertions.assertEquals(wine.getManufacturer(), "Berton Vineyards");
-            Assertions.assertEquals(wine.getBrand(), "Berton Vinyard Foundstone");
-            Assertions.assertEquals(wine.getCountry(), "Австралия");
-            Assertions.assertNull(wine.getRegion());
-            Assertions.assertEquals(wine.getVolume(), BigDecimal.valueOf(0.75));
-            Assertions.assertEquals(wine.getDescription(), "Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием.");
+            Assertions.assertEquals("Вино Berton Foundstone Shiraz красное сухое 0,75 л", wine.getName());             //test the fields are being parsed correctly
+            Assertions.assertEquals(BigDecimal.valueOf(750), wine.getOldPrice());
+            Assertions.assertEquals( "https://www.winelab.ru/product/1009581", wine.getLink());
+            Assertions.assertEquals(BigDecimal.valueOf(529.0), wine.getNewPrice());
+            Assertions.assertEquals("https://www.winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ", wine.getImage());
+            Assertions.assertEquals("Berton Vineyards", wine.getManufacturer());
+            Assertions.assertEquals( "Berton Vinyard Foundstone", wine.getBrand());
+            Assertions.assertEquals("Австралия", wine.getCountry());
+            Assertions.assertEquals(BigDecimal.valueOf(0.75), wine.getVolume());
+            Assertions.assertEquals( "Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием.", wine.getDescription());
         } catch (Exception e) {
             e.printStackTrace();
         }
