@@ -43,7 +43,7 @@ public class ParserController {
     public void parseWine(@PathVariable(value = "id") int productID) {
         try {
             Wine wine = parserService.parseProduct(productID);
-            log.info(ApiWine.dtoToApi(wine).toString());
+            log.info(wine.toString());
         } catch (IOException ex) {
             log.error(ex.getMessage());
         }
