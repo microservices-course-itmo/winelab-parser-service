@@ -269,7 +269,7 @@ public class ParserService {
         Set<String> countrySet = loadAttributes(document, countrySelector);
         Set<String> grapeSet = loadAttributes(document, grapeSelector);
         Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
-        //AtomicInteger count = new AtomicInteger();
+        AtomicInteger count = new AtomicInteger();
         while (!isLastPage) {
             document.select(cardSelector)
                     .parallelStream()
@@ -286,6 +286,7 @@ public class ParserService {
                                     log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
                             } catch (Exception ex) {
+                                count.set(count.get() + 1);
                                 log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
@@ -300,7 +301,7 @@ public class ParserService {
             }
         }
 
-
+log.info("Total failed-to-parse wines: {}", count);
     }
 
     /* Utility */
