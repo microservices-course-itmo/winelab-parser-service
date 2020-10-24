@@ -1,6 +1,8 @@
 package com.wine.to.up.winelab.parser.service.dto;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.utils.enums.Color;
+import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 
 import java.util.Arrays;
 
@@ -28,12 +30,13 @@ public class ApiWine {
             builder.setNewPrice(wine.getNewPrice().floatValue());
         }
         builder.setLink(wine.getLink());
-        // TODO set color and sugar in a more proper way
-        if (wine.getColor() != null) {
-            builder.setColor(ParserApi.Wine.Color.forNumber(wine.getColor().ordinal()));
+        Color color = wine.getColor();
+        if (color != null) {
+            builder.setColor(ParserApi.Wine.Color.valueOf(color.name()));
         }
-        if (wine.getSugar() != null) {
-            builder.setSugar(ParserApi.Wine.Sugar.forNumber(wine.getSugar().ordinal()));
+        Sugar sugar = wine.getSugar();
+        if (sugar != null) {
+            builder.setSugar(ParserApi.Wine.Sugar.valueOf(sugar.name()));
         }
         builder.setImage(wine.getImage());
         if (wine.getManufacturer() != null) {

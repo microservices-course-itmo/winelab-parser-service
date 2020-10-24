@@ -59,7 +59,7 @@ public class ParserController {
         try {
             Map<Integer, Wine> wines = parserService.parseCatalogs();
             for (Wine wine : wines.values()) {
-                log.info(ApiWine.dtoToApi(wine).toString());
+                log.info(wine.toString());
             }
             long end = System.currentTimeMillis();
             long timeElapsedTotal = end - begin;
