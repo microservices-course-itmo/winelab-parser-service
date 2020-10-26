@@ -1,13 +1,12 @@
 package com.wine.to.up.winelab.parser.service.messaging.serialization;
 
-import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.util.SerializationUtils;
 
 /**
- * Deserializer for {@link KafkaMessageSentEvent}
+ * Deserializer for {@link ParserApi.Wine}
  */
 @Slf4j
 public class EventDeserializer implements Deserializer<ParserApi.Wine> {
