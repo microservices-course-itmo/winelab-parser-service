@@ -51,13 +51,18 @@ public class ParserServiceTest {
     }
 
     @Test
-    public void testIdIsValid() {
-        int id = 0;
+    public void testIdIsValid()  {
         try {
-            Assertions.assertThrows(org.jsoup.HttpStatusException.class, (Executable) parserService.parseProduct(id));
-        } catch (Exception e) {
+            int id = 0;
+
+            Assertions.assertThrows(org.jsoup.HttpStatusException.class, () ->
+                parserService.parseProduct(id)
+            );
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     @Test
