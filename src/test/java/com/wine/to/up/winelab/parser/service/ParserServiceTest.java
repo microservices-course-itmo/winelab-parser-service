@@ -5,8 +5,10 @@ import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
 
@@ -43,6 +45,16 @@ public class ParserServiceTest {
             Assertions.assertEquals("Австралия", wine.getCountry());
             Assertions.assertEquals(BigDecimal.valueOf(0.75), wine.getVolume());
             Assertions.assertEquals( "Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием.", wine.getDescription());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testIdIsValid() {
+        int id = 0;
+        try {
+            Assertions.assertThrows(org.jsoup.HttpStatusException.class, (Executable) parserService.parseProduct(id));
         } catch (Exception e) {
             e.printStackTrace();
         }
