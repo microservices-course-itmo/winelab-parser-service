@@ -3,8 +3,6 @@ package com.wine.to.up.winelab.parser.service.configuration;
 import com.wine.to.up.commonlib.messaging.BaseKafkaHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
-import com.wine.to.up.demo.service.api.DemoServiceApiProperties;
-import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
 import com.wine.to.up.winelab.parser.service.api.WineLabServiceApiProperties;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
@@ -87,7 +85,7 @@ public class KafkaConfiguration {
     @Bean
     BaseKafkaHandler<Wine> wineTopicMessagesHandler(Properties consumerProperties,
                                                     WineLabServiceApiProperties wineLabServiceApiProperties,
-                                                                     WineTopicKafkaMessageHandler handler) {
+                                                    WineTopicKafkaMessageHandler handler) {
         // set appropriate deserializer for value
         consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventDeserializer.class.getName());
 
@@ -101,9 +99,9 @@ public class KafkaConfiguration {
      * Uses custom serializer as the messages within single topic should be the same type. And
      * the messages in different topics can have different types and require different serializers
      *
-     * @param producerProperties       is the general producer properties. {@link #producerProperties()}
+     * @param producerProperties          is the general producer properties. {@link #producerProperties()}
      * @param wineLabServiceApiProperties class containing the values of the given service's API properties (in this particular case topic name)
-     * @param metricsCollector         class encapsulating the logic of the metrics collecting and publishing
+     * @param metricsCollector            class encapsulating the logic of the metrics collecting and publishing
      */
     @Bean
     KafkaMessageSender<Wine> wineTopicKafkaMessageSender(Properties producerProperties,

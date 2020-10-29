@@ -1,8 +1,7 @@
 package com.wine.to.up.winelab.parser.service.services;
 
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.utils.enums.Color;
-import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -157,6 +156,7 @@ public class ParserService {
 
         final String searchURL = protocol + siteURL + "/search?q=" +
                 productID + "%3Arelevance" +
+                (wine.getBrand() != null ? "%3Abrands%3A" + wine.getBrand() : "") +
                 (wine.getAlcoholContent() != null ? "%3AAlcoholContent%3A%255B" + wine.getAlcoholContent() + "%2BTO%2B" + wine.getAlcoholContent() + "%255D" : "") +
                 (wine.getNewPrice() != null ? "%3Aprice%3A%5B" + wine.getNewPrice() + "%20TO%20" + wine.getNewPrice() + "%5D" : "");
         Document searchPage;
@@ -169,7 +169,7 @@ public class ParserService {
             Element colorSpan = searchPage.selectFirst(String.format(filterSelector, colorSelector));
             if (colorSpan != null) {
                 String colorText = colorSpan.html();
-                Color color = Color.fromString(colorText);
+                ParserApi.Wine.Color color = getColor(colorText);
                 if (color != null) {
                     wine.setColor(color);
                 }
@@ -178,7 +178,7 @@ public class ParserService {
             Element sugarSpan = searchPage.selectFirst(String.format(filterSelector, sugarSelector));
             if (sugarSpan != null) {
                 String sugarText = sugarSpan.html();
-                Sugar sugar = Sugar.fromString(sugarText);
+                ParserApi.Wine.Sugar sugar = getSugar(sugarText);
                 if (sugar != null) {
                     wine.setSugar(sugar);
                 }
@@ -222,8 +222,8 @@ public class ParserService {
         } catch (Exception ex) {
             for (Element tagEl : tags) {
                 String tag = tagEl.ownText();
-                Color color = Color.fromString(tag);
-                Sugar sugar = Sugar.fromString(tag);
+                ParserApi.Wine.Color color = getColor(tag);
+                ParserApi.Wine.Sugar sugar = getSugar(tag);
                 if (color != null) {
                     wine.setColor(color);
                 } else if (sugar != null) {
@@ -301,7 +301,7 @@ public class ParserService {
             }
         }
 
-log.info("Total failed-to-parse wines: {}", count);
+        log.info("Total failed-to-parse wines: {}", count);
     }
 
     /* Utility */
@@ -342,5 +342,25 @@ log.info("Total failed-to-parse wines: {}", count);
                 "Соединенные Штаты Америки", "США",
                 "Соед. Королев.", "Великобритания");
         return countries.getOrDefault(country, country);
+    }
+
+    private ParserApi.Wine.Color getColor(String color) {
+        final Map<String, ParserApi.Wine.Color> colors = Map.of(
+                "красное", ParserApi.Wine.Color.RED,
+                "розовое", ParserApi.Wine.Color.ROSE,
+                "белое", ParserApi.Wine.Color.WHITE
+        );
+        return colors.getOrDefault(color.toLowerCase(), null);
+    }
+
+    private ParserApi.Wine.Sugar getSugar(String sugar) {
+        final Map<String, ParserApi.Wine.Sugar> sugars = Map.of(
+                "брют", ParserApi.Wine.Sugar.DRY,
+                "сухое", ParserApi.Wine.Sugar.DRY,
+                "полусухое", ParserApi.Wine.Sugar.MEDIUM_DRY,
+                "полусладкое", ParserApi.Wine.Sugar.MEDIUM,
+                "сладкое", ParserApi.Wine.Sugar.SWEET
+        );
+        return sugars.getOrDefault(sugar, null);
     }
 }

@@ -1,12 +1,8 @@
 package com.wine.to.up.winelab.parser.service.messaging;
 
 import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
-import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
-import com.wine.to.up.winelab.parser.service.domain.entity.Message;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicInteger;
