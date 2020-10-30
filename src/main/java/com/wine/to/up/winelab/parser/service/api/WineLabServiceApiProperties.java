@@ -6,11 +6,8 @@
 package com.wine.to.up.winelab.parser.service.api;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.PropertySources;
 import org.springframework.stereotype.Component;
 
-@PropertySources({@PropertySource({"classpath:application-demo-service-api.properties"}), @PropertySource({"classpath:application-demo-service-api-${spring.profiles.active:local}.properties"})})
 @ConfigurationProperties(
         prefix = "wine.service.api"
 )

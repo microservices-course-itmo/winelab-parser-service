@@ -14,12 +14,10 @@ import java.math.BigDecimal;
 public class Wine implements Serializable {
     // wine name as it is on product page
     private String name;
-    // site address
-    private String site;
-    // price without discount in rubles
-    private BigDecimal oldPrice;
     // product page address
     private String link;
+    // price without discount in rubles
+    private BigDecimal oldPrice;
     // new price accounting the discount
     private BigDecimal newPrice;
     // product image
