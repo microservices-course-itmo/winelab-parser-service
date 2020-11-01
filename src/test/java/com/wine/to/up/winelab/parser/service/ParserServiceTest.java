@@ -1,23 +1,33 @@
 package com.wine.to.up.winelab.parser.service;
 
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.job.ParseJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.slf4j.event.LoggingEvent;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.awt.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Objects;
 
 public class ParserServiceTest {
     ParserService parserService;
+    ParserService mockedParserService;
+    private static final String wineToStrReference = "Wine(name=Вино Berton Foundstone Shiraz красное сухое 0,75 л, link=https://www.winelab.ru/product/1009581, oldPrice=750, newPrice=675.0, image=https://www.winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ, manufacturer=Berton Vineyards, brand=Berton Vinyard Foundstone, country=Австралия, region=null, volume=0.75, alcoholContent=13, sparkling=false, color=RED, sugar=null, grapeSort=Шираз, description=Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием., gastronomy=Гастрономическое сочетание: стейк из говядины прожарки medium, свинина на косточке, твердые сыры, хамон, колбасы. Температура подачи: 14-16° С)";
+    private static final String gastronomyReference = "Гастрономическое сочетание: стейк из говядины прожарки medium, свинина на косточке, твердые сыры, хамон, колбасы. Температура подачи: 14-16° С";
 
     @BeforeEach
     public void init() {
         parserService = new ParserService();
+        mockedParserService = Mockito.mock(ParserService.class);
         ReflectionTestUtils.setField(parserService, "siteURL", "www.winelab.ru");
         ReflectionTestUtils.setField(parserService, "protocol", "https://");
         ReflectionTestUtils.setField(parserService, "cookies", Map.of("currentPos", "S734", "currentRegion", "RU-SPE"));
@@ -37,29 +47,33 @@ public class ParserServiceTest {
             Wine wine = parserService.parseProduct(1009581);
             Assertions.assertEquals("Вино Berton Foundstone Shiraz красное сухое 0,75 л", wine.getName());             //test the fields are being parsed correctly
             Assertions.assertEquals(BigDecimal.valueOf(750), wine.getOldPrice());
-            Assertions.assertEquals( "https://www.winelab.ru/product/1009581", wine.getLink());
+            Assertions.assertEquals("https://www.winelab.ru/product/1009581", wine.getLink());
             Assertions.assertEquals(BigDecimal.valueOf(675.0), wine.getNewPrice());
             Assertions.assertEquals("https://www.winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ", wine.getImage());
             Assertions.assertEquals("Berton Vineyards", wine.getManufacturer());
-            Assertions.assertEquals( "Berton Vinyard Foundstone", wine.getBrand());
+            Assertions.assertEquals("Berton Vinyard Foundstone", wine.getBrand());
             Assertions.assertEquals("Австралия", wine.getCountry());
             Assertions.assertEquals(BigDecimal.valueOf(0.75), wine.getVolume());
-            Assertions.assertEquals( "Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием.", wine.getDescription());
+            Assertions.assertEquals(ParserApi.Wine.Color.RED, wine.getColor());
+            //Assertions.assertEquals(ParserApi.Wine.Sugar.DRY, wine.getSugar());
+            Assertions.assertEquals("Шираз", wine.getGrapeSort());
+            Assertions.assertEquals("Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием.", wine.getDescription());
+            Assertions.assertEquals(wineToStrReference, wine.toString());
+            Assertions.assertEquals(gastronomyReference, wine.getGastronomy());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void testIdIsValid()  {
+    public void testIdIsValid() {
         try {
             int id = 0;
 
             Assertions.assertThrows(org.jsoup.HttpStatusException.class, () ->
                     parserService.parseProduct(id)
             );
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -79,6 +93,30 @@ public class ParserServiceTest {
             Assertions.assertNull(wine.getRegion());
             Assertions.assertNotNull(wine.getDescription());
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testParseCatalogsNotEmpty() {
+        try {
+            Map<Integer, Wine> wines = parserService.parseCatalogs();
+            Assertions.assertFalse(wines.isEmpty());
+            Assertions.assertFalse(wines.values().stream().anyMatch(Objects::isNull));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testParseJobDoesntThrow() {
+        //TODO: Move to separate file
+        try {
+            //TODO: assert doesnt throw by log analysis (check out UpdateServiceTest)
+            Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
+            ParseJob job = new ParseJob(mockedParserService);
+            Assertions.assertDoesNotThrow(job::parseCatalogs);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
