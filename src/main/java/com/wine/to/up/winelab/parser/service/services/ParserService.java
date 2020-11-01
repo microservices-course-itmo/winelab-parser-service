@@ -361,6 +361,6 @@ public class ParserService {
                 "полусладкое", ParserApi.Wine.Sugar.MEDIUM,
                 "сладкое", ParserApi.Wine.Sugar.SWEET
         );
-        return sugars.getOrDefault(sugar, null);
+        return sugars.getOrDefault(sugar.toLowerCase(), null);
     }
 }
