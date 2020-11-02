@@ -1,16 +1,13 @@
-package com.wine.to.up.winelab.parser.service;
+package com.wine.to.up.winelab.parser.service.services;
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.wine.to.up.winelab.parser.service.services.KafkaService;
-import com.wine.to.up.winelab.parser.service.services.ParserService;
-import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -22,6 +19,7 @@ public class UpdateServiceTest {
     KafkaService mockedKafka;
     UpdateService updateService;
     ListAppender<ILoggingEvent> listAppender;
+
     @BeforeEach
     public void init() {
         mockedParser = Mockito.mock(ParserService.class);

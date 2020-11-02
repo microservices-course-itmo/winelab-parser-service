@@ -1,13 +1,11 @@
-package com.wine.to.up.winelab.parser.service;
+package com.wine.to.up.winelab.parser.service.job;
 
-import org.junit.jupiter.api.Test;
-import com.wine.to.up.winelab.parser.service.job.ParseJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
-
 
 import java.io.IOException;
 import java.util.Map;

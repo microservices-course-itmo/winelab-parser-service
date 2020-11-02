@@ -2,26 +2,18 @@ package com.wine.to.up.winelab.parser.service.dto;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.controller.ParserController;
-import com.wine.to.up.winelab.parser.service.services.KafkaService;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(ParserController.class)
@@ -59,12 +51,13 @@ class WineTest {
             Assertions.assertNotNull(apiWine.getManufacturer());
             Assertions.assertNotNull(apiWine.getBrand());
             Assertions.assertNotNull(apiWine.getCountry());
+            Assertions.assertNotNull(apiWine.getColor());
+            Assertions.assertNotNull(apiWine.getSugar());
             Assertions.assertNotNull(apiWine.getRegion(0));
             Assertions.assertNotNull(apiWine.getGrapeSort(0));
             Assertions.assertNotNull(apiWine.getGastronomy());
             Assertions.assertNotNull(apiWine.getDescription());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -76,9 +69,9 @@ class WineTest {
             ParserApi.Wine apiWine = wine.toParserWine();
 
             Assertions.assertEquals("Вино Saga Domaine Barons de Rothschild Bordeaux красное сухое 0,75 л", apiWine.getName());             //test the fields are being mapped correctly
-            Assertions.assertEquals((float)1243.0, apiWine.getOldPrice());
+            Assertions.assertEquals((float) 1243.0, apiWine.getOldPrice());
             Assertions.assertEquals("https://www.winelab.ru/product/1014769", apiWine.getLink());
-            Assertions.assertEquals((float)599.0, apiWine.getNewPrice());
+            Assertions.assertEquals((float) 599.0, apiWine.getNewPrice());
             Assertions.assertEquals("https://www.winelab.ru/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA", apiWine.getImage());
             Assertions.assertEquals("Domaine Barons de Rothschild", apiWine.getManufacturer());
             Assertions.assertEquals("SAGA", apiWine.getBrand());

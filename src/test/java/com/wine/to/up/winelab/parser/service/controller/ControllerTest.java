@@ -1,6 +1,5 @@
-package com.wine.to.up.winelab.parser.service;
+package com.wine.to.up.winelab.parser.service.controller;
 
-import com.wine.to.up.winelab.parser.service.controller.ParserController;
 import com.wine.to.up.winelab.parser.service.services.KafkaService;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;

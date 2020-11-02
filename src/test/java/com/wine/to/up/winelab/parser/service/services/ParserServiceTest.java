@@ -1,8 +1,7 @@
-package com.wine.to.up.winelab.parser.service;
+package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
