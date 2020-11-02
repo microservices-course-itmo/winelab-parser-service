@@ -51,7 +51,7 @@ public class ParserServiceTest {
             Assertions.assertEquals("Австралия", wine.getCountry());
             Assertions.assertEquals(BigDecimal.valueOf(0.75), wine.getVolume());
             Assertions.assertEquals(ParserApi.Wine.Color.RED, wine.getColor());
-            //Assertions.assertEquals(ParserApi.Wine.Sugar.DRY, wine.getSugar());
+            Assertions.assertEquals(ParserApi.Wine.Sugar.DRY, wine.getSugar());
             Assertions.assertEquals("Шираз", wine.getGrapeSort());
             Assertions.assertEquals("Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием.", wine.getDescription());
             Assertions.assertEquals(wineToStrReference, wine.toString());

@@ -6,7 +6,6 @@ import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -36,6 +35,7 @@ public class ControllerTest {
             Assertions.assertEquals(ArithmeticException.class, e.getCause().getClass());
         }
     }
+
     @Test
     public void parseWine_throwNullPointer() throws Exception {
         try {
