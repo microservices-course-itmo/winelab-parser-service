@@ -36,4 +36,12 @@ public class ControllerTest {
             Assertions.assertEquals(ArithmeticException.class, e.getCause().getClass());
         }
     }
+    @Test
+    public void parseWine_throwNullPointer() throws Exception {
+        try {
+            mockMvc.perform(get("/parser/wine/1009581"));
+        } catch (NestedServletException e) {
+            Assertions.assertEquals(NullPointerException.class, e.getCause().getClass());
+        }
+    }
 }

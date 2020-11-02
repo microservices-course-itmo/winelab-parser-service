@@ -2,17 +2,13 @@ package com.wine.to.up.winelab.parser.service;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.job.ParseJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.slf4j.event.LoggingEvent;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.awt.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
@@ -108,16 +104,4 @@ public class ParserServiceTest {
         }
     }
 
-    @Test
-    public void testParseJobDoesntThrow() {
-        //TODO: Move to separate file
-        try {
-            //TODO: assert doesnt throw by log analysis (check out UpdateServiceTest)
-            Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
-            ParseJob job = new ParseJob(mockedParserService);
-            Assertions.assertDoesNotThrow(job::parseCatalogs);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
