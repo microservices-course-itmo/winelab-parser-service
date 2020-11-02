@@ -36,7 +36,7 @@ public class UpdateJobTest {
 
     @Test
     public void testUpdateJobDoesntThrow() {
-        //TODO: move to separate file
+
         UpdateWineLabJob job = new UpdateWineLabJob();
         ReflectionTestUtils.setField(job, "updateService", updateService);
         Assertions.assertDoesNotThrow(job::runJob);

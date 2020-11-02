@@ -36,7 +36,7 @@ public class ParseJobTest {
 
     @Test
     public void testParseJobDoesntThrow() {
-        //TODO: Move to separate file
+
         try {
             //TODO: assert doesnt throw by log analysis (check out UpdateServiceTest)
             Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
