@@ -1,17 +1,19 @@
 package com.wine.to.up.winelab.parser.service.messaging.serialization;
 
-import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
+import com.wine.to.up.parser.common.api.schema.ParserApi;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serializer;
 
 /**
- * Serializer for {@link KafkaMessageSentEvent}
+ * Serializer for {@link ParserApi.Wine}
  */
-public class EventSerializer implements Serializer<KafkaMessageSentEvent> {
+@Slf4j
+public class EventSerializer implements Serializer<ParserApi.Wine> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public byte[] serialize(String topic, KafkaMessageSentEvent data) {
+    public byte[] serialize(String topic, ParserApi.Wine data) {
         return data.toByteArray();
     }
 }

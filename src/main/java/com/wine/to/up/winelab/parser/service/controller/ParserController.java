@@ -1,7 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,24 +16,20 @@ import java.util.List;
 @RequestMapping("/parser")
 @Slf4j
 public class ParserController {
-
-    private final MessageRepository messageRepository;
     private final ParserService parserService;
 
     @Autowired
-    public ParserController(MessageRepository messageRepository, ParserService parserService) {
-        this.messageRepository = messageRepository;
+    public ParserController(ParserService parserService) {
         this.parserService = parserService;
     }
 
     @GetMapping
-    public void parseProductPage(@RequestParam int productID) {
+    public void parseWine(@RequestParam int productID) {
         try {
             Wine wine = parserService.parseProduct(productID);
             log.info(wine.toString());
-        }
-        catch (IOException ex) {
-            log.error(ex.getMessage());
+        } catch (IOException ex) {
+            log.error("Error while parsing wine with id {}", productID, ex);
         }
     }
 
@@ -43,20 +38,20 @@ public class ParserController {
         try {
             List<Integer> ids = parserService.parseHome();
             log.info(ids.toString());
-        }
-        catch (IOException ex) {
-            log.error(ex.getMessage());
+        } catch (IOException ex) {
+            log.error("Error while parsing home page", ex);
         }
     }
 
     @GetMapping("/catalog")
-    public void parseCatalog() {
+    public void parseCatalogs() {
         try {
-            List<Integer> ids = parserService.parseCatalog();
-            log.info(ids.toString());
-        }
-        catch (IOException ex) {
-            log.error(ex.getMessage());
+            List<Integer> ids = parserService.parseCatalogs();
+            for (Integer id : ids) {
+                parseWine(id);
+            }
+        } catch (IOException ex) {
+            log.error("Error while parsing catalogs", ex);
         }
     }
 }
