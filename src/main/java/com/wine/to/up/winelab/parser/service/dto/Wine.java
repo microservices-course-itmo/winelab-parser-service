@@ -16,8 +16,6 @@ import java.math.BigDecimal;
 public class Wine implements Serializable {
     // wine name as it is on product page
     private String name;
-    // site address
-    private String site;
     // price without discount in rubles
     private BigDecimal oldPrice;
     // product page address
@@ -32,10 +30,9 @@ public class Wine implements Serializable {
     private String region;
     // volume in liters
     private BigDecimal volume;
-    private BigDecimal alcoholPercentage;
+    private BigDecimal alcoholContent;
     // is wine sparkling
     private boolean sparkling;
-    //should enums really be private? We can't access any methods that way.
     private Color color;
     private Sugar sugar;
     private String grapeSort;
