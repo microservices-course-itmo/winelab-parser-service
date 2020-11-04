@@ -23,11 +23,9 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/parser")
 @Slf4j
 public class ParserController {
-
+    @Autowired
     private final MessageRepository messageRepository;
     private final ParserService parserService;
-
-    @Autowired
     public ParserController(MessageRepository messageRepository, ParserService parserService) {
         this.messageRepository = messageRepository;
         this.parserService = parserService;
