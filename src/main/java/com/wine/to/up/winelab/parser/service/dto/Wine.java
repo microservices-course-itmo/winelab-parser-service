@@ -1,8 +1,6 @@
 package com.wine.to.up.winelab.parser.service.dto;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
-import com.wine.to.up.winelab.parser.service.utils.enums.Color;
-import com.wine.to.up.winelab.parser.service.utils.enums.Sugar;
 import lombok.*;
 
 import java.io.Serializable;
@@ -16,10 +14,10 @@ import java.math.BigDecimal;
 public class Wine implements Serializable {
     // wine name as it is on product page
     private String name;
-    // price without discount in rubles
-    private BigDecimal oldPrice;
     // product page address
     private String link;
+    // price without discount in rubles
+    private BigDecimal oldPrice;
     // new price accounting the discount
     private BigDecimal newPrice;
     // product image
@@ -33,39 +31,12 @@ public class Wine implements Serializable {
     private BigDecimal alcoholContent;
     // is wine sparkling
     private boolean sparkling;
-    private Color color;
-    private Sugar sugar;
+    //should enums really be private? We can't access any methods that way.
+    private ParserApi.Wine.Color color;
+    private ParserApi.Wine.Sugar sugar;
     private String grapeSort;
     private String description;
     private String gastronomy;
-
-    public ParserApi.Wine.Sugar getParserSugar() {
-        Sugar instanceSugar = getSugar();
-        ParserApi.Wine.Sugar sugar =
-                instanceSugar == Sugar.DRY
-                        ? ParserApi.Wine.Sugar.DRY
-                        : instanceSugar == Sugar.MEDIUM
-                        ? ParserApi.Wine.Sugar.MEDIUM
-                        : instanceSugar == Sugar.MEDIUM_DRY
-                        ? ParserApi.Wine.Sugar.MEDIUM_DRY
-                        : instanceSugar == Sugar.SWEET
-                        ? ParserApi.Wine.Sugar.SWEET
-                        : ParserApi.Wine.Sugar.DRY;// TODO!
-        return sugar;
-    }
-
-    public ParserApi.Wine.Color getParserColor() {
-        Color instanceColor = getColor();
-        ParserApi.Wine.Color color =
-                instanceColor == Color.RED
-                        ? ParserApi.Wine.Color.RED
-                        : instanceColor == Color.ROSE
-                        ? ParserApi.Wine.Color.ROSE
-                        : instanceColor == Color.WHITE
-                        ? ParserApi.Wine.Color.WHITE
-                        : ParserApi.Wine.Color.UNRECOGNIZED;
-        return color;
-    }
 
     public ParserApi.Wine toParserWine() {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();
@@ -78,10 +49,10 @@ public class Wine implements Serializable {
             builder.setName(getName());
         if (getCountry() != null)
             builder.setCountry(getCountry());
-        if (getParserColor() != null)
-            builder.setColor(getParserColor());
-        if (getParserSugar() != null)
-            builder.setSugar(getParserSugar());
+        if (getColor() != null)
+            builder.setColor(getColor());
+        if (getSugar() != null)
+            builder.setSugar(getSugar());
         if (getImage() != null)
             builder.setImage(getImage());
         if (getManufacturer() != null)
@@ -94,8 +65,8 @@ public class Wine implements Serializable {
             builder.setGastronomy(getGastronomy());
         if (getDescription() != null)
             builder.setDescription(getDescription());
-        if (getAlcoholPercentage() != null)
-            builder.setStrength(getAlcoholPercentage().floatValue());
+        if (getAlcoholContent() != null)
+            builder.setStrength(getAlcoholContent().floatValue());
         if (getLink() != null)
             builder.setLink(getLink());
         if (getRegion() != null)

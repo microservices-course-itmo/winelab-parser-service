@@ -1,23 +1,15 @@
 package com.wine.to.up.winelab.parser.service.dto;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
-import com.wine.to.up.winelab.parser.service.controller.ParserController;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
 
-@ExtendWith(SpringExtension.class)
-@WebMvcTest(ParserController.class)
-@OverrideAutoConfiguration(enabled = true)
 class WineTest {
     ParserService parserService;
     ParserService mockedParserService;

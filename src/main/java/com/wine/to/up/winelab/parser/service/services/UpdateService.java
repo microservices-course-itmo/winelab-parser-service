@@ -20,10 +20,10 @@ public class UpdateService {
         try {
             Map<Integer, Wine> wines = parserService.parseCatalogs();
             wines.forEach((id, wine) ->
-                kafkaService.sendWine(wine)
+                    kafkaService.sendWine(wine)
             );
-        } catch(IOException e) {
-            log.error("Update catalog error, {}",e.toString());
+        } catch (IOException e) {
+            log.error("Update catalog error, {}", e.toString());
         }
     }
 }
