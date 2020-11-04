@@ -1,6 +1,5 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
-import com.wine.to.up.winelab.parser.service.dto.ApiWine;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repository.MessageRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
