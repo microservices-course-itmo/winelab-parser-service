@@ -261,7 +261,7 @@ public class ParserService {
         final String nameSelector = "div.product_card--header div"; // last in the list
         final String startPage = "/catalog/" + category;
 
-        Map<Integer, Wine> ids = new HashMap<>();
+
         String url = protocol + siteURL + startPage;
         Document document = Jsoup.connect(url).cookies(cookies).get();
         boolean isLastPage = false;
@@ -277,7 +277,7 @@ public class ParserService {
                         String name = card.select(nameSelector).last().html();
                         if (isWine(name)) {
                             int id = Integer.parseInt(card.attr(idSelector));
-                            try { // TODO log time spent for parsing one position
+                            try {
                                 if (!wines.containsKey(id)) {
                                     long start = System.currentTimeMillis();
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
