@@ -21,10 +21,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class ControllerTest {
     @Autowired
     MockMvc mockMvc;
-    @MockBean
-    ParserService parserService;
-    @MockBean
-    KafkaService kafkaService;
 
     @Test
     public void parseCatalog_throwArithmetic() throws Exception {
