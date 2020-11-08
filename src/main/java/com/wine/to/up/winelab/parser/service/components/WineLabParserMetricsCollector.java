@@ -11,4 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class WineLabParserMetricsCollector extends CommonMetricsCollector {
+    public WineLabParserMetricsCollector() {
+        super("winelab");
+    }
 }
