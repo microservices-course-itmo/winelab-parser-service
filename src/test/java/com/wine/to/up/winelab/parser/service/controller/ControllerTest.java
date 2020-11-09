@@ -1,7 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
-import com.wine.to.up.winelab.parser.service.services.KafkaService;
-import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +20,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class ControllerTest {
     @Autowired
     MockMvc mockMvc;
+
+    @MockBean
+    private WineLabParserMetricsCollector metricsCollector;
 
     @Test
     public void parseCatalog_throwArithmetic() throws Exception {
