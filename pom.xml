@@ -21,6 +21,7 @@
         <service.commonlib.version>0.2.2-SNAPSHOT</service.commonlib.version>
         <parser.common.api.version>0.2.2-SNAPSHOT</parser.common.api.version>
         <jsoup.version>1.13.1</jsoup.version>
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -84,4 +85,16 @@
             <version>${jsoup.version}</version>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12.4</version>
+                <configuration>
+                    <skipTests>${skipTests}</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
