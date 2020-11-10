@@ -40,39 +40,24 @@ public class Wine implements Serializable {
 
     public ParserApi.Wine toParserWine() {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();
-        builder.setSparkling(this.sparkling);
-        if (getBrand() != null)
-            builder.setBrand(getBrand());
-        if (getVolume() != null)
-            builder.setCapacity(getVolume().floatValue());
-        if (getName() != null)
-            builder.setName(getName());
-        if (getCountry() != null)
-            builder.setCountry(getCountry());
-        if (getColor() != null)
-            builder.setColor(getColor());
-        if (getSugar() != null)
-            builder.setSugar(getSugar());
-        if (getImage() != null)
-            builder.setImage(getImage());
-        if (getManufacturer() != null)
-            builder.setManufacturer(getManufacturer());
-        if (getNewPrice() != null)
-            builder.setNewPrice(getNewPrice().floatValue());
-        if (getOldPrice() != null)
-            builder.setOldPrice(getOldPrice().floatValue());
-        if (getGastronomy() != null)
-            builder.setGastronomy(getGastronomy());
-        if (getDescription() != null)
-            builder.setDescription(getDescription());
-        if (getAlcoholContent() != null)
-            builder.setStrength(getAlcoholContent().floatValue());
-        if (getLink() != null)
-            builder.setLink(getLink());
-        if (getRegion() != null)
-            builder.addRegion(getRegion());
-        if (getGrapeSort() != null)
-            builder.addGrapeSort(getGrapeSort());
+        builder
+                .setSparkling(this.sparkling)
+                .setBrand(this.brand)
+                .setCapacity(this.volume.floatValue())
+                .setName(this.name)
+                .setCountry(this.country)
+                .setColor(this.color)
+                .setSugar(this.sugar)
+                .setImage(this.image)
+                .setManufacturer(this.manufacturer)
+                .setNewPrice(this.newPrice.floatValue())
+                .setOldPrice(this.oldPrice.floatValue())
+                .setGastronomy(this.gastronomy)
+                .setDescription(this.description)
+                .setStrength(this.alcoholContent.floatValue())
+                .setLink(this.link)
+                .addRegion(this.region)
+                .addGrapeSort(this.grapeSort);
         return builder.build();
     }
 }
