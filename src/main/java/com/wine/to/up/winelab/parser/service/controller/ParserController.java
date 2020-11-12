@@ -4,12 +4,15 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -77,9 +80,10 @@ public class ParserController {
      *
      * @param catalog catalog to be parsed (either "wine" for casual wine or "sparkling" for sparkling wine)
      * @param page    page of the catalog to be parsed
+     * @return ResponseEntity
      */
     @GetMapping("/catalogs/{catalog}/{page}")
-    public void parseCatalogPage(
+    public ResponseEntity<Object> parseCatalogPage(
             @PathVariable(value = "catalog") String catalog,
             @PathVariable(value = "page") int page) {
         log.info("Parsing started!");
@@ -100,8 +104,14 @@ public class ParserController {
             long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
             log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
+            var response_data = new ArrayList<String>();
+            for (var wine : wines.values()) {
+                response_data.add(wine.toString());
+            }
+            return ResponseEntity.ok(response_data);
         } catch (IOException ex) {
             log.error(ex.getMessage());
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
