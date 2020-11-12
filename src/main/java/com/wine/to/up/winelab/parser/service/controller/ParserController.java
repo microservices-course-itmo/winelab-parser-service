@@ -64,7 +64,40 @@ public class ParserController {
                             TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
             ));
 
-            long quantity = (wines.size()) / (TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal));
+            long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
+            log.info("Wines parsed quantity every minute {} ", quantity);
+            log.info("Parsing done! Total {} wines parsed", wines.size());
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint for parsing single page of catalog
+     *
+     * @param catalog catalog to be parsed (either "wine" for casual wine or "sparkling" for sparkling wine)
+     * @param page    page of the catalog to be parsed
+     */
+    @GetMapping("/catalogs/{catalog}/{page}")
+    public void parseCatalogPage(
+            @PathVariable(value = "catalog") String catalog,
+            @PathVariable(value = "page") int page) {
+        log.info("Parsing started!");
+        long begin = System.currentTimeMillis();
+        try {
+            Map<Integer, Wine> wines = parserService.parseCatalogPage(catalog, page);
+            for (Wine wine : wines.values()) {
+                log.info(wine.toString());
+            }
+            long end = System.currentTimeMillis();
+            long timeElapsedTotal = end - begin;
+            log.info("Time elapsed total: {} ", String.format("%d min %d sec",
+                    TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal),
+                    TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
+            ));
+
+            long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
             log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {

@@ -30,8 +30,8 @@ public class ParserService {
     private String protocol;
     @Value("#{${parser.cookies}}")
     private Map<String, String> cookies;
-    @Value("${parser.catalogs}")
-    String[] catalogs;
+    @Value("#{${parser.catalogs}}")
+    private Map<String, String> catalogs;
 
     @Value("${parser.selector.filter}")
     private String filterSelector;
@@ -62,7 +62,7 @@ public class ParserService {
         Set<String> countrySet = new HashSet<>();
         Set<String> grapeSet = new HashSet<>();
         Set<String> manufacturerSet = new HashSet<>();
-        for (String catalog : catalogs) {
+        for (String catalog : catalogs.values()) {
             String url = protocol + siteURL + "/catalog/" + catalog;
             Document document = Jsoup.connect(url).cookies(cookies).get();
 
@@ -248,7 +248,7 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() throws IOException {
         Map<Integer, Wine> wines = new HashMap<>();
-        for (String catalog : catalogs) {
+        for (String catalog : catalogs.values()) {
             parseCatalog(catalog, wines);
         }
         return wines;
@@ -260,7 +260,6 @@ public class ParserService {
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
         final String nameSelector = "div.product_card--header div"; // last in the list
         final String startPage = "/catalog/" + category;
-
 
         String url = protocol + siteURL + startPage;
         Document document = Jsoup.connect(url).cookies(cookies).get();
@@ -291,7 +290,6 @@ public class ParserService {
                             }
                         }
                     });
-
             Element nextPage = document.select(nextPageSelector).first();
             if (nextPage == null) {
                 isLastPage = true;
@@ -302,6 +300,48 @@ public class ParserService {
         }
 
         log.info("Total failed-to-parse wines: {}", count);
+    }
+
+    public Map<Integer, Wine> parseCatalogPage(String catalog, int page) throws IOException {
+        final String cardSelector = "div.container a.product_card";
+        final String idSelector = "data-id";
+        final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
+        final String nameSelector = "div.product_card--header div"; // last in the list
+        final String url = protocol + siteURL + "/catalog/" + catalogs.get(catalog) + "?page=" + page + "&sort=relevance";
+
+        Document document = Jsoup.connect(url).cookies(cookies).get();
+
+        Set<String> countrySet = loadAttributes(document, countrySelector);
+        Set<String> grapeSet = loadAttributes(document, grapeSelector);
+        Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
+
+        Map<Integer, Wine> wines = new HashMap<>();
+
+        AtomicInteger count = new AtomicInteger();
+
+        document.select(cardSelector)
+                .parallelStream()
+                .forEach(card -> {
+                    String name = card.select(nameSelector).last().html();
+                    if (isWine(name)) {
+                        int id = Integer.parseInt(card.attr(idSelector));
+                        try {
+                            if (!wines.containsKey(id)) {
+                                long start = System.currentTimeMillis();
+                                wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
+                                long finish = System.currentTimeMillis();
+                                long timeElapsed = finish - start;
+                                log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
+                            }
+                        } catch (Exception ex) {
+                            count.set(count.get() + 1);
+                            log.error("Error while parsing wine with id {} {}", id, ex);
+                        }
+                    }
+                });
+
+        log.info("Total failed-to-parse wines: {}", count);
+        return wines;
     }
 
     /* Utility */
