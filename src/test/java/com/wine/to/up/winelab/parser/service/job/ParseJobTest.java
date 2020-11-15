@@ -10,7 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.util.Map;
 
-public class ParseJobTest {
+class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
 
@@ -33,7 +33,7 @@ public class ParseJobTest {
     }
 
     @Test
-    public void testParseJobDoesntThrow() {
+    void testParseJobDoesntThrow() {
 
         try {
             //TODO: assert doesnt throw by log analysis (check out UpdateServiceTest)

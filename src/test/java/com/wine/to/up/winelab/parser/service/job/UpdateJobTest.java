@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 
-public class UpdateJobTest {
+class UpdateJobTest {
     ParserService mockedParser;
     KafkaService mockedKafka;
     UpdateService updateService;
     ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
-    public void init() {
+    void init() {
         mockedParser = Mockito.mock(ParserService.class);
         mockedKafka = Mockito.mock(KafkaService.class);
         updateService = new UpdateService();
@@ -34,7 +34,7 @@ public class UpdateJobTest {
     }
 
     @Test
-    public void testUpdateJobDoesntThrow() {
+    void testUpdateJobDoesntThrow() {
 
         UpdateWineLabJob job = new UpdateWineLabJob();
         ReflectionTestUtils.setField(job, "updateService", updateService);

@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(ParserController.class)
 @OverrideAutoConfiguration(enabled = true)
-public class ControllerTest {
+class ControllerTest {
     @Autowired
     MockMvc mockMvc;
 
@@ -25,7 +25,7 @@ public class ControllerTest {
     private WineLabParserMetricsCollector metricsCollector;
 
     @Test
-    public void parseCatalog_throwArithmetic() throws Exception {
+    void parseCatalog_throwArithmetic() throws Exception {
         try {
             mockMvc.perform(get("/parser/catalogs"));
         } catch (NestedServletException e) {
@@ -34,7 +34,7 @@ public class ControllerTest {
     }
 
     @Test
-    public void parseWine_throwNullPointer() throws Exception {
+    void parseWine_throwNullPointer() throws Exception {
         try {
             mockMvc.perform(get("/parser/wine/1009581"));
         } catch (NestedServletException e) {
