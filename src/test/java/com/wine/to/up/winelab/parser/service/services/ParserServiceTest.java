@@ -92,7 +92,7 @@ public class ParserServiceTest {
         }
     }
 
-    @Test
+/*    @Test
     public void testParseCatalogsNotEmpty() {
         try {
             Map<Integer, Wine> wines = parserService.parseCatalogs();
@@ -101,6 +101,6 @@ public class ParserServiceTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
 }
