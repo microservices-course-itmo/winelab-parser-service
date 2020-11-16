@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.job;
 
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,11 +14,15 @@ import java.util.Map;
 public class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
+    private final WineLabParserMetricsCollector metricsCollector;
 
+    public ParseJobTest(WineLabParserMetricsCollector metricsCollector) {
+        this.metricsCollector = metricsCollector;
+    }
 
     @BeforeEach
     public void init() {
-        parserService = new ParserService();
+        parserService = new ParserService(metricsCollector);
         mockedParserService = Mockito.mock(ParserService.class);
         ReflectionTestUtils.setField(parserService, "siteURL", "www.winelab.ru");
         ReflectionTestUtils.setField(parserService, "protocol", "https://");

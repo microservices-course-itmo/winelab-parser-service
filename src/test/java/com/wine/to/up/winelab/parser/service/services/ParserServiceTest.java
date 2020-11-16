@@ -1,5 +1,5 @@
 package com.wine.to.up.winelab.parser.service.services;
-
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import org.junit.jupiter.api.Assertions;
@@ -18,10 +18,15 @@ public class ParserServiceTest {
     ParserService mockedParserService;
     private static final String wineToStrReference = "Wine(name=Вино Berton Foundstone Shiraz красное сухое 0,75 л, link=https://www.winelab.ru/product/1009581, oldPrice=750, newPrice=675.0, image=https://www.winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ, manufacturer=Berton Vineyards, brand=Berton Vinyard Foundstone, country=Австралия, region=null, volume=0.75, alcoholContent=13, sparkling=false, color=RED, sugar=DRY, grapeSort=Шираз, description=Регион: Юго-Восточная Австралия. Сорт винограда: 100% Шираз. Выдержка: чаны из нержавеющей стали. Цвет: насыщенный пурпурный с фиолетовым оттенком. Аромат: насыщенный выразительный с яркими нотами специй, спелой ежевики, сливы и легкими сладковатыми оттенками дуба, кофе, ванили и карамели. Вкус: полнотелый насыщенный с умеренно терпкими приятными шелковистыми танинами и оттенками ежевики, черешни, сливы и длительным послевкусием., gastronomy=Гастрономическое сочетание: стейк из говядины прожарки medium, свинина на косточке, твердые сыры, хамон, колбасы. Температура подачи: 14-16° С)";
     private static final String gastronomyReference = "Гастрономическое сочетание: стейк из говядины прожарки medium, свинина на косточке, твердые сыры, хамон, колбасы. Температура подачи: 14-16° С";
+    private final WineLabParserMetricsCollector metricsCollector;
+
+    public ParserServiceTest(WineLabParserMetricsCollector metricsCollector) {
+        this.metricsCollector = metricsCollector;
+    }
 
     @BeforeEach
     public void init() {
-        parserService = new ParserService();
+        parserService = new ParserService(metricsCollector);
         mockedParserService = Mockito.mock(ParserService.class);
         ReflectionTestUtils.setField(parserService, "siteURL", "www.winelab.ru");
         ReflectionTestUtils.setField(parserService, "protocol", "https://");
