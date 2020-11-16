@@ -1,9 +1,11 @@
 package com.wine.to.up.winelab.parser.service.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class GeneralPurposesBeansConfig {
@@ -22,5 +24,11 @@ public class GeneralPurposesBeansConfig {
     @Bean
     public ObjectMapper getObjectMapper() {
         return new ObjectMapper();
+    }
+
+    @Primary
+    @Bean
+    public ParserService getParser() {
+        return new ParserService();
     }
 }
