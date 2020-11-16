@@ -78,7 +78,6 @@ public class ParserServiceTest {
     public void testParsedValuesNotNull() {
         try {
             Wine wine = parserService.parseProduct(1009581);
-
             Assertions.assertNotNull(wine.getName());           //test the fields are not null/null (depends on the field)
             Assertions.assertNotNull(wine.getLink());
             Assertions.assertNotNull(wine.getImage());
