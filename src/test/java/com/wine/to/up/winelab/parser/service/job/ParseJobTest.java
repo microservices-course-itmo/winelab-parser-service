@@ -10,7 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.util.Map;
 
-public class ParseJobTest {
+class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
 
