@@ -32,7 +32,7 @@ class WineTest {
     }
 
     @Test
-    public void testMappedValuesNotNull() {
+    void testMappedValuesNotNull() {
         try {
             Wine wine = parserService.parseProduct(1014769);
             ParserApi.Wine apiWine = wine.toParserWine();
@@ -55,7 +55,7 @@ class WineTest {
     }
 
     @Test
-    public void testParsedValuesEqualExpected() {
+    void testParsedValuesEqualExpected() {
         try {
             Wine wine = parserService.parseProduct(1014769);
             ParserApi.Wine apiWine = wine.toParserWine();

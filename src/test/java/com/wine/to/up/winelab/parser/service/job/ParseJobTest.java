@@ -32,8 +32,8 @@ public class ParseJobTest {
         ReflectionTestUtils.setField(parserService, "categorySelector", "category");
     }
 
-/*    @Test
-    public void testParseJobDoesntThrow() {
+    @Test
+    void testParseJobDoesntThrow() {
 
         try {
             //TODO: assert doesnt throw by log analysis (check out UpdateServiceTest)
@@ -43,6 +43,6 @@ public class ParseJobTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
 }

@@ -104,11 +104,11 @@ public class ParserController {
             long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
             log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
-            var response_data = new ArrayList<String>();
+            var responseData = new ArrayList<String>();
             for (var wine : wines.values()) {
-                response_data.add(wine.toString());
+                responseData.add(wine.toString());
             }
-            return ResponseEntity.ok(response_data);
+            return ResponseEntity.ok(responseData);
         } catch (IOException ex) {
             log.error(ex.getMessage());
             return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
