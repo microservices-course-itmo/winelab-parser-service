@@ -29,11 +29,12 @@ public class ParserController {
     @Autowired
     private final ParserService parserService;
     private final WineLabParserMetricsCollector metricsCollector;
-    public ParserController(ParserService parserService,WineLabParserMetricsCollector metricsCollector) {
+
+    public ParserController(ParserService parserService, WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
-    
+
     /**
      * Endpoint for parsing one specific wine by id given
      *
@@ -48,6 +49,9 @@ public class ParserController {
             log.error(ex.getMessage());
         }
     }
+
+    int fault = 0;
+    int allwine = 0;
 
     /**
      * Endpoint for parsing all the wine-related catalogs
@@ -73,10 +77,15 @@ public class ParserController {
             log.info("Wines parsed quantity every minute {} ", quantity);
             metricsCollector.avgParsingTimeSingle(quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
+            allwine = wines.size();
             metricsCollector.winesParcedSuccessfully(wines.size());
         } catch (IOException ex) {
+            fault = fault + 1;
             log.error(ex.getMessage());
         }
-        //metricsCollector.successfullyPrcntg((wines.size()/)*100);
+        log.info("fault {}", fault);
+        metricsCollector.winesParcedUnsuccessfully(fault);
+        int percentofSuccess = (((allwine - fault) / allwine)*100);
+        metricsCollector.successfullyPrcntg(percentofSuccess);
     }
 }

@@ -74,22 +74,21 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
         winesParcedSuccessfullyCounter.inc(count);
     }
-    /*
-    public void winesParcedUnsuccessfully(AtomicInteger count){
-        Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
+
+    public void winesParcedUnsuccessfully(int count){
+        Metrics.counter(WINES_PARSED_UNSUCCESSFULLY).increment(count);
         winesParcedUnsuccessfullyCounter.inc(count);
     }
-     */
     public void avgParsingTimeSingle(double time) {
-        Metrics.timer(PARSING_TIME_FULL).record((long)time, TimeUnit.MILLISECONDS);
+        Metrics.timer(AVG_PARSING_TIME_SINGLE).record((long)time, TimeUnit.MILLISECONDS);
         avgParsingTimeSingleSummary.observe(time);
     }
     public void attributeLackPrcntg(double count){
-        Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
+        Metrics.counter(ATTRIBUTE_LACK_PRCNTG).increment(count);
         attributeLackPrcntgCounter.inc(count);
     }
     public void successfullyPrcntg(double count){
-        Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
+        Metrics.counter(SUCCESSFUL_PRCNTG).increment(count);
         successfullyPrcntgCounter.inc(count);
     }
 }

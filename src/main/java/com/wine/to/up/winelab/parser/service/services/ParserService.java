@@ -3,6 +3,7 @@ package com.wine.to.up.winelab.parser.service.services;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+//import jdk.internal.access.JavaIOFileDescriptorAccess;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -303,8 +304,8 @@ public class ParserService {
             }
         }
 
-        log.info("Total failed-to-parse wines: {}", count);
-        metricsCollector.winesParcedUnsuccessfully(count);
+        //log.info("Total failed-to-parse wines: {}", count);
+        //metricsCollector.winesParcedUnsuccessfully(count);
     }
 
     /* Utility */
