@@ -1,7 +1,9 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,8 +30,16 @@ public class ParserController {
     @Autowired
     private final ParserService parserService;
 
-    public ParserController(ParserService parserService) {
+    @Autowired
+    private final UpdateService updateService;
+
+    @Autowired
+    private final UpdateWineLabJob job;
+
+    public ParserController(ParserService parserService, UpdateService updateService, UpdateWineLabJob job) {
         this.parserService = parserService;
+        this.updateService = updateService;
+        this.job = job;
     }
 
     /**
@@ -113,5 +123,13 @@ public class ParserController {
             log.error(ex.getMessage());
             return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
+     */
+    @GetMapping("/update")
+    public void updateCatalogs() {
+        job.runJob();
     }
 }

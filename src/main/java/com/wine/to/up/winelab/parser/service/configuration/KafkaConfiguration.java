@@ -3,6 +3,7 @@ package com.wine.to.up.winelab.parser.service.configuration;
 import com.wine.to.up.commonlib.messaging.BaseKafkaHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.api.WineLabServiceApiProperties;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
@@ -104,9 +105,9 @@ public class KafkaConfiguration {
      * @param metricsCollector            class encapsulating the logic of the metrics collecting and publishing
      */
     @Bean
-    KafkaMessageSender<Wine> wineTopicKafkaMessageSender(Properties producerProperties,
-                                                         WineLabServiceApiProperties wineLabServiceApiProperties,
-                                                         WineLabParserMetricsCollector metricsCollector) {
+    KafkaMessageSender<ParserApi.WineParsedEvent> wineTopicKafkaMessageSender(Properties producerProperties,
+                                                                              WineLabServiceApiProperties wineLabServiceApiProperties,
+                                                                              WineLabParserMetricsCollector metricsCollector) {
         // set appropriate serializer for value
         producerProperties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EventSerializer.class.getName());
 

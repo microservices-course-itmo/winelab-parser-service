@@ -35,7 +35,5 @@ public class ParseJob {
         } catch (Exception ex) {
             log.error("Catalogs parsing failed: {}", ex.getMessage());
         }
-
-
     }
 }
