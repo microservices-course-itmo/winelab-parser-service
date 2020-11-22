@@ -40,7 +40,7 @@ public class ParserController {
             Wine wine = parserService.parseProduct(productID);
             log.info(wine.toString());
         } catch (IOException ex) {
-            log.error(ex.getMessage());
+            log.error("Error while parsing wine with id {} : {}", productID, ex.toString());
         }
     }
 
@@ -68,7 +68,7 @@ public class ParserController {
             log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {
-            log.error(ex.getMessage());
+            log.error("Error while parsing catalogs, {}", ex.toString());
         }
     }
 }
