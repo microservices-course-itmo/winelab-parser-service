@@ -33,7 +33,7 @@ public class ParseJob {
             log.info("Catalogs parsing finished successful at {}. {} objects parsed",
                     dateFormat.format(new Date()), wines.size());
         } catch (Exception ex) {
-            log.error("Catalogs parsing failed: {}", ex.toString());
+            log.error("Catalogs parsing failed: ", ex);
         }
     }
 }

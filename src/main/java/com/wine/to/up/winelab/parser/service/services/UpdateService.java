@@ -22,8 +22,8 @@ public class UpdateService {
             wines.forEach((id, wine) ->
                     kafkaService.sendWine(wine)
             );
-        } catch (IOException e) {
-            log.error("Update catalog error, {}", e.toString());
+        } catch (IOException ex) {
+            log.error("Update catalog error: ", ex);
         }
     }
 }
