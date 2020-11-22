@@ -4,7 +4,7 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,11 +25,10 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/parser")
 @Slf4j
+@Configuration
 public class ParserController {
-    @Autowired
     private final ParserService parserService;
 
-    @Autowired
     private final UpdateWineLabJob job;
 
     public ParserController(ParserService parserService, UpdateWineLabJob job) {
