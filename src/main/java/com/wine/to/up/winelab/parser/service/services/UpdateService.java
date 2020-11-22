@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,19 +22,15 @@ public class UpdateService {
     private String siteURL;
 
     public void updateCatalog() {
-        try {
-            Map<Integer, Wine> wines = parserService.parseCatalogs();
-            ParserApi.WineParsedEvent.Builder eventBuilder = ParserApi.WineParsedEvent.newBuilder()
-                    .addAllWines(wines.values()
-                            .stream()
-                            .map(Wine::toParserWine)
-                            .collect(Collectors.toList()));
-            if (siteURL != null) {
-                eventBuilder.setShopLink(siteURL);
-            }
-            kafkaService.sendWineParsedEvent(eventBuilder.build());
-        } catch (IOException ex) {
-            log.error("Update catalog error : ", ex);
+        Map<Integer, Wine> wines = parserService.parseCatalogs();
+        ParserApi.WineParsedEvent.Builder eventBuilder = ParserApi.WineParsedEvent.newBuilder()
+                .addAllWines(wines.values()
+                        .stream()
+                        .map(Wine::toParserWine)
+                        .collect(Collectors.toList()));
+        if (siteURL != null) {
+            eventBuilder.setShopLink(siteURL);
         }
+        kafkaService.sendWineParsedEvent(eventBuilder.build());
     }
 }
