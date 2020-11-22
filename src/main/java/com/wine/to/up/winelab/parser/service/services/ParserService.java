@@ -8,6 +8,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@Configuration
+@PropertySource("classpath:parser.properties")
 public class ParserService {
     @Value("${parser.siteURL}")
     private String siteURL;
