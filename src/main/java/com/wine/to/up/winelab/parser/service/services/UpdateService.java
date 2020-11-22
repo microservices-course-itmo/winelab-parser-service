@@ -34,8 +34,8 @@ public class UpdateService {
                 eventBuilder.setShopLink(siteURL);
             }
             kafkaService.sendWineParsedEvent(eventBuilder.build());
-        } catch (IOException e) {
-            log.error("Update catalog error, {}", e.toString());
+        } catch (IOException ex) {
+            log.error("Update catalog error : ", ex);
         }
     }
 }
