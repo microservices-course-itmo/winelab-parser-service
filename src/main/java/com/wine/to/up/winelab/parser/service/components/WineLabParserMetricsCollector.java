@@ -2,12 +2,14 @@ package com.wine.to.up.winelab.parser.service.components;
 
 import com.wine.to.up.commonlib.metrics.CommonMetricsCollector;
 import io.micrometer.core.instrument.Metrics;
-import org.springframework.stereotype.Component;
+import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Summary;
-import io.prometheus.client.Counter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This Class expose methods for recording specific metrics
@@ -15,8 +17,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Micrometer's metrics exposed at /actuator/prometheus
  * Prometheus' metrics exposed at /metrics-prometheus
  */
+@Slf4j
 @Component
 public class WineLabParserMetricsCollector extends CommonMetricsCollector {
+    private static HashMap<String, Boolean> isParsingMap = new HashMap<>();
+
     private static final String SERVICE_NAME = "winelab_parce_service";
     private static final String IS_PARSING = "is_parsing";
     private static final String PARSING_TIME_FULL = "parsing_time_full";
@@ -62,11 +67,18 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
             .help("Number of successfully processed wines")
             .register();
 //isParsing дщдулфть
-   public void isParsing(double v) {
-        Metrics.gauge(IS_PARSING,v);
-        isParsingGauge.set(v);
+   public void isParsing(String key, Boolean v) {
+       isParsingMap.put(key, v);
+       if(isParsingMap.containsValue(true)) {
+           Metrics.gauge(IS_PARSING,1);
+           isParsingGauge.set(1);
+       } else {
+           Metrics.gauge(IS_PARSING,0);
+           isParsingGauge.set(0);
+       }
     }
     public void parsingTimeFull(double time) {
+        log.debug("parsingTimeFull");
         Metrics.timer(PARSING_TIME_FULL).record((long)time, TimeUnit.MILLISECONDS);
         parsingTimeFullSummary.observe(time);
     }
