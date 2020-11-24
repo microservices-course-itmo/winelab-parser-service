@@ -28,8 +28,16 @@ public class ParserController {
     @Autowired
     private final ParserService parserService;
 
-    public ParserController(ParserService parserService) {
+    @Autowired
+    private final UpdateService updateService;
+
+    @Autowired
+    private final UpdateWineLabJob job;
+
+    public ParserController(ParserService parserService, UpdateService updateService, UpdateWineLabJob job) {
         this.parserService = parserService;
+        this.updateService = updateService;
+        this.job = job;
     }
 
     /**
@@ -43,7 +51,7 @@ public class ParserController {
             Wine wine = parserService.parseProduct(productID);
             log.info(wine.toString());
         } catch (IOException ex) {
-            log.error("Error while parsing wine with id {} ", productID, ex);
+            log.error("Error while parsing wine {} : ", productID, ex);
         }
     }
 
@@ -71,7 +79,7 @@ public class ParserController {
             log.info("Wines parsed quantity every minute {} ", quantity);
             log.info("Parsing done! Total {} wines parsed", wines.size());
         } catch (IOException ex) {
-            log.error("Error while parsing catalogs", ex);
+            log.error("Error while parsing catalogs :", ex);
         }
     }
 
@@ -110,8 +118,16 @@ public class ParserController {
             }
             return ResponseEntity.ok(responseData);
         } catch (IOException ex) {
-            log.error(ex.getMessage());
+            log.error("Error while parsing {} page {} : ", catalog, page, ex);
             return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
+     */
+    @GetMapping("/update")
+    public void updateCatalogs() {
+        job.runJob();
     }
 }

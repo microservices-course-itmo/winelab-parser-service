@@ -21,7 +21,7 @@ class WineTest {
         ReflectionTestUtils.setField(parserService, "siteURL", "www.winelab.ru");
         ReflectionTestUtils.setField(parserService, "protocol", "https://");
         ReflectionTestUtils.setField(parserService, "cookies", Map.of("currentPos", "S734", "currentRegion", "RU-SPE"));
-        ReflectionTestUtils.setField(parserService, "catalogs", Map.of("wine","vino","sparkling", "shampanskie-i-igristye-vina"));
+        ReflectionTestUtils.setField(parserService, "catalogs", Map.of("wine", "vino", "sparkling", "shampanskie-i-igristye-vina"));
         ReflectionTestUtils.setField(parserService, "filterSelector", "div.filter_block__container.js-facet.js-facet-values div[data-code=%s] div.filter_button span");
         ReflectionTestUtils.setField(parserService, "colorSelector", "Color");
         ReflectionTestUtils.setField(parserService, "sugarSelector", "SugarAmount");
