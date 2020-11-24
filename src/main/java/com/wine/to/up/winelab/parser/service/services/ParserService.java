@@ -3,7 +3,6 @@ package com.wine.to.up.winelab.parser.service.services;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
-//import jdk.internal.access.JavaIOFileDescriptorAccess;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -36,6 +35,10 @@ public class ParserService {
     private Map<String, String> catalogs;
     static final String DATA_ID_SELECTOR = "data-id";
     static final String CATALOG_URL = "/catalog/";
+    static final String IS_PARSING_PRODUCT = "product";
+    static final String IS_PARSING_CATALOGS = "catalogs";
+    static final String IS_PARSING_CATALOG = "catalog";
+    static final String IS_PARSING_CATALOG_PAGE = "catalogPage";
 
     @Value("${parser.selector.filter}")
     private String filterSelector;
@@ -79,7 +82,7 @@ public class ParserService {
     }
 
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
-        metricsCollector.isParsing("product", true);
+        metricsCollector.isParsing(IS_PARSING_PRODUCT, true);
         final String productURL = protocol + siteURL + "/product/" + productID;
 
 
@@ -161,7 +164,7 @@ public class ParserService {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
 
         }
-        metricsCollector.isParsing("product", false);
+        metricsCollector.isParsing(IS_PARSING_PRODUCT, false);
         metricsCollector.attributeLackPrcntg(wine.lackPercentage());
         return wine;
     }
@@ -173,17 +176,17 @@ public class ParserService {
      * @throws IOException in case method couldn't reach web page
      */
     public Map<Integer, Wine> parseCatalogs() throws IOException {
-        metricsCollector.isParsing("catalogs", true);
+        metricsCollector.isParsing(IS_PARSING_CATALOGS, true);
         Map<Integer, Wine> wines = new HashMap<>();
         for (String catalog : catalogs.values()) {
             parseCatalog(catalog, wines);
         }
-        metricsCollector.isParsing("catalogs", false);
+        metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
         return wines;
     }
 
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
-        metricsCollector.isParsing("catalog", true);
+        metricsCollector.isParsing(IS_PARSING_CATALOG, true);
         final String cardSelector = "div.container a.product_card";
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
         final String nameSelector = "div.product_card--header div"; // last in the list
@@ -228,11 +231,11 @@ public class ParserService {
         }
 
         log.info("Total failed-to-parse wines: {}", count);
-        metricsCollector.isParsing("product", false);
+        metricsCollector.isParsing(IS_PARSING_CATALOG, false);
     }
 
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) throws IOException {
-        metricsCollector.isParsing("catalogPage", true);
+        metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, true);
         final String cardSelector = "div.container a.product_card";
         final String nameSelector = "div.product_card--header div"; // last in the list
         final String url = protocol + siteURL + CATALOG_URL + catalogs.get(catalog) + "?page=" + page + "&sort=relevance";
@@ -269,7 +272,7 @@ public class ParserService {
                 });
 
         log.info("Total failed-to-parse wines: {}", count);
-        metricsCollector.isParsing("catalogPage", false);
+        metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
         return wines;
     }
 

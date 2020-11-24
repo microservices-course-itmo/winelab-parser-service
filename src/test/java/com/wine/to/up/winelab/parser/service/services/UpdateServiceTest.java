@@ -11,6 +11,7 @@ import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 class UpdateServiceTest {
@@ -20,7 +21,7 @@ class UpdateServiceTest {
     ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
-    void init() {
+    public void init() {
         mockedParser = Mockito.mock(ParserService.class);
         mockedKafka = Mockito.mock(KafkaService.class);
         updateService = new UpdateService();
@@ -33,10 +34,18 @@ class UpdateServiceTest {
     }
 
     @Test
-    void testUpdateDoesntThrow()    {
+    void testUpdateDoesntThrow() throws IOException {
         Assertions.assertDoesNotThrow(updateService::updateCatalog);
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
+    }
+
+    @Test
+    void testUpdateThrows() throws IOException {
+        Mockito.when(mockedParser.parseCatalogs()).thenThrow(new IOException());
+        Assertions.assertDoesNotThrow(updateService::updateCatalog);
+        List<ILoggingEvent> logsList = listAppender.list;
+        Assertions.assertTrue(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
 
 }
