@@ -63,10 +63,8 @@ class ParserServiceTest {
     void testIdIsValid() {
         try {
             int id = 0;
-
-            Assertions.assertThrows(org.jsoup.HttpStatusException.class, () ->
-                    parserService.parseProduct(id)
-            );
+            Wine wine = parserService.parseProduct(0);
+            Assertions.assertNull(wine);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
