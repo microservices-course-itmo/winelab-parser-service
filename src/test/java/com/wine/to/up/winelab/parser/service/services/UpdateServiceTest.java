@@ -14,7 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.util.List;
 
-public class UpdateServiceTest {
+class UpdateServiceTest {
     ParserService mockedParser;
     KafkaService mockedKafka;
     UpdateService updateService;
@@ -34,14 +34,14 @@ public class UpdateServiceTest {
     }
 
     @Test
-    public void testUpdateDoesntThrow() throws IOException {
+    void testUpdateDoesntThrow() throws IOException {
         Assertions.assertDoesNotThrow(updateService::updateCatalog);
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
 
     @Test
-    public void testUpdateThrows() throws IOException {
+    void testUpdateThrows() throws IOException {
         Mockito.when(mockedParser.parseCatalogs()).thenThrow(new IOException());
         Assertions.assertDoesNotThrow(updateService::updateCatalog);
         List<ILoggingEvent> logsList = listAppender.list;
