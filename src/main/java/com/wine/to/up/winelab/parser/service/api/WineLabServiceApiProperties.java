@@ -17,7 +17,6 @@ public class WineLabServiceApiProperties {
     private String host;
 
     public WineLabServiceApiProperties() {
-        //comm
     }
 
     public void setMessageSentEventsTopicName(String messageSentEventsTopicName) {
