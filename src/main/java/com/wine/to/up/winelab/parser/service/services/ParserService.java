@@ -63,21 +63,25 @@ public class ParserService {
      *
      * @param productID a product id on winelab.ru of wine to be parsed
      * @return parsed wine object
-     * @throws IOException in case method couldn't reach web page
      */
-    public Wine parseProduct(int productID) throws IOException {
-        Set<String> countrySet = new HashSet<>();
-        Set<String> grapeSet = new HashSet<>();
-        Set<String> manufacturerSet = new HashSet<>();
-        for (String catalog : catalogs.values()) {
-            String url = protocol + siteURL + CATALOG_URL + catalog;
-            Document document = Jsoup.connect(url).cookies(cookies).get();
+    public Wine parseProduct(int productID) {
+        try {
+            Set<String> countrySet = new HashSet<>();
+            Set<String> grapeSet = new HashSet<>();
+            Set<String> manufacturerSet = new HashSet<>();
+            for (String catalog : catalogs.values()) {
+                String url = protocol + siteURL + "/catalog/" + catalog;
+                Document document = Jsoup.connect(url).cookies(cookies).get();
 
-            countrySet.addAll(loadAttributes(document, countrySelector));
-            grapeSet.addAll(loadAttributes(document, grapeSelector));
-            manufacturerSet.addAll(loadAttributes(document, manufacturerSelector));
+                countrySet.addAll(loadAttributes(document, countrySelector));
+                grapeSet.addAll(loadAttributes(document, grapeSelector));
+                manufacturerSet.addAll(loadAttributes(document, manufacturerSelector));
+            }
+            return parseProduct(productID, countrySet, grapeSet, manufacturerSet);
+        } catch (IOException ex) {
+            log.error("Error while parsing wine {} : ", productID, ex);
+            return null;
         }
-        return parseProduct(productID, countrySet, grapeSet, manufacturerSet);
     }
 
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
@@ -169,14 +173,19 @@ public class ParserService {
      * Parsing all wine-related catalogs from winelab web site
      *
      * @return map of parsed wines in format (product id, parsed wine object)
-     * @throws IOException in case method couldn't reach web page
      */
-    public Map<Integer, Wine> parseCatalogs() throws IOException {
-        Map<Integer, Wine> wines = new HashMap<>();
-        for (String catalog : catalogs.values()) {
-            parseCatalog(catalog, wines);
+    public Map<Integer, Wine> parseCatalogs() {
+        try {
+            Map<Integer, Wine> wines = new HashMap<>();
+            for (String catalog : catalogs.values()) {
+                parseCatalog(catalog, wines);
+            }
+            return wines;
+        } catch (IOException ex) {
+            log.error("Error while parsing catalogs : ", ex);
+            return new HashMap<>();
         }
-        return wines;
+
     }
 
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
@@ -184,7 +193,7 @@ public class ParserService {
         final String idSelector = "data-id";
         final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
         final String nameSelector = "div.product_card--header div"; // last in the list
-        final String startPage = CATALOG_URL + category;
+        final String startPage = "/catalog/" + category;
 
         String url = protocol + siteURL + startPage;
         Document document = Jsoup.connect(url).cookies(cookies).get();
@@ -200,7 +209,56 @@ public class ParserService {
                     .forEach(card -> {
                         String name = card.select(nameSelector).last().html();
                         if (isWine(name)) {
-                            int id = Integer.parseInt(card.attr(DATA_ID_SELECTOR));
+                            int id = Integer.parseInt(card.attr(idSelector));
+                            try {
+                                if (!wines.containsKey(id)) {
+                                    long start = System.currentTimeMillis();
+                                    wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
+                                    long finish = System.currentTimeMillis();
+                                    long timeElapsed = finish - start;
+                                    log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
+                                }
+                            } catch (Exception ex) {
+                                count.set(count.get() + 1);
+                                log.error("Error while parsing wine with id {} {}", id, ex);
+                            }
+                        }
+                    });
+            Element nextPage = document.select(nextPageSelector).first();
+            if (nextPage == null) {
+                isLastPage = true;
+            } else {
+                url = protocol + siteURL + nextPage.attr("href");
+                document = Jsoup.connect(url).cookies(cookies).get();
+            }
+        }
+
+        log.info("Total failed-to-parse wines: {}", count);
+    }
+
+    public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
+        final String cardSelector = "div.container a.product_card";
+        final String idSelector = "data-id";
+        final String nextPageSelector = "ul.pagination li.page-item a[rel=next]";
+        final String nameSelector = "div.product_card--header div"; // last in the list
+        final String url = protocol + siteURL + "/catalog/" + catalogs.get(catalog) + "?page=" + page + "&sort=relevance";
+        try {
+            Document document = Jsoup.connect(url).cookies(cookies).get();
+
+            Set<String> countrySet = loadAttributes(document, countrySelector);
+            Set<String> grapeSet = loadAttributes(document, grapeSelector);
+            Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
+
+            Map<Integer, Wine> wines = new HashMap<>();
+
+            AtomicInteger count = new AtomicInteger();
+
+            document.select(cardSelector)
+                    .parallelStream()
+                    .forEach(card -> {
+                        String name = card.select(nameSelector).last().html();
+                        if (isWine(name)) {
+                            int id = Integer.parseInt(card.attr(idSelector));
                             try {
                                 if (!wines.containsKey(id)) {
                                     long start = System.currentTimeMillis();
@@ -216,56 +274,12 @@ public class ParserService {
                         }
                     });
 
-            Element nextPage = document.select(nextPageSelector).first();
-            if (nextPage == null) {
-                isLastPage = true;
-            } else {
-                url = protocol + siteURL + nextPage.attr("href");
-                document = Jsoup.connect(url).cookies(cookies).get();
-            }
+            log.info("Total failed-to-parse wines: {}", count);
+            return wines;
+        }  catch (IOException ex) {
+            log.error("Error while parsing {} catalog's page {} : ", catalog, page, ex);
+            return new HashMap<>();
         }
-
-        log.info("Total failed-to-parse wines: {}", count);
-    }
-
-    public Map<Integer, Wine> parseCatalogPage(String catalog, int page) throws IOException {
-        final String cardSelector = "div.container a.product_card";
-        final String nameSelector = "div.product_card--header div"; // last in the list
-        final String url = protocol + siteURL + CATALOG_URL + catalogs.get(catalog) + "?page=" + page + "&sort=relevance";
-
-        Document document = Jsoup.connect(url).cookies(cookies).get();
-
-        Set<String> countrySet = loadAttributes(document, countrySelector);
-        Set<String> grapeSet = loadAttributes(document, grapeSelector);
-        Set<String> manufacturerSet = loadAttributes(document, manufacturerSelector);
-
-        Map<Integer, Wine> wines = new HashMap<>();
-
-        AtomicInteger count = new AtomicInteger();
-
-        document.select(cardSelector)
-                .parallelStream()
-                .forEach(card -> {
-                    String name = card.select(nameSelector).last().html();
-                    if (isWine(name)) {
-                        int id = Integer.parseInt(card.attr(DATA_ID_SELECTOR));
-                        try {
-                            if (!wines.containsKey(id)) {
-                                long start = System.currentTimeMillis();
-                                wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
-                                long finish = System.currentTimeMillis();
-                                long timeElapsed = finish - start;
-                                log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
-                            }
-                        } catch (Exception ex) {
-                            count.set(count.get() + 1);
-                            log.error("Error while parsing wine with id {} {}", id, ex);
-                        }
-                    }
-                });
-
-        log.info("Total failed-to-parse wines: {}", count);
-        return wines;
     }
 
     /* Utility */

@@ -37,8 +37,8 @@ class ParseJobTest {
             Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
             ParseJob job = new ParseJob(mockedParserService);
             Assertions.assertDoesNotThrow(job::parseCatalogs);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
