@@ -1,16 +1,25 @@
 package com.wine.to.up.winelab.parser.service.job;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.UpdateService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Map;
 
 class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
-
+    ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
     public void init() {
@@ -27,19 +36,19 @@ class ParseJobTest {
         ReflectionTestUtils.setField(parserService, "grapeSelector", "Sort");
         ReflectionTestUtils.setField(parserService, "manufacturerSelector", "manufacture");
         ReflectionTestUtils.setField(parserService, "categorySelector", "category");
+        Logger logger = (Logger) LoggerFactory.getLogger(UpdateService.class);
+        listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
     }
 
     @Test
-    void testParseJobDoesntThrow() {
-
-        try {
-            //TODO: assert doesnt throw by log analysis (check out UpdateServiceTest)
-            Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
-            ParseJob job = new ParseJob(mockedParserService);
-            Assertions.assertDoesNotThrow(job::parseCatalogs);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    public void testParseJobDoesntThrow() {
+        Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
+        ParseJob job = new ParseJob(mockedParserService);
+        Assertions.assertDoesNotThrow(job::parseCatalogs);
+        List<ILoggingEvent> logsList = listAppender.list;
+        Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
 
 }

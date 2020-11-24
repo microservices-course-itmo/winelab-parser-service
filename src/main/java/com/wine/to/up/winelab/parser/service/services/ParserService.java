@@ -55,6 +55,32 @@ public class ParserService {
     static final String CATALOG_URL = "/catalog/";
 
 
+    final String[] wineStrings = {"вино", "винный", "шампанское", "портвейн", "глинтвейн", "вермут", "кагор", "сангрия"};
+    final String[] sparklingStrings = {"игрист", "шампанское"};
+
+    final String[] regions = {"бордо", "венето", "тоскана", "риоха", "кастилья ла манча", "бургундия", "долина луары",
+            "кампо де борха", "риберо дель дуэро", "пьемонт", "долина роны", "сицилия", "другие регионы"};
+
+    final Map<String, String> countries = Map.of(
+            "Российская Федерация", "Россия",
+            "Южная Африка", "ЮАР",
+            "Соединенные Штаты Америки", "США",
+            "Соед. Королев.", "Великобритания");
+
+    final Map<String, ParserApi.Wine.Color> colors = Map.of(
+            "красное", ParserApi.Wine.Color.RED,
+            "розовое", ParserApi.Wine.Color.ROSE,
+            "белое", ParserApi.Wine.Color.WHITE
+    );
+
+    final Map<String, ParserApi.Wine.Sugar> sugars = Map.of(
+            "брют", ParserApi.Wine.Sugar.DRY,
+            "сухое", ParserApi.Wine.Sugar.DRY,
+            "полусухое", ParserApi.Wine.Sugar.MEDIUM_DRY,
+            "полусладкое", ParserApi.Wine.Sugar.MEDIUM,
+            "сладкое", ParserApi.Wine.Sugar.SWEET
+    );
+
     public ParserService() {
     }
 
@@ -162,6 +188,7 @@ public class ParserService {
                     wine.setCountry(countryFix(country));
                 }
             }
+            return wine;
         } catch (Exception ex) {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
 
@@ -219,7 +246,7 @@ public class ParserService {
                                     log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
                             } catch (Exception ex) {
-                                count.set(count.get() + 1);
+                                count.incrementAndGet();
                                 log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
@@ -292,53 +319,32 @@ public class ParserService {
     }
 
     private boolean isWine(String name) {
-        final String[] wineStrings = {"вино", "винный", "шампанское", "портвейн", "глинтвейн", "вермут", "кагор", "сангрия"};
         return Arrays.stream(wineStrings).reduce(false,
                 (a, b) -> a || name.toLowerCase().contains(b),
                 (a, b) -> a || b);
     }
 
     private boolean isSparkling(String name) {
-        final String[] sparklingStrings = {"игрист", "шампанское"};
         return Arrays.stream(sparklingStrings).reduce(false,
                 (a, b) -> a || name.toLowerCase().contains(b),
                 (a, b) -> a || b);
     }
 
     private boolean isRegion(String subcategory) {
-        final String[] regions = {"бордо", "венето", "тоскана", "риоха", "кастилья ла манча", "бургундия", "долина луары",
-                "кампо де борха", "риберо дель дуэро", "пьемонт", "долина роны", "сицилия", "другие регионы"};
         return Arrays.stream(regions).reduce(false,
                 (a, b) -> a || subcategory.toLowerCase().contains(b),
                 (a, b) -> a || b);
     }
 
     private String countryFix(String country) { // fix double names for countries
-        final Map<String, String> countries = Map.of(
-                "Российская Федерация", "Россия",
-                "Южная Африка", "ЮАР",
-                "Соединенные Штаты Америки", "США",
-                "Соед. Королев.", "Великобритания");
         return countries.getOrDefault(country, country);
     }
 
     private ParserApi.Wine.Color getColor(String color) {
-        final Map<String, ParserApi.Wine.Color> colors = Map.of(
-                "красное", ParserApi.Wine.Color.RED,
-                "розовое", ParserApi.Wine.Color.ROSE,
-                "белое", ParserApi.Wine.Color.WHITE
-        );
         return colors.getOrDefault(color.toLowerCase(), null);
     }
 
     private ParserApi.Wine.Sugar getSugar(String sugar) {
-        final Map<String, ParserApi.Wine.Sugar> sugars = Map.of(
-                "брют", ParserApi.Wine.Sugar.DRY,
-                "сухое", ParserApi.Wine.Sugar.DRY,
-                "полусухое", ParserApi.Wine.Sugar.MEDIUM_DRY,
-                "полусладкое", ParserApi.Wine.Sugar.MEDIUM,
-                "сладкое", ParserApi.Wine.Sugar.SWEET
-        );
         return sugars.getOrDefault(sugar.toLowerCase(), null);
     }
 
