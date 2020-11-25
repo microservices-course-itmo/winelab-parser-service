@@ -5,6 +5,7 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -12,13 +13,14 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@Configuration
 public class UpdateService {
     @Autowired
     private KafkaService kafkaService;
     @Autowired
     private ParserService parserService;
 
-    @Value("${parser.siteURL}")
+    @Value("${parser.address}")
     private String siteURL;
 
     public void updateCatalog() {
