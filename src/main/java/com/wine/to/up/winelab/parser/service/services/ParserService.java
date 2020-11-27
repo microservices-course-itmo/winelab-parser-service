@@ -203,7 +203,8 @@ public class ParserService {
         String description = document.selectFirst(DESCRIPTION_SELECTOR).html();
         wine.setDescription(description);
         String searchURL = getLink(PROTOCOL, SITE_URL, productID, wine);
-        try {
+
+        try{
             Document searchPage = Jsoup.connect(searchURL).cookies(COOKIES).get();
             fillValuesBySearchURL(searchPage, productID, wine);
             if (!wine.isSparkling()) {
@@ -215,7 +216,6 @@ public class ParserService {
                     }
                 }
             }
-
             if (wine.getCountry() == null) {
                 Element countryWrapper = searchPage.selectFirst(CARD_COUNTRY_SELECTOR);
                 if (countryWrapper != null) {
@@ -223,7 +223,6 @@ public class ParserService {
                     wine.setCountry(countryFix(country));
                 }
             }
-            return wine;
         } catch (Exception ex) {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
@@ -374,15 +373,15 @@ public class ParserService {
     }
 
     private String getLink(String protocol, String siteURL, int productID, Wine wine) {
-        StringBuffer query = new StringBuffer(SEARCH_QUERY_BASE);
+        StringBuffer query = new StringBuffer(String.format(Locale.US, SEARCH_QUERY_BASE, productID));
         if (wine.getBrand() != null) {
-            query.append(String.format(SEARCH_QUERY_BRAND, wine.getBrand()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_BRAND, wine.getBrand()));
         }
         if (wine.getAlcoholContent() != null) {
-            query.append(String.format(SEARCH_QUERY_ALCOHOL, wine.getAlcoholContent(), wine.getAlcoholContent()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_ALCOHOL, wine.getAlcoholContent(), wine.getAlcoholContent()));
         }
         if (wine.getNewPrice() != null) {
-            query.append(String.format(SEARCH_QUERY_PRICE, wine.getNewPrice(), wine.getNewPrice()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_PRICE, wine.getNewPrice(), wine.getNewPrice()));
         }
         return query.toString();
     }
@@ -421,9 +420,11 @@ public class ParserService {
         }
     }
 
-    private void fillValuesBySearchURL(Document searchPage, int productID, Wine wine) {
+    private void fillValuesBySearchURL(Document searchPage, int productID, Wine wine) throws Exception {
         Elements cards = searchPage.select(CARD_SELECTOR);
-        assert cards.size() == 1 && Integer.parseInt(cards.first().attr(ID_SELECTOR)) == productID;
+        if(cards.size() != 1 || Integer.parseInt(cards.first().attr(ID_SELECTOR)) != productID) {
+            throw new Exception("Failed to parse via search");
+        }
 
         Element colorSpan = searchPage.selectFirst(String.format(FILTER_SELECTOR, COLOR_SELECTOR));
         if (colorSpan != null) {
