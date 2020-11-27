@@ -125,9 +125,6 @@ public class ParserController {
     @GetMapping("/update")
     public ResponseEntity<Object> updateCatalogs() {
         int count = job.runJob();
-        if(count == 0) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return ResponseEntity.ok(String.format("Parsing successuful! Total %s wines parsed", count));
+        return ResponseEntity.ok(String.format("Total %d wines sent", count));
     }
 }
