@@ -6,7 +6,6 @@ import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.api.WineLabServiceApiProperties;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
-import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.messaging.WineTopicKafkaMessageHandler;
 import com.wine.to.up.winelab.parser.service.messaging.serialization.EventDeserializer;
 import com.wine.to.up.winelab.parser.service.messaging.serialization.EventSerializer;
@@ -84,7 +83,7 @@ public class KafkaConfiguration {
      * @param handler            which is responsible for handling messages from this topic
      */
     @Bean
-    BaseKafkaHandler<Wine> wineTopicMessagesHandler(Properties consumerProperties,
+    BaseKafkaHandler<ParserApi.WineParsedEvent> wineTopicMessagesHandler(Properties consumerProperties,
                                                     WineLabServiceApiProperties wineLabServiceApiProperties,
                                                     WineTopicKafkaMessageHandler handler) {
         // set appropriate deserializer for value

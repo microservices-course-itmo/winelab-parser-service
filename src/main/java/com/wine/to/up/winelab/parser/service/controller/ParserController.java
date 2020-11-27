@@ -123,7 +123,11 @@ public class ParserController {
      * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
      */
     @GetMapping("/update")
-    public void updateCatalogs() {
-        job.runJob();
+    public ResponseEntity<Object> updateCatalogs() {
+        int count = job.runJob();
+        if(count == 0) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return ResponseEntity.ok(String.format("Parsing successuful! Total %s wines parsed", count));
     }
 }

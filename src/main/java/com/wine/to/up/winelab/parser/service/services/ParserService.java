@@ -294,7 +294,6 @@ public class ParserService {
 
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
-        System.out.println(url);
         try {
             Document document = Jsoup.connect(url).cookies(COOKIES).get();
 

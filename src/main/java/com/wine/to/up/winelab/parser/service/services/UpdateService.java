@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.lang.Integer.min;
 
 @Service
 @Slf4j
@@ -23,16 +26,23 @@ public class UpdateService {
     @Value("${parser.address}")
     private String siteURL;
 
-    public void updateCatalog() {
+    public int updateCatalog() {
         Map<Integer, Wine> wines = parserService.parseCatalogs();
-        ParserApi.WineParsedEvent.Builder eventBuilder = ParserApi.WineParsedEvent.newBuilder()
-                .addAllWines(wines.values()
-                        .stream()
-                        .map(Wine::toParserWine)
-                        .collect(Collectors.toList()));
-        if (siteURL != null) {
-            eventBuilder.setShopLink(siteURL);
+        final int CHUNK_WINE_COUNT = 100;
+        List<ParserApi.Wine> apiWines = wines.values()
+                .stream()
+                .map(Wine::toParserWine)
+                .collect(Collectors.toList());
+        for (int start = 0; start < wines.size(); start += CHUNK_WINE_COUNT) {
+            int end = min(start + CHUNK_WINE_COUNT, wines.size());
+            ParserApi.WineParsedEvent.Builder eventBuilder = ParserApi.WineParsedEvent.newBuilder()
+                    .addAllWines(apiWines.subList(start, end));
+            if (siteURL != null) {
+                eventBuilder.setShopLink(siteURL);
+            }
+            ParserApi.WineParsedEvent event = eventBuilder.build();
+            kafkaService.sendWineParsedEvent(event);
         }
-        kafkaService.sendWineParsedEvent(eventBuilder.build());
+        return wines.size();
     }
 }

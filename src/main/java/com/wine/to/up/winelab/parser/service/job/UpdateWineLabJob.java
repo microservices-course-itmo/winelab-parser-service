@@ -17,11 +17,12 @@ public class UpdateWineLabJob {
      * Каждый день обновляет список вин
      */
     @Scheduled(fixedRate = 24 * 60 * 60 * 1000, initialDelay = 24 * 60 * 60 * 1000)
-    public void runJob() {
+    public int runJob() {
         long startDate = System.currentTimeMillis();
         log.info("start UpdateWineLabJob run job method at {}", startDate);
-        updateService.updateCatalog();
+        int count = updateService.updateCatalog();
         log.info("end UpdateWineLabJob run job method at {} duration = {} ", System.currentTimeMillis(), (System.currentTimeMillis() - startDate));
+        return count;
     }
 
 }

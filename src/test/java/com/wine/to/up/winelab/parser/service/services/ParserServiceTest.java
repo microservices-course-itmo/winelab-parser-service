@@ -40,7 +40,7 @@ class ParserServiceTest {
         try {
             Wine wine = parserService.parseProduct(1009581);
             Assertions.assertEquals("Вино Berton Foundstone Shiraz красное сухое 0,75 л", wine.getName());             //test the fields are being parsed correctly
-            Assertions.assertEquals(BigDecimal.valueOf(750), wine.getOldPrice());
+            Assertions.assertEquals(BigDecimal.valueOf(750f), wine.getOldPrice());
             Assertions.assertEquals("https://www.winelab.ru/product/1009581", wine.getLink());
             Assertions.assertEquals(BigDecimal.valueOf(649.0f), wine.getNewPrice());
             Assertions.assertEquals("https://www.winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ", wine.getImage());
