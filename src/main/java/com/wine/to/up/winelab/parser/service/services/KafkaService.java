@@ -18,7 +18,6 @@ public class KafkaService {
     }
 
     void sendWineParsedEvent(ParserApi.WineParsedEvent event) {
-        log.debug(event.toString());
         kafkaSendMessageService.sendMessage(event);
     }
 
