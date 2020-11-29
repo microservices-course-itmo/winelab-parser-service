@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import org.junit.jupiter.api.Assertions;
@@ -21,10 +22,15 @@ class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
     ListAppender<ILoggingEvent> listAppender;
+    private final WineLabParserMetricsCollector metricsCollector;
+
+    public ParseJobTest(WineLabParserMetricsCollector metricsCollector) {
+        this.metricsCollector = metricsCollector;
+    }
 
     @BeforeEach
     public void init() {
-        parserService = new ParserService();
+        parserService = new ParserService(metricsCollector);
         mockedParserService = Mockito.mock(ParserService.class);
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
@@ -96,4 +102,5 @@ class ParseJobTest {
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
+
 }

@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -79,6 +80,13 @@ public class ParserService {
 
     @Value("${parser.product.address}")
     private String PRODUCT_PAGE_URL;
+    private Map<String, String> cookies;
+    @Value("#{${parser.catalogs}}")
+    private Map<String, String> catalogs;
+    static final String IS_PARSING_PRODUCT = "product";
+    static final String IS_PARSING_CATALOGS = "catalogs";
+    static final String IS_PARSING_CATALOG = "catalog";
+    static final String IS_PARSING_CATALOG_PAGE = "catalogPage";
 
     @Value("${parser.selector.filter}")
     private String FILTER_SELECTOR;
@@ -123,7 +131,9 @@ public class ParserService {
     @Value("${parser.pattern.alcohol}")
     private String PATTERN_ALCOHOL;
 
-    public ParserService() {
+    private final WineLabParserMetricsCollector metricsCollector;
+    public ParserService(WineLabParserMetricsCollector metricsCollector) {
+        this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
 
     /**
@@ -227,6 +237,8 @@ public class ParserService {
         } catch (Exception ex) {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
+        metricsCollector.isParsing(IS_PARSING_PRODUCT, false);
+        metricsCollector.attributeLackPrcntg(wine.lackPercentage());
         return wine;
     }
 

@@ -4,6 +4,7 @@ import com.wine.to.up.parser.common.api.schema.ParserApi;
 import lombok.*;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -70,5 +71,20 @@ public class Wine implements Serializable {
         if (value != null) {
             setterMethod.accept(converter.apply(value));
         }
+    }
+
+    public double lackPercentage() {
+        double res = 0;
+        Field[] fields = getClass().getDeclaredFields();
+        double fieldValue = 1.0 / fields.length;
+        try {
+            for (Field f : fields)
+                if (f.get(this) == null)
+                    res+=fieldValue;
+            return res;
+        } catch(Exception exception) {
+            return res;
+        }
+
     }
 }
