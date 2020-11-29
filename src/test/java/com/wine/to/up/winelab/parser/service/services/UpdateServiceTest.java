@@ -38,5 +38,4 @@ class UpdateServiceTest {
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
-
 }

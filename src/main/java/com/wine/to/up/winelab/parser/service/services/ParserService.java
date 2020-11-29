@@ -374,15 +374,15 @@ public class ParserService {
     }
 
     private String getLink(String protocol, String siteURL, int productID, Wine wine) {
-        StringBuffer query = new StringBuffer(SEARCH_QUERY_BASE);
+        StringBuffer query = new StringBuffer(String.format(Locale.US, SEARCH_QUERY_BASE, productID));
         if (wine.getBrand() != null) {
-            query.append(String.format(SEARCH_QUERY_BRAND, wine.getBrand()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_BRAND, wine.getBrand()));
         }
         if (wine.getAlcoholContent() != null) {
-            query.append(String.format(SEARCH_QUERY_ALCOHOL, wine.getAlcoholContent(), wine.getAlcoholContent()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_ALCOHOL, wine.getAlcoholContent(), wine.getAlcoholContent()));
         }
         if (wine.getNewPrice() != null) {
-            query.append(String.format(SEARCH_QUERY_PRICE, wine.getNewPrice(), wine.getNewPrice()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_PRICE, wine.getNewPrice(), wine.getNewPrice()));
         }
         return query.toString();
     }
