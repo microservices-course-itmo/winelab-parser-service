@@ -84,8 +84,8 @@ public class KafkaConfiguration {
      */
     @Bean
     BaseKafkaHandler<ParserApi.WineParsedEvent> wineTopicMessagesHandler(Properties consumerProperties,
-                                                    WineLabServiceApiProperties wineLabServiceApiProperties,
-                                                    WineTopicKafkaMessageHandler handler) {
+                                                                         WineLabServiceApiProperties wineLabServiceApiProperties,
+                                                                         WineTopicKafkaMessageHandler handler) {
         // set appropriate deserializer for value
         consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventDeserializer.class.getName());
 

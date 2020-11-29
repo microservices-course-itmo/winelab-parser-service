@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.configuration;
-import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
