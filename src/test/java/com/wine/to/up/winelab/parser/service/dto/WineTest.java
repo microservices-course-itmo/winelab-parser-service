@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.dto;
-import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +16,7 @@ class WineTest {
     ParserService mockedParserService;
     private final WineLabParserMetricsCollector metricsCollector;
 
-   public WineTest(WineLabParserMetricsCollector metricsCollector) {
+    public WineTest(WineLabParserMetricsCollector metricsCollector) {
         this.metricsCollector = metricsCollector;
     }
 
