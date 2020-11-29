@@ -55,9 +55,6 @@ public class ParserController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    int fault = 0;
-    int allwine = 0;
-
     /**
      * Endpoint for parsing all the wine-related catalogs
      *
@@ -79,11 +76,24 @@ public class ParserController {
                 TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
         ));
-
-        long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
-        log.info("Wines parsed quantity every minute {} ", quantity);
-        log.info("Parsing done! Total {} wines parsed", wines.size());
-
+        metricsCollector.parsingTimeFull(timeElapsedTotal);
+        if(wines.size() > 0) {
+            double avgTime = ((double) timeElapsedTotal) / wines.size();
+            long quantity = (long) (TimeUnit.MINUTES.toMillis(1) / avgTime);
+            log.info("Average time per wine is {} milliseconds", avgTime);
+            log.info("Wines parsed quantity every minute {} ", quantity);
+            log.info("Parsing done! Total {} wines parsed", wines.size());
+            metricsCollector.avgParsingTimeSingle(avgTime);
+            metricsCollector.winesParcedSuccessfully(wines.size());
+        } else {
+            /* TODO переместить это в ParserService, а желательно вообще все метрики и логи связанные с ними
+            log.info("fault {}", fault);
+            metricsCollector.winesParcedUnsuccessfully(fault);
+            int percentofSuccess = (((allwine - fault) / allwine)*100);
+            metricsCollector.successfullyPrcntg(percentofSuccess);
+             */
+            log.warn("Catalog parser failed to parse any wines");
+        }
         List<String> response_data = wines.values()
                 .stream()
                 .map(Wine::toString)

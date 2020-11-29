@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,12 +19,14 @@ class UpdateServiceTest {
     ParserService mockedParser;
     KafkaService mockedKafka;
     UpdateService updateService;
+    WineLabParserMetricsCollector metricsCollector;
     ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
     void init() {
         mockedParser = Mockito.mock(ParserService.class);
         mockedKafka = Mockito.mock(KafkaService.class);
+        metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
         updateService = new UpdateService();
         ReflectionTestUtils.setField(updateService, "kafkaService", mockedKafka);
         ReflectionTestUtils.setField(updateService, "parserService", mockedParser);
@@ -41,7 +44,7 @@ class UpdateServiceTest {
     }
 
     @Test
-    void testUpdateThrows() throws IOException {
+    void testUpdateThrows() {
         Mockito.when(mockedParser.parseCatalogs()).thenThrow(new IOException());
         Assertions.assertDoesNotThrow(updateService::updateCatalog);
         List<ILoggingEvent> logsList = listAppender.list;

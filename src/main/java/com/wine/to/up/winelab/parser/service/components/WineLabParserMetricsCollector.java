@@ -41,12 +41,12 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
 
     private static final Summary parsingTimeFullSummary = Summary.build()
             .name(PARSING_TIME_FULL)
-            .help("Time spent parsing the entire directory")
+            .help("Time spent parsing the entire directory, in milliseconds")
             .register();
 
     private static final Summary avgParsingTimeSingleSummary = Summary.build()
             .name(AVG_PARSING_TIME_SINGLE)
-            .help("Average parsing time of one wine for one complete parsing of the catalog")
+            .help("Average parsing time of one wine for one complete parsing of the catalog, in milliseconds")
             .register();
 
     private static final Counter successfullyPrcntgCounter = Counter.build()
@@ -66,7 +66,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
             .name(WINES_PARSED_SUCCESSFULLY)
             .help("Number of successfully processed wines")
             .register();
-//isParsing дщдулфть
+//isParsing
    public void isParsing(String key, Boolean v) {
        isParsingMap.put(key, v);
        if(isParsingMap.containsValue(true)) {
@@ -82,6 +82,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.timer(PARSING_TIME_FULL).record((long)time, TimeUnit.MILLISECONDS);
         parsingTimeFullSummary.observe(time);
     }
+
     public void winesParcedSuccessfully(int count){
         Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
         winesParcedSuccessfullyCounter.inc(count);

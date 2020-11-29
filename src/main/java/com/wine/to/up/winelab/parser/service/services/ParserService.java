@@ -249,19 +249,22 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         try {
+            metricsCollector.isParsing(IS_PARSING_CATALOGS, true);
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
                 parseCatalog(catalog, wines);
             }
+            metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing catalogs : ", ex);
+            metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             return new HashMap<>();
         }
-
     }
 
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
+        metricsCollector.isParsing(IS_PARSING_CATALOG, true);
         String url = String.format(CATALOG_START_URL, category);
         Document document = Jsoup.connect(url).cookies(COOKIES).get();
         boolean isLastPage = false;
@@ -280,11 +283,7 @@ public class ParserService {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
                                 if (!wines.containsKey(id)) {
-                                    long start = System.currentTimeMillis();
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
-                                    long finish = System.currentTimeMillis();
-                                    long timeElapsed = finish - start;
-                                    log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
                             } catch (Exception ex) {
                                 count.incrementAndGet();
@@ -302,9 +301,11 @@ public class ParserService {
         }
 
         log.info("Total failed-to-parse wines: {}", count);
+        metricsCollector.isParsing(IS_PARSING_CATALOG, false);
     }
 
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
+        metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, true);
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
         try {
             Document document = Jsoup.connect(url).cookies(COOKIES).get();
@@ -339,9 +340,11 @@ public class ParserService {
                     });
 
             log.info("Total failed-to-parse wines: {}", count);
+            metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing {} catalog's page {} : ", catalog, page, ex);
+            metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
             return new HashMap<>();
         }
     }
