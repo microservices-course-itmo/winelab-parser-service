@@ -34,18 +34,9 @@ class UpdateServiceTest {
     }
 
     @Test
-    void testUpdateDoesntThrow() throws IOException {
+    void testUpdateDoesntThrow() {
         Assertions.assertDoesNotThrow(updateService::updateCatalog);
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
-
-    @Test
-    void testUpdateThrows() throws IOException {
-        Mockito.when(mockedParser.parseCatalogs()).thenThrow(new IOException());
-        Assertions.assertDoesNotThrow(updateService::updateCatalog);
-        List<ILoggingEvent> logsList = listAppender.list;
-        Assertions.assertTrue(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
-    }
-
 }

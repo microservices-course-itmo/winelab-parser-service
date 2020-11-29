@@ -162,10 +162,14 @@ public class ParserService {
         }
     }
 
+    protected Document getProductDocument(String productURL) throws IOException {
+        return Jsoup.connect(productURL).cookies(COOKIES).get();
+    }
+
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
 
-        Document document = Jsoup.connect(productURL).cookies(COOKIES).get();
+        Document document = getProductDocument(productURL);
 
         Wine wine = new Wine();
 
