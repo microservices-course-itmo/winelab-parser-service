@@ -84,7 +84,7 @@ public class ParserController {
             metricsCollector.parsingTimeFull(timeElapsedTotal);
             metricsCollector.avgParsingTimeSingle(avgTime);
         } else {
-            /* TODO вынести вот эту часть в сервис, а вообще желательно все метрики и логи
+            /* TODO вынести вот эту часть в сервис, а вообще желательно все метрики и логи вынести из контроллеров
             log.info("fault {}", fault);
             metricsCollector.winesParcedUnsuccessfully(fault);
             int percentofSuccess = (((allwine - fault) / allwine)*100);
