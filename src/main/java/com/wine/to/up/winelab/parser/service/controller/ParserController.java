@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -28,12 +30,14 @@ import java.util.stream.Collectors;
 @Configuration
 public class ParserController {
     private final ParserService parserService;
+    private final WineLabParserMetricsCollector metricsCollector;
 
     private final UpdateWineLabJob job;
 
-    public ParserController(ParserService parserService, UpdateWineLabJob job) {
+    public ParserController(ParserService parserService, UpdateWineLabJob job, WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
         this.job = job;
+        this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
 
     /**
@@ -72,11 +76,22 @@ public class ParserController {
                 TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
         ));
-
-        long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
-        log.info("Wines parsed quantity every minute {} ", quantity);
-        log.info("Parsing done! Total {} wines parsed", wines.size());
-
+        if(wines.size() > 0) {
+            double avgTime = ((double) timeElapsedTotal) / (wines.size());
+            long quantity = (long) (TimeUnit.MINUTES.toMillis(1) / avgTime);
+            log.info("Wines parsed quantity every minute {} ", quantity);
+            log.info("Parsing done! Total {} wines parsed", wines.size());
+            metricsCollector.parsingTimeFull(timeElapsedTotal);
+            metricsCollector.avgParsingTimeSingle(avgTime);
+        } else {
+            /* TODO вынести вот эту часть в сервис, а вообще желательно все метрики и логи вынести из контроллеров
+            log.info("fault {}", fault);
+            metricsCollector.winesParcedUnsuccessfully(fault);
+            int percentofSuccess = (((allwine - fault) / allwine)*100);
+            metricsCollector.successfullyPrcntg(percentofSuccess);
+             */
+            log.warn("Parsing completed with 0 wines being returned");
+        }
         List<String> response_data = wines.values()
                 .stream()
                 .map(Wine::toString)
@@ -123,7 +138,8 @@ public class ParserController {
      * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
      */
     @GetMapping("/update")
-    public void updateCatalogs() {
-        job.runJob();
+    public ResponseEntity<Object> updateCatalogs() {
+        int count = job.runJob();
+        return ResponseEntity.ok(String.format("Total %d wines sent", count));
     }
 }

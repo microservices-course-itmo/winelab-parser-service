@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -79,6 +80,13 @@ public class ParserService {
 
     @Value("${parser.product.address}")
     private String PRODUCT_PAGE_URL;
+    private Map<String, String> cookies;
+    @Value("#{${parser.catalogs}}")
+    private Map<String, String> catalogs;
+    static final String IS_PARSING_PRODUCT = "product";
+    static final String IS_PARSING_CATALOGS = "catalogs";
+    static final String IS_PARSING_CATALOG = "catalog";
+    static final String IS_PARSING_CATALOG_PAGE = "catalogPage";
 
     @Value("${parser.selector.filter}")
     private String FILTER_SELECTOR;
@@ -123,7 +131,9 @@ public class ParserService {
     @Value("${parser.pattern.alcohol}")
     private String PATTERN_ALCOHOL;
 
-    public ParserService() {
+    private final WineLabParserMetricsCollector metricsCollector;
+    public ParserService(WineLabParserMetricsCollector metricsCollector) {
+        this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
 
     /**
@@ -227,6 +237,8 @@ public class ParserService {
         } catch (Exception ex) {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
+        metricsCollector.isParsing(IS_PARSING_PRODUCT, false);
+        metricsCollector.attributeLackPrcntg(wine.lackPercentage());
         return wine;
     }
 
@@ -237,19 +249,22 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         try {
+            metricsCollector.isParsing(IS_PARSING_CATALOGS, true);
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
                 parseCatalog(catalog, wines);
             }
+            metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing catalogs : ", ex);
+            metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             return new HashMap<>();
         }
-
     }
 
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
+        metricsCollector.isParsing(IS_PARSING_CATALOG, true);
         String url = String.format(CATALOG_START_URL, category);
         Document document = Jsoup.connect(url).cookies(COOKIES).get();
         boolean isLastPage = false;
@@ -268,11 +283,7 @@ public class ParserService {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
                                 if (!wines.containsKey(id)) {
-                                    long start = System.currentTimeMillis();
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
-                                    long finish = System.currentTimeMillis();
-                                    long timeElapsed = finish - start;
-                                    log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
                             } catch (Exception ex) {
                                 count.incrementAndGet();
@@ -290,11 +301,12 @@ public class ParserService {
         }
 
         log.info("Total failed-to-parse wines: {}", count);
+        metricsCollector.isParsing(IS_PARSING_CATALOG, false);
     }
 
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
+        metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, true);
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
-        System.out.println(url);
         try {
             Document document = Jsoup.connect(url).cookies(COOKIES).get();
 
@@ -314,23 +326,21 @@ public class ParserService {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
                                 if (!wines.containsKey(id)) {
-                                    long start = System.currentTimeMillis();
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
-                                    long finish = System.currentTimeMillis();
-                                    long timeElapsed = finish - start;
-                                    log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
                             } catch (Exception ex) {
-                                count.set(count.get() + 1);
+                                count.incrementAndGet();
                                 log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
                     });
 
             log.info("Total failed-to-parse wines: {}", count);
+            metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing {} catalog's page {} : ", catalog, page, ex);
+            metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
             return new HashMap<>();
         }
     }
@@ -375,15 +385,15 @@ public class ParserService {
     }
 
     private String getLink(String protocol, String siteURL, int productID, Wine wine) {
-        StringBuffer query = new StringBuffer(SEARCH_QUERY_BASE);
+        StringBuffer query = new StringBuffer(String.format(Locale.US, SEARCH_QUERY_BASE, productID));
         if (wine.getBrand() != null) {
-            query.append(String.format(SEARCH_QUERY_BRAND, wine.getBrand()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_BRAND, wine.getBrand()));
         }
         if (wine.getAlcoholContent() != null) {
-            query.append(String.format(SEARCH_QUERY_ALCOHOL, wine.getAlcoholContent(), wine.getAlcoholContent()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_ALCOHOL, wine.getAlcoholContent(), wine.getAlcoholContent()));
         }
         if (wine.getNewPrice() != null) {
-            query.append(String.format(SEARCH_QUERY_PRICE, wine.getNewPrice(), wine.getNewPrice()));
+            query.append(String.format(Locale.US, SEARCH_QUERY_PRICE, wine.getNewPrice(), wine.getNewPrice()));
         }
         return query.toString();
     }
