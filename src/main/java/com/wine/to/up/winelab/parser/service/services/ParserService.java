@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -239,6 +240,7 @@ public class ParserService {
         }
         metricsCollector.isParsing(IS_PARSING_PRODUCT, false);
         metricsCollector.attributeLackPrcntg(wine.lackPercentage());
+
         return wine;
     }
 
@@ -249,12 +251,34 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         try {
+            long begin = System.currentTimeMillis();
+
             metricsCollector.isParsing(IS_PARSING_CATALOGS, true);
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
                 parseCatalog(catalog, wines);
             }
             metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
+
+            long end = System.currentTimeMillis();
+            long timeElapsedTotal = end - begin;
+
+            if(wines.size() > 0) {
+                double avgTime = ((double) timeElapsedTotal) / (wines.size());
+                long quantity = (long) (TimeUnit.MINUTES.toMillis(1) / avgTime);
+                log.info("Wines parsed quantity every minute {} ", quantity);
+                log.info("Parsing done! Total {} wines parsed", wines.size());
+                metricsCollector.parsingTimeFull(timeElapsedTotal);
+                metricsCollector.avgParsingTimeSingle(avgTime);
+            } else {
+                /* TODO вынести вот эту часть в сервис, а вообще желательно все метрики и логи вынести из контроллеров
+                log.info("fault {}", fault);
+                metricsCollector.winesParcedUnsuccessfully(fault);
+                int percentofSuccess = (((allwine - fault) / allwine)*100);
+                metricsCollector.successfullyPrcntg(percentofSuccess);
+                 */
+                log.warn("Parsing completed with 0 wines being returned");
+            }
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing catalogs : ", ex);
@@ -300,6 +324,7 @@ public class ParserService {
             }
         }
 
+        metricsCollector.winesParcedUnsuccessfully(count.intValue());
         log.info("Total failed-to-parse wines: {}", count);
         metricsCollector.isParsing(IS_PARSING_CATALOG, false);
     }

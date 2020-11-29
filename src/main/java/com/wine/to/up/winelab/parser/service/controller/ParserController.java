@@ -76,22 +76,6 @@ public class ParserController {
                 TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
         ));
-        if(wines.size() > 0) {
-            double avgTime = ((double) timeElapsedTotal) / (wines.size());
-            long quantity = (long) (TimeUnit.MINUTES.toMillis(1) / avgTime);
-            log.info("Wines parsed quantity every minute {} ", quantity);
-            log.info("Parsing done! Total {} wines parsed", wines.size());
-            metricsCollector.parsingTimeFull(timeElapsedTotal);
-            metricsCollector.avgParsingTimeSingle(avgTime);
-        } else {
-            /* TODO вынести вот эту часть в сервис, а вообще желательно все метрики и логи вынести из контроллеров
-            log.info("fault {}", fault);
-            metricsCollector.winesParcedUnsuccessfully(fault);
-            int percentofSuccess = (((allwine - fault) / allwine)*100);
-            metricsCollector.successfullyPrcntg(percentofSuccess);
-             */
-            log.warn("Parsing completed with 0 wines being returned");
-        }
         List<String> response_data = wines.values()
                 .stream()
                 .map(Wine::toString)
