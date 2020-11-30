@@ -272,7 +272,7 @@ public class ParserService {
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
                                     long finish = System.currentTimeMillis();
                                     long timeElapsed = finish - start;
-                                    log.info("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
+                                    log.debug("Time elapsed parsing wine with id {} = {} ms", id, timeElapsed);
                                 }
                             } catch (Exception ex) {
                                 count.incrementAndGet();
