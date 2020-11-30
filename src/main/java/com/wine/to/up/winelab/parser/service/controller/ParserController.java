@@ -45,7 +45,7 @@ public class ParserController {
     public ResponseEntity<Object> parseWine(@PathVariable(value = "id") int productID) {
         Wine wine = parserService.parseProduct(productID);
         if (wine != null) {
-            log.info(wine.toString());
+            log.debug(wine.toString());
             return ResponseEntity.ok(wine);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
