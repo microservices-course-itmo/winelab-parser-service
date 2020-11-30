@@ -82,16 +82,7 @@ public class KafkaConfiguration {
      * @param consumerProperties is the general consumer properties. {@link #consumerProperties()}
      * @param handler            which is responsible for handling messages from this topic
      */
-    @Bean
-    BaseKafkaHandler<ParserApi.WineParsedEvent> wineTopicMessagesHandler(Properties consumerProperties,
-                                                    WineLabServiceApiProperties wineLabServiceApiProperties,
-                                                    WineTopicKafkaMessageHandler handler) {
-        // set appropriate deserializer for value
-        consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventDeserializer.class.getName());
 
-        // bind consumer with topic name and with appropriate handler
-        return new BaseKafkaHandler<>(wineLabServiceApiProperties.getMessageSentEventsTopicName(), new KafkaConsumer<>(consumerProperties), handler);
-    }
 
     /**
      * Creates sender based on general properties. It helps to send single message to designated topic.
