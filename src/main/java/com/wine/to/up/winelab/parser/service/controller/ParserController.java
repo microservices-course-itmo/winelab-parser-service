@@ -1,6 +1,5 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
-import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -30,14 +28,12 @@ import java.util.stream.Collectors;
 @Configuration
 public class ParserController {
     private final ParserService parserService;
-    private final WineLabParserMetricsCollector metricsCollector;
 
     private final UpdateWineLabJob job;
 
-    public ParserController(ParserService parserService, UpdateWineLabJob job, WineLabParserMetricsCollector metricsCollector) {
+    public ParserController(ParserService parserService, UpdateWineLabJob job) {
         this.parserService = parserService;
         this.job = job;
-        this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
 
     /**
@@ -76,11 +72,11 @@ public class ParserController {
                 TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
         ));
-        List<String> response_data = wines.values()
+        List<String> responseData = wines.values()
                 .stream()
                 .map(Wine::toString)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(response_data);
+        return ResponseEntity.ok(responseData);
     }
 
     /**
@@ -111,11 +107,11 @@ public class ParserController {
         long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
         log.info("Wines parsed quantity every minute {} ", quantity);
         log.info("Parsing done! Total {} wines parsed", wines.size());
-        List<String> response_data = wines.values()
+        List<String> responseData = wines.values()
                 .stream()
                 .map(Wine::toString)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(response_data);
+        return ResponseEntity.ok(responseData);
     }
 
     /**

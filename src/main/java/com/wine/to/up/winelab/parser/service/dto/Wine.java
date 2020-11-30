@@ -6,6 +6,8 @@ import lombok.*;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -85,6 +87,19 @@ public class Wine implements Serializable {
             return res;
         } catch(Exception exception) {
             return res;
+        }
+
+    }
+    public List<String> lackAttributes() {
+        List<String> result = new ArrayList<>();
+        Field[] fields = getClass().getDeclaredFields();
+        try {
+            for (Field f : fields)
+                if (f.get(this) == null)
+                    result.add(f.getName());
+            return result;
+        } catch(Exception exception) {
+            return result;
         }
 
     }

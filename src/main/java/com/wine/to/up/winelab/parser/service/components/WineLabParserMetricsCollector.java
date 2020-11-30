@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This Class expose methods for recording specific metrics
@@ -22,51 +23,139 @@ import java.util.concurrent.TimeUnit;
 public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static HashMap<String, Boolean> isParsingMap = new HashMap<>();
 
-    private static final String SERVICE_NAME = "winelab_parce_service";
+    private static final String SERVICE_NAME = "winelab_parse_service";
+
+    private static final String PARSING_STARTED = "parsing_started_total";
+    private static final String PARSING_IN_PROGRESS = "parsing_in_progress";
+    private static final String PARSING_DURATION = "parsing_process_duration_summary";
+    private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
+    private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration";
+    private static final String WINE_PAGE_FETCHING_DURATION = "wine_page_fetching_duration";
+    private static final String WINE_DETAILS_PARSING_DURATION = "wine_details_parsing_duration";
+    private static final String WINE_PAGE_PARSING_DURATION = "wine_page_parsing_duration";
     private static final String IS_PARSING = "is_parsing";
-    private static final String PARSING_TIME_FULL = "parsing_time_full";
-    private static final String AVG_PARSING_TIME_SINGLE = "avg_parsing_time_single";
-    private static final String SUCCESSFUL_PRCNTG = "successful_prcntg";
-    private static final String ATTRIBUTE_LACK_PRCNTG = "attribute_lack_prcntg";
     private static final String WINES_PARSED_UNSUCCESSFULLY = "wines_parsed_unsuccessfully";
     private static final String WINES_PARSED_SUCCESSFULLY = "wines_parsed_successfully";
+    private static final String WINES_PUBLISHED_TO_KAFKA = "wines_published_to_kafka_count";
 
     public WineLabParserMetricsCollector() {
         super(SERVICE_NAME);
     }
+
+    private static final Counter parsingStartedCounter = Counter.build()
+            .name(PARSING_STARTED)
+            .help("Total number of parsing processes ever started")
+            .register();
+    private static final Gauge parsingInProgressGauge = Gauge.build()
+            .name(PARSING_IN_PROGRESS)
+            .help("Total number of parsing processes currently in progress")
+            .register();
+    private static final Summary parsingDurationSummary = Summary.build()
+            .name(PARSING_DURATION)
+            .help("The duration of every parsing process completed so far")
+            .register();
+    private static final Gauge timeSinceLastParsingGauge = Gauge.build()
+            .name(TIME_SINCE_LAST_PARSING)
+            .help("The amount of time since the last successfully completed parsing process")
+            .register();
+    private static final Summary wineDetailsFetchingDurationSummary = Summary.build()
+            .name(WINE_DETAILS_FETCHING_DURATION)
+            .help("The duration of every fetching of a wine details page")
+            .register();
+    private static final Summary winePageFetchingDurationSummary = Summary.build()
+            .name(WINE_PAGE_FETCHING_DURATION)
+            .help("The duration of every parsing of a wine details page")
+            .register();
+    private static final Summary wineDetailsParsingDurationSummary = Summary.build()
+            .name(WINE_DETAILS_PARSING_DURATION)
+            .help("The duration of every parsing of a wine details page")
+            .register();
+    private static final Summary winePageParsingDurationSummary = Summary.build()
+            .name(WINE_PAGE_PARSING_DURATION)
+            .help("The duration of every parsing of a wines page")
+            .register();
+
     private static final Gauge isParsingGauge = Gauge.build()
             .name(IS_PARSING)
             .help("Parsing is in progress")
             .register();
 
-    private static final Summary parsingTimeFullSummary = Summary.build()
-            .name(PARSING_TIME_FULL)
-            .help("Time spent parsing the entire directory")
-            .register();
-
-    private static final Summary avgParsingTimeSingleSummary = Summary.build()
-            .name(AVG_PARSING_TIME_SINGLE)
-            .help("Average parsing time of one wine for one complete parsing of the catalog")
-            .register();
-
-    private static final Counter successfullyPrcntgCounter = Counter.build()
-            .name(SUCCESSFUL_PRCNTG)
-            .help("Percentage of successfully processed wines")
-            .register();
-
-    private static final Counter attributeLackPrcntgCounter = Counter.build()
-            .name(ATTRIBUTE_LACK_PRCNTG)
-            .help("Percentage of unfilled attributes in successful distilled wines")
-            .register();
-    private static final Counter winesParcedUnsuccessfullyCounter = Counter.build()
+    private static final Counter winesParsedUnsuccessfullyCounter = Counter.build()
             .name(WINES_PARSED_UNSUCCESSFULLY)
             .help("The number of wines that could not be processed")
             .register();
-    private static final Counter winesParcedSuccessfullyCounter = Counter.build()
+    private static final Counter winesParsedSuccessfullyCounter = Counter.build()
             .name(WINES_PARSED_SUCCESSFULLY)
             .help("Number of successfully processed wines")
             .register();
-//isParsing дщдулфть
+
+    private static final Counter winesPublishedToKafkaCounter = Counter.build()
+            .name(WINES_PUBLISHED_TO_KAFKA)
+            .help("Number of wines that have been sent to Kafka")
+            .register();
+
+    public void parsingStarted(int count) {
+        Metrics.counter(PARSING_STARTED).increment(count);
+        parsingStartedCounter.inc(count);
+    }
+
+    public void incParsingInProgress() {
+        parsingInProgressGauge.inc();
+        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
+        if(gauge != null) {
+            gauge.getAndIncrement();
+        }
+    }
+
+    public void decParsingInProgress() {
+        parsingInProgressGauge.dec();
+        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
+        if(gauge != null) {
+            gauge.getAndDecrement();
+        }
+    }
+
+    public void timeParsingDuration(long nanoTime) {
+        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        parsingDurationSummary.observe(milliTime);
+        Metrics.summary(PARSING_DURATION).record(milliTime);
+    }
+
+    public void countTimeSinceLastParsing(long nanoTime) {
+        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        timeSinceLastParsingGauge.set(milliTime);
+        Metrics.summary(TIME_SINCE_LAST_PARSING).record(milliTime);
+    }
+
+    public void timeWineDetailsFetchingDuration(long nanoTime) {
+        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        wineDetailsFetchingDurationSummary.observe(milliTime);
+        Metrics.summary(WINE_DETAILS_FETCHING_DURATION).record(milliTime);
+    }
+
+    public void timeWinePageFetchingDuration(long nanoTime) {
+        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        winePageFetchingDurationSummary.observe(milliTime);
+        Metrics.summary(WINE_PAGE_FETCHING_DURATION).record(milliTime);
+    }
+
+    public void timeWineDetailsParsingDuration(long nanoTime) {
+        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        wineDetailsParsingDurationSummary.observe(milliTime);
+        Metrics.summary(WINE_DETAILS_PARSING_DURATION).record(milliTime);
+    }
+
+    public void timeWinePageParsingDuration(long nanoTime) {
+        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        winePageParsingDurationSummary.observe(milliTime);
+        Metrics.summary(WINE_PAGE_PARSING_DURATION).record(milliTime);
+    }
+
+    public void countWinesPublishedToKafka(double wineNum) {
+        Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment();
+        winesPublishedToKafkaCounter.inc(wineNum);
+    }
+
    public void isParsing(String key, Boolean v) {
        isParsingMap.put(key, v);
        if(isParsingMap.containsValue(true)) {
@@ -77,30 +166,13 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
            isParsingGauge.set(0);
        }
     }
-    public void parsingTimeFull(double time) {
-        log.debug("parsingTimeFull");
-        Metrics.timer(PARSING_TIME_FULL).record((long)time, TimeUnit.MILLISECONDS);
-        parsingTimeFullSummary.observe(time);
-    }
-    public void winesParcedSuccessfully(int count){
+    public void winesParsedSuccessfully(int count){
         Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
-        winesParcedSuccessfullyCounter.inc(count);
+        winesParsedSuccessfullyCounter.inc(count);
     }
 
-    public void winesParcedUnsuccessfully(int count){
+    public void winesParsedUnsuccessfully(int count){
         Metrics.counter(WINES_PARSED_UNSUCCESSFULLY).increment(count);
-        winesParcedUnsuccessfullyCounter.inc(count);
-    }
-    public void avgParsingTimeSingle(double time) {
-        Metrics.timer(AVG_PARSING_TIME_SINGLE).record((long)time, TimeUnit.MILLISECONDS);
-        avgParsingTimeSingleSummary.observe(time);
-    }
-    public void attributeLackPrcntg(double count){
-        Metrics.counter(ATTRIBUTE_LACK_PRCNTG).increment(count);
-        attributeLackPrcntgCounter.inc(count);
-    }
-    public void successfullyPrcntg(double count){
-        Metrics.counter(SUCCESSFUL_PRCNTG).increment(count);
-        successfullyPrcntgCounter.inc(count);
+        winesParsedUnsuccessfullyCounter.inc(count);
     }
 }

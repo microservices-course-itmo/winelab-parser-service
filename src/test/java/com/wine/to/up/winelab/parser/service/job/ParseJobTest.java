@@ -92,7 +92,7 @@ class ParseJobTest {
     }
 
     @Test
-    public void testParseJobDoesntThrow() {
+    void testParseJobDoesntThrow() {
         Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
         ParseJob job = new ParseJob(mockedParserService);
         Assertions.assertDoesNotThrow(job::parseCatalogs);

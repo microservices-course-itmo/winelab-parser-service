@@ -2,6 +2,7 @@ package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,14 +12,16 @@ import org.springframework.stereotype.Service;
 public class KafkaService {
 
     private KafkaMessageSender<ParserApi.WineParsedEvent> kafkaSendMessageService;
+    private WineLabParserMetricsCollector metricsCollector;
 
     @Autowired
-    public KafkaService(KafkaMessageSender<ParserApi.WineParsedEvent> kafkaSendMessageService) {
+    public KafkaService(KafkaMessageSender<ParserApi.WineParsedEvent> kafkaSendMessageService, WineLabParserMetricsCollector metricsCollector) {
         this.kafkaSendMessageService = kafkaSendMessageService;
+        this.metricsCollector = metricsCollector;
     }
 
     void sendWineParsedEvent(ParserApi.WineParsedEvent event) {
-        log.debug(event.toString());
+        metricsCollector.countWinesPublishedToKafka(event.getWinesCount());
         kafkaSendMessageService.sendMessage(event);
     }
 

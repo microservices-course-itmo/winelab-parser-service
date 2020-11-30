@@ -1,8 +1,11 @@
 package com.wine.to.up.winelab.parser.service.services;
 
+import com.wine.to.up.commonlib.annotations.InjectEventLogger;
+import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,10 @@ import java.util.stream.Collectors;
 @Configuration
 @PropertySource(value = "classpath:parser.properties", encoding = "Windows-1251")
 public class ParserService {
+
+    @InjectEventLogger
+    private EventLogger eventLogger;
+
     @Value("${parser.address}")
     private String SITE_URL;
     @Value("${parser.protocol}")
@@ -132,6 +138,8 @@ public class ParserService {
     @Value("${parser.pattern.alcohol}")
     private String PATTERN_ALCOHOL;
 
+    private Long lastParse = null;
+
     private final WineLabParserMetricsCollector metricsCollector;
     public ParserService(WineLabParserMetricsCollector metricsCollector) {
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
@@ -164,9 +172,15 @@ public class ParserService {
     }
 
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
+        metricsCollector.parsingStarted(1);
+        metricsCollector.isParsing(IS_PARSING_PRODUCT, true);
+        metricsCollector.incParsingInProgress();
+        long parseStart = System.nanoTime();
+        long fetchStart = System.nanoTime();
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
-
         Document document = Jsoup.connect(productURL).cookies(COOKIES).get();
+        long fetchEnd = System.nanoTime();
+        metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - fetchStart);
 
         Wine wine = new Wine();
 
@@ -175,6 +189,7 @@ public class ParserService {
             name = document.selectFirst(PRODUCT_NAME_SELECTOR).ownText();
             wine.setName(name);
         } catch (NullPointerException ex) {
+            eventLogger.error(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get name", productID);
             return null;
         }
@@ -238,8 +253,15 @@ public class ParserService {
         } catch (Exception ex) {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
+        long parseEnd = System.nanoTime();
+        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
+        metricsCollector.decParsingInProgress();
         metricsCollector.isParsing(IS_PARSING_PRODUCT, false);
-        metricsCollector.attributeLackPrcntg(wine.lackPercentage());
+        eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
+        var lackAttributes = wine.lackAttributes();
+        if(!lackAttributes.isEmpty()) {
+            lackAttributes.forEach(attribute -> eventLogger.info(WineLabParserNotableEvents.W_WINE_ATTRIBUTE_ABSENT, attribute, productURL));
+        }
 
         return wine;
     }
@@ -251,36 +273,25 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         try {
-            long begin = System.currentTimeMillis();
-
             metricsCollector.isParsing(IS_PARSING_CATALOGS, true);
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
                 parseCatalog(catalog, wines);
             }
             metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
-
-            long end = System.currentTimeMillis();
-            long timeElapsedTotal = end - begin;
-
+            long currentParse = System.nanoTime();
+            if(lastParse != null) {
+                metricsCollector.countTimeSinceLastParsing(currentParse - lastParse);
+            }
+            lastParse = currentParse;
             if(wines.size() > 0) {
-                double avgTime = ((double) timeElapsedTotal) / (wines.size());
-                long quantity = (long) (TimeUnit.MINUTES.toMillis(1) / avgTime);
-                log.info("Wines parsed quantity every minute {} ", quantity);
                 log.info("Parsing done! Total {} wines parsed", wines.size());
-                metricsCollector.parsingTimeFull(timeElapsedTotal);
-                metricsCollector.avgParsingTimeSingle(avgTime);
             } else {
-                /* TODO вынести вот эту часть в сервис, а вообще желательно все метрики и логи вынести из контроллеров
-                log.info("fault {}", fault);
-                metricsCollector.winesParcedUnsuccessfully(fault);
-                int percentofSuccess = (((allwine - fault) / allwine)*100);
-                metricsCollector.successfullyPrcntg(percentofSuccess);
-                 */
                 log.warn("Parsing completed with 0 wines being returned");
             }
             return wines;
         } catch (IOException ex) {
+            eventLogger.error(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Error while parsing catalogs : ", ex);
             metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             return new HashMap<>();
@@ -289,43 +300,57 @@ public class ParserService {
 
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
         metricsCollector.isParsing(IS_PARSING_CATALOG, true);
+        long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
         Document document = Jsoup.connect(url).cookies(COOKIES).get();
+        long firstFetchEnd = System.nanoTime();
+        metricsCollector.timeWinePageFetchingDuration(firstFetchEnd - parseStart);
         boolean isLastPage = false;
 
         Set<String> countrySet = loadAttributes(document, COUNTRY_SELECTOR);
         Set<String> grapeSet = loadAttributes(document, GRAPE_SELECTOR);
         Set<String> manufacturerSet = loadAttributes(document, MANUFACTURER_SELECTOR);
 
-        AtomicInteger count = new AtomicInteger();
+        AtomicInteger unsuccessfullCounter = new AtomicInteger();
+        AtomicInteger allCounter = new AtomicInteger();
+
+        int page = 1;
+
         while (!isLastPage) {
             document.select(CARD_SELECTOR)
                     .parallelStream()
                     .forEach(card -> {
                         String name = card.select(CATALOG_NAME_SELECTOR).last().html();
                         if (isWine(name)) {
+                            allCounter.incrementAndGet();
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
                                 if (!wines.containsKey(id)) {
                                     wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
+                                    metricsCollector.winesParsedSuccessfully(1);
                                 }
                             } catch (Exception ex) {
-                                count.incrementAndGet();
+                                unsuccessfullCounter.incrementAndGet();
+                                metricsCollector.winesParsedUnsuccessfully(1);
                                 log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
                     });
+            eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, page);
+            page++;
             Element nextPage = document.select(NEXT_PAGE_SELECTOR).first();
             if (nextPage == null) {
                 isLastPage = true;
             } else {
+                long fetchStart = System.nanoTime();
                 url = String.format(CATALOG_NEXT_URL, nextPage.attr("href"));
                 document = Jsoup.connect(url).cookies(COOKIES).get();
+                long fetchEnd = System.nanoTime();
+                metricsCollector.timeWinePageFetchingDuration(fetchEnd - fetchStart);
             }
         }
-
-        metricsCollector.winesParcedUnsuccessfully(count.intValue());
-        log.info("Total failed-to-parse wines: {}", count);
+        long parseEnd = System.nanoTime();
+        metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
         metricsCollector.isParsing(IS_PARSING_CATALOG, false);
     }
 
