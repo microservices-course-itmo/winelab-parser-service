@@ -14,9 +14,15 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.HashSet;
+
 
 /**
  * Class containing methods for parsing product pages and catalog pages
