@@ -173,7 +173,6 @@ public class ParserService {
 
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
         metricsCollector.parsingStarted(1);
-        metricsCollector.isParsing(IS_PARSING_PRODUCT, true);
         metricsCollector.incParsingInProgress();
         long parseStart = System.nanoTime();
         long fetchStart = System.nanoTime();
@@ -249,20 +248,18 @@ public class ParserService {
                     wine.setCountry(countryFix(country));
                 }
             }
-            return wine;
+
         } catch (Exception ex) {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
         long parseEnd = System.nanoTime();
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
         metricsCollector.decParsingInProgress();
-        metricsCollector.isParsing(IS_PARSING_PRODUCT, false);
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
         var lackAttributes = wine.lackAttributes();
         if(!lackAttributes.isEmpty()) {
             lackAttributes.forEach(attribute -> eventLogger.info(WineLabParserNotableEvents.W_WINE_ATTRIBUTE_ABSENT, attribute, productURL));
         }
-
         return wine;
     }
 
@@ -273,12 +270,10 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         try {
-            metricsCollector.isParsing(IS_PARSING_CATALOGS, true);
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
                 parseCatalog(catalog, wines);
             }
-            metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             long currentParse = System.nanoTime();
             if(lastParse != null) {
                 metricsCollector.countTimeSinceLastParsing(currentParse - lastParse);
@@ -293,13 +288,11 @@ public class ParserService {
         } catch (IOException ex) {
             eventLogger.error(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Error while parsing catalogs : ", ex);
-            metricsCollector.isParsing(IS_PARSING_CATALOGS, false);
             return new HashMap<>();
         }
     }
 
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
-        metricsCollector.isParsing(IS_PARSING_CATALOG, true);
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
         Document document = Jsoup.connect(url).cookies(COOKIES).get();
@@ -351,11 +344,9 @@ public class ParserService {
         }
         long parseEnd = System.nanoTime();
         metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
-        metricsCollector.isParsing(IS_PARSING_CATALOG, false);
     }
 
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
-        metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, true);
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
         try {
             Document document = Jsoup.connect(url).cookies(COOKIES).get();
@@ -386,11 +377,9 @@ public class ParserService {
                     });
 
             log.info("Total failed-to-parse wines: {}", count);
-            metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing {} catalog's page {} : ", catalog, page, ex);
-            metricsCollector.isParsing(IS_PARSING_CATALOG_PAGE, false);
             return new HashMap<>();
         }
     }

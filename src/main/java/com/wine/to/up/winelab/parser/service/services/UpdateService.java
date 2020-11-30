@@ -32,6 +32,7 @@ public class UpdateService {
 
     public int updateCatalog() {
         long parseStart = System.nanoTime();
+        metricsCollector.isParsing(1);
         Map<Integer, Wine> wines = parserService.parseCatalogs();
         final int CHUNK_WINE_COUNT = 100;
         List<ParserApi.Wine> apiWines = wines.values()
@@ -50,6 +51,7 @@ public class UpdateService {
         }
         long parseEnd = System.nanoTime();
         metricsCollector.timeParsingDuration(parseEnd - parseStart);
+        metricsCollector.isParsing(0);
         return wines.size();
     }
 }

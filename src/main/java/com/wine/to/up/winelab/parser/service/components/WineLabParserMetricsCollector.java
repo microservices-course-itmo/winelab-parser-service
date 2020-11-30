@@ -102,7 +102,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     public void incParsingInProgress() {
         parsingInProgressGauge.inc();
         AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
-        if(gauge != null) {
+        if (gauge != null) {
             gauge.getAndIncrement();
         }
     }
@@ -110,7 +110,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     public void decParsingInProgress() {
         parsingInProgressGauge.dec();
         AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
-        if(gauge != null) {
+        if (gauge != null) {
             gauge.getAndDecrement();
         }
     }
@@ -156,22 +156,17 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         winesPublishedToKafkaCounter.inc(wineNum);
     }
 
-   public void isParsing(String key, Boolean v) {
-       isParsingMap.put(key, v);
-       if(isParsingMap.containsValue(true)) {
-           Metrics.gauge(IS_PARSING,1);
-           isParsingGauge.set(1);
-       } else {
-           Metrics.gauge(IS_PARSING,0);
-           isParsingGauge.set(0);
-       }
+    public void isParsing(int v) {
+        Metrics.gauge(IS_PARSING, v);
+        isParsingGauge.set(v);
     }
-    public void winesParsedSuccessfully(int count){
+
+    public void winesParsedSuccessfully(int count) {
         Metrics.counter(WINES_PARSED_SUCCESSFULLY).increment(count);
         winesParsedSuccessfullyCounter.inc(count);
     }
 
-    public void winesParsedUnsuccessfully(int count){
+    public void winesParsedUnsuccessfully(int count) {
         Metrics.counter(WINES_PARSED_UNSUCCESSFULLY).increment(count);
         winesParsedUnsuccessfullyCounter.inc(count);
     }
