@@ -182,7 +182,11 @@ public class ParserService {
 
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
-        fillPrices(wine, document, details);
+        boolean priceParsed = fillPrices(wine, document, details);
+        if(!priceParsed) {
+            log.warn("Wine {} will not be parsed because could not get price", productID);
+            return null;
+        }
 
         String brand = details.attr(BRAND_SELECTOR);
         if (!brand.isEmpty()) {
@@ -477,17 +481,20 @@ public class ParserService {
         }
     }
 
-    private void fillPrices(Wine wine, Document document, Element details) {
+    private boolean fillPrices(Wine wine, Document document, Element details) {
 
         String newPriceString = details.attr(NEW_PRICE_SELECTOR);
         if (!newPriceString.isEmpty()) {
             BigDecimal newPrice = new BigDecimal(newPriceString);
             wine.setNewPrice(newPrice);
+        } else {
+            return false;
         }
         Element oldPriceSpan = document.selectFirst(OLD_PRICE_SELECTOR);
         if (oldPriceSpan != null) {
             BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replace(" ", ""));
             wine.setOldPrice(oldPrice);
         }
+        return true;
     }
 }
