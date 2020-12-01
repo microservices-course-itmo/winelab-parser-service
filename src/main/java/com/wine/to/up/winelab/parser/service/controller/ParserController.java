@@ -49,7 +49,7 @@ public class ParserController {
     public ResponseEntity<Object> parseWine(@PathVariable(value = "id") int productID) {
         Wine wine = parserService.parseProduct(productID);
         if (wine != null) {
-            log.info(wine.toString());
+            log.debug(wine.toString());
             return ResponseEntity.ok(wine);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -67,7 +67,7 @@ public class ParserController {
 
         Map<Integer, Wine> wines = parserService.parseCatalogs();
         for (Wine wine : wines.values()) {
-            log.info(wine.toString());
+            log.debug(wine.toString());
         }
         long end = System.currentTimeMillis();
         long timeElapsedTotal = end - begin;
