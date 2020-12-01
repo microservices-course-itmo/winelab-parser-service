@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.dto;
 
+import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -21,6 +22,7 @@ class WineTest {
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
         parserService = new ParserService(metricsCollector);
         mockedParserService = Mockito.mock(ParserService.class);
+        EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
         ReflectionTestUtils.setField(parserService, "COOKIES", Map.of("currentPos", "S734", "currentRegion", "RU-SPE"));
@@ -54,7 +56,7 @@ class WineTest {
         ReflectionTestUtils.setField(parserService, "CATEGORY_SELECTOR", "category");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_BASE", "https://winelab.ru/search?q=%d%%3Arelevance");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_BRAND", "%%3Abrands%%3A%s");
-        ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_ALCOHOL", "%%3AAlcoholContent%%3A%%255B%.1f%%2BTO%%2B%.1f%%255De");
+        ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_ALCOHOL", "%%3AAlcoholContent%%3A%%255B%.1f%%2BTO%%2B%.1f%%255D");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_PRICE", "%%3Aprice%%3A%%5B%.0f%%20TO%%20%.0f%%5D");
         ReflectionTestUtils.setField(parserService, "WINES", new String[] {"вино","винный","шампанское","портвейн","глинтвейн","вермут","кагор","сангрия"});
         ReflectionTestUtils.setField(parserService, "SPARKLINGS", new String[] {"игрист","шампанское"});
@@ -77,6 +79,8 @@ class WineTest {
                 "сладкое",ParserApi.Wine.Sugar.SWEET));
         ReflectionTestUtils.setField(parserService, "PATTERN_VOLUME", "\\d+([,.]\\d+)? [Лл]");
         ReflectionTestUtils.setField(parserService, "PATTERN_ALCOHOL", "\\d{0,2}(.\\d+)? %");
+        ReflectionTestUtils.setField(parserService, "MAX_RETRIES", 3);
+        ReflectionTestUtils.setField(parserService, "eventLogger", eventLoggerMock);
     }
 
     @Test
@@ -108,7 +112,7 @@ class WineTest {
         Assertions.assertEquals(1243.0f, apiWine.getOldPrice());
         Assertions.assertEquals("https://winelab.ru/product/1014769", apiWine.getLink());
         Assertions.assertEquals(599.0f, apiWine.getNewPrice());
-        Assertions.assertEquals("https://winelab.ru/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA", apiWine.getImage());
+        Assertions.assertEquals("https://jmrkpxyvei.a.trbcdn.net/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA", apiWine.getImage());
         Assertions.assertEquals("Domaine Barons de Rothschild", apiWine.getManufacturer());
         Assertions.assertEquals("SAGA", apiWine.getBrand());
         Assertions.assertEquals("Франция", apiWine.getCountry());

@@ -44,6 +44,8 @@ public class ParserService {
     private Map<String, String> COOKIES;
     @Value("#{${parser.catalogs}}")
     private Map<String, String> CATALOGS;
+    @Value("${parser.retries}")
+    private int MAX_RETRIES;
 
     @Value("${parser.selector.catalog.id}")
     private String ID_SELECTOR;
@@ -158,7 +160,7 @@ public class ParserService {
             Set<String> manufacturerSet = new HashSet<>();
             for (String catalog : CATALOGS.values()) {
                 String url = String.format(CATALOG_START_URL, catalog);
-                Document document = Jsoup.connect(url).cookies(COOKIES).get();
+                Document document = getDocument(url);
 
                 countrySet.addAll(loadAttributes(document, COUNTRY_SELECTOR));
                 grapeSet.addAll(loadAttributes(document, GRAPE_SELECTOR));
@@ -171,8 +173,17 @@ public class ParserService {
         }
     }
 
-    protected Document getProductDocument(String productURL) throws IOException {
-        return Jsoup.connect(productURL).cookies(COOKIES).get();
+    protected Document getDocument(String url) throws IOException {
+        for(int count = 0; count < MAX_RETRIES; count++) {
+            try {
+                Document document = Jsoup.connect(url).cookies(COOKIES).get();
+                return document;
+            }
+            catch (IOException ex) {
+                log.warn("Couldn't get page {} on try {} : {}", url, count + 1, ex);
+            }
+        }
+        throw new IOException(String.format("Couldn't get page %s", url));
     }
 
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
@@ -182,7 +193,7 @@ public class ParserService {
         long fetchStart = System.nanoTime();
 
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
-        Document document = getProductDocument(productURL);
+        Document document = getDocument(productURL);
 
         long fetchEnd = System.nanoTime();
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - fetchStart);
@@ -217,7 +228,7 @@ public class ParserService {
 
         Element img = document.selectFirst(IMAGE_SELECTOR);
         if (img != null) {
-            String image = PROTOCOL + SITE_URL + img.attr("src");
+            String image = img.attr("src");
             wine.setImage(image);
         }
 
@@ -235,7 +246,7 @@ public class ParserService {
         wine.setDescription(description);
         String searchURL = getLink(PROTOCOL, SITE_URL, productID, wine);
         try {
-            Document searchPage = Jsoup.connect(searchURL).cookies(COOKIES).get();
+            Document searchPage = getDocument(searchURL);
             fillValuesBySearchURL(searchPage, productID, wine);
             if (!wine.isSparkling()) {
                 Elements categories = searchPage.select(String.format(FILTER_SELECTOR, CATEGORY_SELECTOR));
@@ -301,7 +312,7 @@ public class ParserService {
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
-        Document document = Jsoup.connect(url).cookies(COOKIES).get();
+        Document document = getDocument(url);
         long firstFetchEnd = System.nanoTime();
         metricsCollector.timeWinePageFetchingDuration(firstFetchEnd - parseStart);
         boolean isLastPage = false;
@@ -343,7 +354,7 @@ public class ParserService {
             } else {
                 long fetchStart = System.nanoTime();
                 url = String.format(CATALOG_NEXT_URL, nextPage.attr("href"));
-                document = Jsoup.connect(url).cookies(COOKIES).get();
+                document = getDocument(url);
                 long fetchEnd = System.nanoTime();
                 metricsCollector.timeWinePageFetchingDuration(fetchEnd - fetchStart);
             }
@@ -355,7 +366,7 @@ public class ParserService {
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
         try {
-            Document document = Jsoup.connect(url).cookies(COOKIES).get();
+            Document document = getDocument(url);
 
             Set<String> countrySet = loadAttributes(document, COUNTRY_SELECTOR);
             Set<String> grapeSet = loadAttributes(document, GRAPE_SELECTOR);
