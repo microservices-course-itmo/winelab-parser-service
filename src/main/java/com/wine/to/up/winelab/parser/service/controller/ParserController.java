@@ -116,7 +116,7 @@ public class ParserController {
         long begin = System.currentTimeMillis();
             Map<Integer, Wine> wines = parserService.parseCatalogPage(catalog, page);
         for (Wine wine : wines.values()) {
-            log.info(wine.toString());
+            log.debug(wine.toString());
         }
         long end = System.currentTimeMillis();
         long timeElapsedTotal = end - begin;
