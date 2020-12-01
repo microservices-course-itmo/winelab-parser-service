@@ -23,7 +23,6 @@ public class UpdateService {
     private KafkaService kafkaService;
     @Autowired
     private ParserService parserService;
-
     @Autowired
     private WineLabParserMetricsCollector metricsCollector;
 
