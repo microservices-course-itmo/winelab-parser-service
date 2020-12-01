@@ -1,16 +1,12 @@
 package com.wine.to.up.winelab.parser.service.configuration;
 
-import com.wine.to.up.commonlib.messaging.BaseKafkaHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.api.WineLabServiceApiProperties;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
-import com.wine.to.up.winelab.parser.service.messaging.WineTopicKafkaMessageHandler;
-import com.wine.to.up.winelab.parser.service.messaging.serialization.EventDeserializer;
 import com.wine.to.up.winelab.parser.service.messaging.serialization.EventSerializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
