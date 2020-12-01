@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +23,15 @@ public class UpdateService {
     private KafkaService kafkaService;
     @Autowired
     private ParserService parserService;
+    @Autowired
+    private WineLabParserMetricsCollector metricsCollector;
 
     @Value("${parser.address}")
     private String siteURL;
 
     public int updateCatalog() {
+        long parseStart = System.nanoTime();
+        metricsCollector.isParsing(1);
         Map<Integer, Wine> wines = parserService.parseCatalogs();
         final int CHUNK_WINE_COUNT = 100;
         List<ParserApi.Wine> apiWines = wines.values()
@@ -43,6 +48,9 @@ public class UpdateService {
             ParserApi.WineParsedEvent event = eventBuilder.build();
             kafkaService.sendWineParsedEvent(event);
         }
+        long parseEnd = System.nanoTime();
+        metricsCollector.timeParsingDuration(parseEnd - parseStart);
+        metricsCollector.isParsing(0);
         return wines.size();
     }
 }
