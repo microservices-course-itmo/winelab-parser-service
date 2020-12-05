@@ -132,7 +132,7 @@ public class ParserController {
     public ResponseEntity<Object> parseAsCsv()
     {
         log.info("Parsing as CSV started!");
-        Map<Integer, Wine> wines = parserService.parseCatalogPage("wine", 1);
+        Map<Integer, Wine> wines = parserService.parseCatalogs();
         if (wines.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
