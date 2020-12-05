@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +29,13 @@ import java.util.stream.Collectors;
 @Configuration
 public class ParserController {
     private final ParserService parserService;
-
     private final UpdateWineLabJob job;
+    private final WineToCsvConverter converter;
 
-    public ParserController(ParserService parserService, UpdateWineLabJob job) {
+    public ParserController(ParserService parserService, UpdateWineLabJob job, WineToCsvConverter converter) {
         this.parserService = parserService;
         this.job = job;
+        this.converter = converter;
     }
 
     /**
@@ -62,9 +64,6 @@ public class ParserController {
         long begin = System.currentTimeMillis();
 
         Map<Integer, Wine> wines = parserService.parseCatalogs();
-        for (Wine wine : wines.values()) {
-            log.info(wine.toString());
-        }
         long end = System.currentTimeMillis();
         long timeElapsedTotal = end - begin;
         log.info("Time elapsed total: {} ", String.format("%d min %d sec",
@@ -72,6 +71,9 @@ public class ParserController {
                 TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
         ));
+        if (wines.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         List<String> responseData = wines.values()
                 .stream()
                 .map(Wine::toString)
@@ -92,7 +94,7 @@ public class ParserController {
             @PathVariable(value = "page") int page) {
         log.info("Parsing started!");
         long begin = System.currentTimeMillis();
-            Map<Integer, Wine> wines = parserService.parseCatalogPage(catalog, page);
+        Map<Integer, Wine> wines = parserService.parseCatalogPage(catalog, page);
         for (Wine wine : wines.values()) {
             log.info(wine.toString());
         }
@@ -122,4 +124,21 @@ public class ParserController {
         int count = job.runJob();
         return ResponseEntity.ok(String.format("Total %d wines sent", count));
     }
+
+    /**
+     * Endpoint for parsing catalog and returning it in CSV format
+     */
+    @GetMapping("/catalogs/csv")
+    public ResponseEntity<Object> parseAsCsv()
+    {
+        log.info("Parsing as CSV started!");
+        Map<Integer, Wine> wines = parserService.parseCatalogPage("wine", 1);
+        if (wines.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        WineToCsvConverter converter = new WineToCsvConverter();
+        String responseData = WineToCsvConverter.convert(wines.values());
+        return ResponseEntity.ok(responseData);
+    }
+
 }
