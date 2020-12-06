@@ -8,7 +8,6 @@ import io.prometheus.client.Summary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,11 +20,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 public class WineLabParserMetricsCollector extends CommonMetricsCollector {
-    private static HashMap<String, Boolean> isParsingMap = new HashMap<>();
-
     private static final String SERVICE_NAME = "winelab_parse_service";
 
     private static final String PARSING_STARTED = "parsing_started_total";
+    private static final String PARSING_COMPLETE = "parsing_complete_total";
     private static final String PARSING_IN_PROGRESS = "parsing_in_progress";
     private static final String PARSING_DURATION = "parsing_process_duration_summary";
     private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
@@ -45,6 +43,10 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final Counter parsingStartedCounter = Counter.build()
             .name(PARSING_STARTED)
             .help("Total number of parsing processes ever started")
+            .register();
+    private static final Counter parsingCompleteCounter = Counter.build()
+            .name(PARSING_COMPLETE)
+            .help("Total number of parsing processes ever completed")
             .register();
     private static final Gauge parsingInProgressGauge = Gauge.build()
             .name(PARSING_IN_PROGRESS)
@@ -97,6 +99,11 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     public void parsingStarted(int count) {
         Metrics.counter(PARSING_STARTED).increment(count);
         parsingStartedCounter.inc(count);
+    }
+
+    public void parsingComplete(int count) {
+        Metrics.counter(PARSING_COMPLETE).increment(count);
+        parsingCompleteCounter.inc(count);
     }
 
     public void incParsingInProgress() {

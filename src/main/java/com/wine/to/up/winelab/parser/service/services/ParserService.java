@@ -253,6 +253,7 @@ public class ParserService {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
         long parseEnd = System.nanoTime();
+        metricsCollector.parsingComplete(1);
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
         metricsCollector.decParsingInProgress();
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
