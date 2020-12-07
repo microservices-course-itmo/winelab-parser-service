@@ -4,18 +4,25 @@ import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
-class WineTest {
+public class CsvConverterTest {
     ParserService parserService;
     ParserService mockedParserService;
     WineLabParserMetricsCollector metricsCollector;
+    private static final String csvExpected = "\"NAME\",\"LINK\",\"OLD_PRICE\",\"NEW_PRICE\",\"IMAGE\",\"MANUFACTURER\",\"BRAND\",\"COUNTRY\",\"REGION\",\"VOLUME\",\"ALCOHOL_CONTENT\",\"SPARKLING\",\"COLOR\",\"SUGAR\",\"GRAPE_SORT\",\"DESCRIPTION\",\"GASTRONOMY\"\n" +
+            "\"Вино Saga Domaine Barons de Rothschild Bordeaux красное сухое 0,75 л\",\"https://winelab.ru/product/1014769\",\"1243\",\"599.0\",\"https://jmrkpxyvei.a.trbcdn.net/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA\",\"Domaine Barons de Rothschild\",\"SAGA\",\"Франция\",\"Бордо\",\"0.75\",\"13\",\"false\",\"RED\",\"DRY\",\"Каберне Совиньон\",\"Сага Бордо Руж – это вино на каждый день. Оно включает в себя традиционные сорта винограда: Каберне Совиньон, Мерло, которые смешиваются в разных пропорциях (в зависимости от урожая). Доминирующий Каберне Совиньон придает вину классическую элегантность, тогда как стиль DBR (Lafite) способствует созданию мягкого, нежного вкуса. Сорт: 60% Каберне Совиньон, 40% Мерло Время выдержки в дубовых бочках : 40% вина, 9 месяцев в нержавеющих емкостях Цвет: Насыщенный пурпурный. Аромат: Нежный и выразительный, с тонами черных ягод (ежевики и черешни) на фоне ванильных и жареных ноток. Вкус: Сочное и мягкое на вкус, с обильной танинной структурой и продолжительным ягодным послевкусием, отмеченным лакричным привкусом.\",\"Вино прекрасно сочетается с блюдами из красного мяса. Декантирование Примерно за 1 час Температура подачи: 16-18 °C\"\n";
 
     @BeforeEach
     public void init() {
@@ -58,25 +65,25 @@ class WineTest {
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_BRAND", "%%3Abrands%%3A%s");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_ALCOHOL", "%%3AAlcoholContent%%3A%%255B%.1f%%2BTO%%2B%.1f%%255D");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_PRICE", "%%3Aprice%%3A%%5B%.0f%%20TO%%20%.0f%%5D");
-        ReflectionTestUtils.setField(parserService, "WINES", new String[]{"вино", "винный", "шампанское", "портвейн", "глинтвейн", "вермут", "кагор", "сангрия"});
-        ReflectionTestUtils.setField(parserService, "SPARKLINGS", new String[]{"игрист", "шампанское"});
-        ReflectionTestUtils.setField(parserService, "REGIONS", new String[]{"бордо", "венето", "тоскана", "риоха", "кастилья ла манча", "бургундия", "долина луары",
-                "кампо де борха", "риберо дель дуэро", "пьемонт", "долина роны", "сицилия", "другие регионы"});
+        ReflectionTestUtils.setField(parserService, "WINES", new String[] {"вино","винный","шампанское","портвейн","глинтвейн","вермут","кагор","сангрия"});
+        ReflectionTestUtils.setField(parserService, "SPARKLINGS", new String[] {"игрист","шампанское"});
+        ReflectionTestUtils.setField(parserService, "REGIONS", new String[] {"бордо","венето","тоскана","риоха","кастилья ла манча","бургундия","долина луары",
+                "кампо де борха","риберо дель дуэро","пьемонт","долина роны","сицилия","другие регионы"});
         ReflectionTestUtils.setField(parserService, "COUNTRY_FIX", Map.of(
-                "Российская Федерация", "Россия",
-                "Южная Африка", "ЮАР",
-                "Соединенные Штаты Америки", "США",
-                "Соед. Королев.", "Великобритания"));
+                "Российская Федерация","Россия",
+                "Южная Африка","ЮАР",
+                "Соединенные Штаты Америки","США",
+                "Соед. Королев.","Великобритания"));
         ReflectionTestUtils.setField(parserService, "COLORS", Map.of(
                 "красное", ParserApi.Wine.Color.RED,
                 "розовое", ParserApi.Wine.Color.ROSE,
                 "белое", ParserApi.Wine.Color.WHITE));
         ReflectionTestUtils.setField(parserService, "SUGARS", Map.of(
                 "брют", ParserApi.Wine.Sugar.DRY,
-                "сухое", ParserApi.Wine.Sugar.DRY,
-                "полусухое", ParserApi.Wine.Sugar.MEDIUM_DRY,
-                "полусладкое", ParserApi.Wine.Sugar.MEDIUM,
-                "сладкое", ParserApi.Wine.Sugar.SWEET));
+                "сухое",ParserApi.Wine.Sugar.DRY,
+                "полусухое",ParserApi.Wine.Sugar.MEDIUM_DRY,
+                "полусладкое",ParserApi.Wine.Sugar.MEDIUM,
+                "сладкое",ParserApi.Wine.Sugar.SWEET));
         ReflectionTestUtils.setField(parserService, "PATTERN_VOLUME", "\\d+([,.]\\d+)? [Лл]");
         ReflectionTestUtils.setField(parserService, "PATTERN_ALCOHOL", "\\d{0,2}(.\\d+)? %");
         ReflectionTestUtils.setField(parserService, "MAX_RETRIES", 3);
@@ -84,43 +91,28 @@ class WineTest {
     }
 
     @Test
-    void testMappedValuesNotNull() {
+    void testCsvConverter() {
         Wine wine = parserService.parseProduct(1014769);
-        ParserApi.Wine apiWine = wine.toParserWine();
-
-        Assertions.assertNotNull(apiWine.getName());           //test the fields are not null/null (depends on the field)
-        Assertions.assertNotNull(apiWine.getLink());
-        Assertions.assertNotNull(apiWine.getImage());
-        Assertions.assertNotNull(apiWine.getManufacturer());
-        Assertions.assertNotNull(apiWine.getBrand());
-        Assertions.assertNotNull(apiWine.getCountry());
-        Assertions.assertNotNull(apiWine.getColor());
-        Assertions.assertNotNull(apiWine.getSugar());
-        Assertions.assertNotNull(apiWine.getRegion(0));
-        Assertions.assertNotNull(apiWine.getGrapeSort(0));
-        Assertions.assertNotNull(apiWine.getGastronomy());
-        Assertions.assertNotNull(apiWine.getDescription());
-
+        WineToCsvConverter converter = new WineToCsvConverter();
+        String message = converter.convert(Arrays.asList(wine));
+        Assertions.assertEquals(csvExpected, message);
     }
 
-    @Test
-    void testParsedValuesEqualExpected() {
-        Wine wine = parserService.parseProduct(1014769);
-        ParserApi.Wine apiWine = wine.toParserWine();
-
-        Assertions.assertEquals("Вино Saga Domaine Barons de Rothschild Bordeaux красное сухое 0,75 л", apiWine.getName());             //test the fields are being mapped correctly
-        Assertions.assertEquals(1243.0f, apiWine.getOldPrice());
-        Assertions.assertEquals("https://winelab.ru/product/1014769", apiWine.getLink());
-        Assertions.assertEquals(599.0f, apiWine.getNewPrice());
-        Assertions.assertEquals("https://jmrkpxyvei.a.trbcdn.net/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA", apiWine.getImage());
-        Assertions.assertEquals("Domaine Barons de Rothschild", apiWine.getManufacturer());
-        Assertions.assertEquals("SAGA", apiWine.getBrand());
-        Assertions.assertEquals("Франция", apiWine.getCountry());
-        Assertions.assertEquals(0.75f, apiWine.getCapacity());
-        Assertions.assertEquals(ParserApi.Wine.Color.RED, apiWine.getColor());
-        Assertions.assertEquals(ParserApi.Wine.Sugar.DRY, apiWine.getSugar());
-        Assertions.assertEquals("Каберне Совиньон", apiWine.getGrapeSort(0));
-        Assertions.assertEquals("Сага Бордо Руж – это вино на каждый день. Оно включает в себя традиционные сорта винограда: Каберне Совиньон, Мерло, которые смешиваются в разных пропорциях (в зависимости от урожая). Доминирующий Каберне Совиньон придает вину классическую элегантность, тогда как стиль DBR (Lafite) способствует созданию мягкого, нежного вкуса. Сорт: 60% Каберне Совиньон, 40% Мерло Время выдержки в дубовых бочках : 40% вина, 9 месяцев в нержавеющих емкостях Цвет: Насыщенный пурпурный. Аромат: Нежный и выразительный, с тонами черных ягод (ежевики и черешни) на фоне ванильных и жареных ноток. Вкус: Сочное и мягкое на вкус, с обильной танинной структурой и продолжительным ягодным послевкусием, отмеченным лакричным привкусом.", apiWine.getDescription());
-        Assertions.assertEquals("Вино прекрасно сочетается с блюдами из красного мяса. Декантирование Примерно за 1 час Температура подачи: 16-18 °C", apiWine.getGastronomy());
+    private class ParserServiceStub extends ParserService {
+        public ParserServiceStub(WineLabParserMetricsCollector metricsCollector) {
+            super(metricsCollector);
+        }
+        @Override
+        protected Document getDocument(String url) throws IOException {
+            StringBuffer localURLBuffer = new StringBuffer(url
+                    .replaceFirst("https://winelab.ru/", "src/test/resources/pages/")
+                    .replaceAll("\\?*", "")
+                    .replaceAll(";", ""))
+                    .append(".html");
+            String localURL = localURLBuffer.toString();
+            File localPage = new File(localURL);
+            System.out.println();
+            return Jsoup.parse(localPage, "UTF-8");
+        }
     }
 }

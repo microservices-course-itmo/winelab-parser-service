@@ -31,7 +31,7 @@ public class WineToCsvConverter {
         fields.put("GASTRONOMY", Wine::getGastronomy);
     }
 
-    public static String convert(Collection<Wine> wines) {
+    public String convert(Collection<Wine> wines) {
         StringBuilder builder = new StringBuilder();
         builder.append(getHeader());
         for (Wine wine : wines) {
@@ -40,11 +40,11 @@ public class WineToCsvConverter {
         return builder.toString();
     }
 
-    private static String getHeader() {
+    private String getHeader() {
         return toCsvString(new ArrayList<>(fields.keySet()));
     }
 
-    static private String getWine(Wine wine) {
+    private String getWine(Wine wine) {
         List<Object> attributes = new ArrayList<>();
         for (Function<Wine, Object> func : fields.values()) {
             attributes.add(func.apply(wine));
@@ -52,7 +52,7 @@ public class WineToCsvConverter {
         return toCsvString(attributes);
     }
 
-    static private String toCsvString(List<Object> list) {
+    private String toCsvString(List<Object> list) {
         return new StringBuilder(
                 list.stream()
                         .map(s -> s == null ? "\"\"" : "\"" + s + "\"")

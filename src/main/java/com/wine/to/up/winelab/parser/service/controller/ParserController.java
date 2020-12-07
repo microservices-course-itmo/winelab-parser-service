@@ -133,8 +133,7 @@ public class ParserController {
         if (wines.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        WineToCsvConverter converter = new WineToCsvConverter();
-        String responseData = WineToCsvConverter.convert(wines.values());
+        String responseData = converter.convert(wines.values());
         return ResponseEntity.ok(responseData);
     }
 
