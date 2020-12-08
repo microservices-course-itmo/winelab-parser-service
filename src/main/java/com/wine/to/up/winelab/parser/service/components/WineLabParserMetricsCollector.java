@@ -133,6 +133,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         micrometerTimeSinceLastSucceededParsingGauge.set(time);
         timeSinceLastParsingGauge.set(time);
     }
+
     public void timeWineDetailsFetchingDuration(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
         wineDetailsFetchingDurationSummary.observe(milliTime);
@@ -163,7 +164,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
 
     public void isParsing(int v) {
-        Metrics.gauge(IS_PARSING, v);
+        //Metrics.gauge(IS_PARSING, v);
         isParsingGauge.set(v);
     }
 
