@@ -106,25 +106,25 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.counter(PARSING_COMPLETE).increment(count);
         parsingCompleteCounter.inc(count);
     }
-
+    private static final AtomicInteger isparsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
     public void incParsingInProgress() {
         parsingInProgressGauge.inc();
-       /* AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
+        isparsingGauge.incrementAndGet();
+        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
         if (gauge != null) {
             gauge.getAndIncrement();
         }
-
-        */
     }
 
     public void decParsingInProgress() {
         parsingInProgressGauge.dec();
-        /*AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
+        isparsingGauge.decrementAndGet();
+        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
         if (gauge != null) {
             gauge.getAndDecrement();
         }
 
-         */
+
     }
 
     public void timeParsingDuration(long nanoTime) {
@@ -166,7 +166,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment();
         winesPublishedToKafkaCounter.inc(wineNum);
     }
-
     public void isParsing(int v) {
         //Metrics.gauge(IS_PARSING, v);
         isParsingGauge.set(v);
