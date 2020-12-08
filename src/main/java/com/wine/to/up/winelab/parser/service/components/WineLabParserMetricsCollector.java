@@ -128,15 +128,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         parsingDurationSummary.observe(milliTime);
         Metrics.summary(PARSING_DURATION).record(milliTime);
     }
-
-   /* public void countTimeSinceLastParsing(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
-        timeSinceLastParsingGauge.set(milliTime);
-        Metrics.summary(TIME_SINCE_LAST_PARSING).record(milliTime);
-    }
-
-    */
-    public static void timeSinceLastSucceededParse(long time) {
+    public static void countTimeSinceLastParsing(long time) {
         // Metrics.gauge(TIME_SINCE_LAST_SUCCEEDED_PARSING, time);
         micrometerTimeSinceLastSucceededParsingGauge.set(time);
         timeSinceLastParsingGauge.set(time);
