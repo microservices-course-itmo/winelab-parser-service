@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This Class expose methods for recording specific metrics
@@ -95,7 +96,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
             .name(WINES_PUBLISHED_TO_KAFKA)
             .help("Number of wines that have been sent to Kafka")
             .register();
-
+    private static final AtomicLong micrometerTimeSinceLastSucceededParsingGauge = Metrics.gauge(TIME_SINCE_LAST_PARSING, new AtomicLong(0));
     public void parsingStarted(int count) {
         Metrics.counter(PARSING_STARTED).increment(count);
         parsingStartedCounter.inc(count);
@@ -128,12 +129,18 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.summary(PARSING_DURATION).record(milliTime);
     }
 
-    public void countTimeSinceLastParsing(long nanoTime) {
+   /* public void countTimeSinceLastParsing(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
         timeSinceLastParsingGauge.set(milliTime);
         Metrics.summary(TIME_SINCE_LAST_PARSING).record(milliTime);
     }
 
+    */
+    public static void timeSinceLastSucceededParse(long time) {
+        // Metrics.gauge(TIME_SINCE_LAST_SUCCEEDED_PARSING, time);
+        micrometerTimeSinceLastSucceededParsingGauge.set(time);
+        timeSinceLastParsingGauge.set(time);
+    }
     public void timeWineDetailsFetchingDuration(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
         wineDetailsFetchingDurationSummary.observe(milliTime);
