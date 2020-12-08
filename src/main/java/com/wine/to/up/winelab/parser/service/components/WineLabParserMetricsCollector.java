@@ -109,18 +109,22 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
 
     public void incParsingInProgress() {
         parsingInProgressGauge.inc();
-        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
+       /* AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
         if (gauge != null) {
             gauge.getAndIncrement();
         }
+
+        */
     }
 
     public void decParsingInProgress() {
         parsingInProgressGauge.dec();
-        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
+        /*AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
         if (gauge != null) {
             gauge.getAndDecrement();
         }
+
+         */
     }
 
     public void timeParsingDuration(long nanoTime) {
