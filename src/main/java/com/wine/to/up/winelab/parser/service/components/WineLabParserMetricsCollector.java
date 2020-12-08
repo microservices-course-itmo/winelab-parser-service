@@ -106,25 +106,30 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.counter(PARSING_COMPLETE).increment(count);
         parsingCompleteCounter.inc(count);
     }
-    private static final AtomicInteger isparsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
+    //private static final AtomicInteger isparsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
     public void incParsingInProgress() {
         parsingInProgressGauge.inc();
-        isparsingGauge.incrementAndGet();
+        //isparsingGauge.incrementAndGet();
         AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
         if (gauge != null) {
             gauge.getAndIncrement();
         }
     }
+    public static void timeSinceLastSucceededParse(long time) {
+        // Metrics.gauge(TIME_SINCE_LAST_SUCCEEDED_PARSING, time);
+        micrometerTimeSinceLastSucceededParsingGauge.set(time);
+        timeSinceLastParsingGauge.set(time);
+    }
 
     public void decParsingInProgress() {
         parsingInProgressGauge.dec();
-        isparsingGauge.decrementAndGet();
+        //isparsingGauge.decrementAndGet();
         AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
         if (gauge != null) {
             gauge.getAndDecrement();
         }
 
-
+        timeSinceLastSucceededParse(System.currentTimeMillis());
     }
 
     public void timeParsingDuration(long nanoTime) {
@@ -132,11 +137,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         parsingDurationSummary.observe(milliTime);
         Metrics.summary(PARSING_DURATION).record(milliTime);
     }
-    public static void countTimeSinceLastParsing(long time) {
-        // Metrics.gauge(TIME_SINCE_LAST_SUCCEEDED_PARSING, time);
-        micrometerTimeSinceLastSucceededParsingGauge.set(time);
-        timeSinceLastParsingGauge.set(time);
-    }
+
 
     public void timeWineDetailsFetchingDuration(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
@@ -167,7 +168,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         winesPublishedToKafkaCounter.inc(wineNum);
     }
     public void isParsing(int v) {
-        //Metrics.gauge(IS_PARSING, v);
+        Metrics.gauge(IS_PARSING, v);
         isParsingGauge.set(v);
     }
 
