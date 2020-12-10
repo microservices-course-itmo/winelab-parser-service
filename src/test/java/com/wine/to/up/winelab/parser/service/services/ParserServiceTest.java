@@ -133,4 +133,12 @@ class ParserServiceTest {
         Assertions.assertFalse(wines.isEmpty());
         Assertions.assertFalse(wines.values().stream().anyMatch(Objects::isNull));
     }
+
+    @Test
+    void testParseCatalogPageNotEmpty() {
+        Map<Integer, Wine> wines = parserService.parseCatalogPage("wine", 1);
+        Assertions.assertFalse(wines.isEmpty());
+        Assertions.assertFalse(wines.values().stream().anyMatch(Objects::isNull));
+    }
+
 }
