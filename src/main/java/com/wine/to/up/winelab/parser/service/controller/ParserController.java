@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  * The controller for parser REST endpoints
@@ -31,11 +33,13 @@ public class ParserController {
     private final ParserService parserService;
     private final UpdateWineLabJob job;
     private final WineToCsvConverter converter;
+    private final WineLabParserMetricsCollector metricsCollector;
 
-    public ParserController(ParserService parserService, UpdateWineLabJob job, WineToCsvConverter converter) {
+    public ParserController(ParserService parserService, UpdateWineLabJob job, WineToCsvConverter converter ,WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
         this.job = job;
         this.converter = converter;
+        this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.KafkaService;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -36,6 +37,7 @@ class ControllerTest {
     KafkaService kafkaService;
     UpdateWineLabJob updateWineLabJob;
     private WineLabParserMetricsCollector metricsCollector;
+    private  WineToCsvConverter converter;
     private ParserController parserController;
 
     @BeforeEach
@@ -43,8 +45,9 @@ class ControllerTest {
         parserService = Mockito.mock(ParserService.class);
         kafkaService = Mockito.mock(KafkaService.class);
         updateWineLabJob = Mockito.mock(UpdateWineLabJob.class);
+        converter = Mockito.mock(WineToCsvConverter.class);
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
-        parserController  = new ParserController(parserService, updateWineLabJob, metricsCollector);
+        parserController  = new ParserController(parserService, updateWineLabJob, converter, metricsCollector);
         mockMvc = MockMvcBuilders.standaloneSetup(parserController).build();
     }
 
