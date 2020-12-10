@@ -92,6 +92,10 @@ public class ParserController {
     public ResponseEntity<Object> parseCatalogPage(
             @PathVariable(value = "catalog") String catalog,
             @PathVariable(value = "page") int page) {
+        if(page < 1){
+            log.warn("Couldn't parse {}s' catalog page {} : Page number must be positive", catalog, page);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         log.info("Parsing started!");
         long begin = System.currentTimeMillis();
         Map<Integer, Wine> wines = parserService.parseCatalogPage(catalog, page);
