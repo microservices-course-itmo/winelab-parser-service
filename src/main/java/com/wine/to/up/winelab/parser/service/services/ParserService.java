@@ -44,6 +44,8 @@ public class ParserService {
     private Map<String, String> COOKIES;
     @Value("#{${parser.catalogs}}")
     private Map<String, String> CATALOGS;
+    @Value("${parser.retries}")
+    private int MAX_RETRIES;
 
     @Value("${parser.selector.catalog.id}")
     private String ID_SELECTOR;
@@ -141,6 +143,7 @@ public class ParserService {
     private Long lastParse = null;
 
     private final WineLabParserMetricsCollector metricsCollector;
+
     public ParserService(WineLabParserMetricsCollector metricsCollector) {
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
@@ -158,7 +161,7 @@ public class ParserService {
             Set<String> manufacturerSet = new HashSet<>();
             for (String catalog : CATALOGS.values()) {
                 String url = String.format(CATALOG_START_URL, catalog);
-                Document document = Jsoup.connect(url).cookies(COOKIES).get();
+                Document document = getDocument(url);
 
                 countrySet.addAll(loadAttributes(document, COUNTRY_SELECTOR));
                 grapeSet.addAll(loadAttributes(document, GRAPE_SELECTOR));
@@ -171,13 +174,27 @@ public class ParserService {
         }
     }
 
+    protected Document getDocument(String url) throws IOException {
+        for (int count = 0; count < MAX_RETRIES; count++) {
+            try {
+                Document document = Jsoup.connect(url).cookies(COOKIES).get();
+                return document;
+            } catch (IOException ex) {
+                log.warn("Couldn't get page {} on try {} : {}", url, count + 1, ex);
+            }
+        }
+        throw new IOException(String.format("Couldn't get page %s", url));
+    }
+
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
         metricsCollector.parsingStarted(1);
         metricsCollector.incParsingInProgress();
         long parseStart = System.nanoTime();
         long fetchStart = System.nanoTime();
+
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
-        Document document = Jsoup.connect(productURL).cookies(COOKIES).get();
+        Document document = getDocument(productURL);
+
         long fetchEnd = System.nanoTime();
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - fetchStart);
 
@@ -211,7 +228,7 @@ public class ParserService {
 
         Element img = document.selectFirst(IMAGE_SELECTOR);
         if (img != null) {
-            String image = PROTOCOL + SITE_URL + img.attr("src");
+            String image = img.attr("src");
             wine.setImage(image);
         }
 
@@ -228,9 +245,17 @@ public class ParserService {
         String description = document.selectFirst(DESCRIPTION_SELECTOR).html();
         wine.setDescription(description);
         String searchURL = getLink(PROTOCOL, SITE_URL, productID, wine);
+        Document searchPage = null;
+        boolean searchSuccessfull;
         try {
-            Document searchPage = Jsoup.connect(searchURL).cookies(COOKIES).get();
-            fillValuesBySearchURL(searchPage, productID, wine);
+            searchPage = getDocument(searchURL);
+            Elements cards = searchPage.select(CARD_SELECTOR);
+            searchSuccessfull = cards.size() == 1 && Integer.parseInt(cards.first().attr(ID_SELECTOR)) == productID;
+        } catch (IOException ex) {
+            searchSuccessfull = false;
+        }
+        if (searchSuccessfull) {
+            fillValuesBySearchURL(searchPage, wine);
             if (!wine.isSparkling()) {
                 Elements categories = searchPage.select(String.format(FILTER_SELECTOR, CATEGORY_SELECTOR));
                 for (Element category : categories) {
@@ -248,17 +273,16 @@ public class ParserService {
                     wine.setCountry(countryFix(country));
                 }
             }
-
-        } catch (Exception ex) {
+        } else {
             fillValuesOnException(tags, wine, grapeSet, manufacturerSet, countrySet);
         }
+
         long parseEnd = System.nanoTime();
-        metricsCollector.parsingComplete(1);
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
         metricsCollector.decParsingInProgress();
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
         var lackAttributes = wine.lackAttributes();
-        if(!lackAttributes.isEmpty()) {
+        if (!lackAttributes.isEmpty()) {
             lackAttributes.forEach(attribute -> eventLogger.info(WineLabParserNotableEvents.W_WINE_ATTRIBUTE_ABSENT, attribute, productURL));
         }
         return wine;
@@ -276,11 +300,11 @@ public class ParserService {
                 parseCatalog(catalog, wines);
             }
             long currentParse = System.nanoTime();
-            if(lastParse != null) {
-                //metricsCollector.countTimeSinceLastParsing(currentParse - lastParse);
+            if (lastParse != null) {
+                metricsCollector.countTimeSinceLastParsing(currentParse - lastParse);
             }
             lastParse = currentParse;
-            if(wines.size() > 0) {
+            if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
             } else {
                 log.warn("Parsing completed with 0 wines being returned");
@@ -296,7 +320,7 @@ public class ParserService {
     private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
-        Document document = Jsoup.connect(url).cookies(COOKIES).get();
+        Document document = getDocument(url);
         long firstFetchEnd = System.nanoTime();
         metricsCollector.timeWinePageFetchingDuration(firstFetchEnd - parseStart);
         boolean isLastPage = false;
@@ -338,7 +362,7 @@ public class ParserService {
             } else {
                 long fetchStart = System.nanoTime();
                 url = String.format(CATALOG_NEXT_URL, nextPage.attr("href"));
-                document = Jsoup.connect(url).cookies(COOKIES).get();
+                document = getDocument(url);
                 long fetchEnd = System.nanoTime();
                 metricsCollector.timeWinePageFetchingDuration(fetchEnd - fetchStart);
             }
@@ -350,7 +374,7 @@ public class ParserService {
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
         try {
-            Document document = Jsoup.connect(url).cookies(COOKIES).get();
+            Document document = getDocument(url);
 
             Set<String> countrySet = loadAttributes(document, COUNTRY_SELECTOR);
             Set<String> grapeSet = loadAttributes(document, GRAPE_SELECTOR);
@@ -472,9 +496,7 @@ public class ParserService {
         }
     }
 
-    private void fillValuesBySearchURL(Document searchPage, int productID, Wine wine) {
-        Elements cards = searchPage.select(CARD_SELECTOR);
-        assert cards.size() == 1 && Integer.parseInt(cards.first().attr(ID_SELECTOR)) == productID;
+    private void fillValuesBySearchURL(Document searchPage, Wine wine) {
 
         Element colorSpan = searchPage.selectFirst(String.format(FILTER_SELECTOR, COLOR_SELECTOR));
         if (colorSpan != null) {

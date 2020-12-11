@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -29,6 +30,7 @@ class ParseJobTest {
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
         parserService = new ParserService(metricsCollector);
         mockedParserService = Mockito.mock(ParserService.class);
+        EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
         ReflectionTestUtils.setField(parserService, "COOKIES", Map.of("currentPos", "S734", "currentRegion", "RU-SPE"));
@@ -62,7 +64,7 @@ class ParseJobTest {
         ReflectionTestUtils.setField(parserService, "CATEGORY_SELECTOR", "category");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_BASE", "https://winelab.ru/search?q=%d%%3Arelevance");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_BRAND", "%%3Abrands%%3A%s");
-        ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_ALCOHOL", "%%3AAlcoholContent%%3A%%255B%.1f%%2BTO%%2B%.1f%%255De");
+        ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_ALCOHOL", "%%3AAlcoholContent%%3A%%255B%.1f%%2BTO%%2B%.1f%%255D");
         ReflectionTestUtils.setField(parserService, "SEARCH_QUERY_PRICE", "%%3Aprice%%3A%%5B%.0f%%20TO%%20%.0f%%5D");
         ReflectionTestUtils.setField(parserService, "WINES", new String[] {"вино","винный","шампанское","портвейн","глинтвейн","вермут","кагор","сангрия"});
         ReflectionTestUtils.setField(parserService, "SPARKLINGS", new String[] {"игрист","шампанское"});
@@ -85,6 +87,8 @@ class ParseJobTest {
                 "сладкое",ParserApi.Wine.Sugar.SWEET));
         ReflectionTestUtils.setField(parserService, "PATTERN_VOLUME", "\\d+([,.]\\d+)? [Лл]");
         ReflectionTestUtils.setField(parserService, "PATTERN_ALCOHOL", "\\d{0,2}(.\\d+)? %");
+        ReflectionTestUtils.setField(parserService, "MAX_RETRIES", 3);
+        ReflectionTestUtils.setField(parserService, "eventLogger", eventLoggerMock);
         Logger logger = (Logger) LoggerFactory.getLogger(UpdateService.class);
         listAppender = new ListAppender<>();
         listAppender.start();
