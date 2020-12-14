@@ -300,9 +300,7 @@ public class ParserService {
                 parseCatalog(catalog, wines);
             }
             long currentParse = System.nanoTime();
-            if (lastParse != null) {
-                metricsCollector.countTimeSinceLastParsing(currentParse - lastParse);
-            }
+
             lastParse = currentParse;
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
