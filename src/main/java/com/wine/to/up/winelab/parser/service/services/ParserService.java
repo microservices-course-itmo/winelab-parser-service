@@ -301,7 +301,7 @@ public class ParserService {
             }
             long currentParse = System.nanoTime();
             if (lastParse != null) {
-                metricsCollector.countTimeSinceLastParsing(currentParse - lastParse);
+                //metricsCollector.timeSinceLastSucceededParse(currentParse - lastParse);
             }
             lastParse = currentParse;
             if (wines.size() > 0) {

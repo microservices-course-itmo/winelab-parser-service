@@ -26,11 +26,11 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String PARSING_STARTED = "parsing_started_total";
     private static final String PARSING_COMPLETE = "parsing_complete_total";
     private static final String PARSING_IN_PROGRESS = "parsing_in_progress";
-    private static final String PARSING_DURATION = "parsing_process_duration_summary";
+    private static final String PARSING_DURATION = "parsing_process_duration_seconds";
     private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
-    private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration";
+    private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration_seconds";
     private static final String WINE_PAGE_FETCHING_DURATION = "wine_page_fetching_duration";
-    private static final String WINE_DETAILS_PARSING_DURATION = "wine_details_parsing_duration";
+    private static final String WINE_DETAILS_PARSING_DURATION = "wine_details_parsing_duration_seconds";
     private static final String WINE_PAGE_PARSING_DURATION = "wine_page_parsing_duration";
     private static final String IS_PARSING = "is_parsing";
     private static final String WINES_PARSED_UNSUCCESSFULLY = "wines_parsed_unsuccessfully";
