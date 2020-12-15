@@ -347,7 +347,10 @@ public class ParserService {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
                                 if (!wines.containsKey(id)) {
-                                    wines.put(id, parseProduct(id, countrySet, grapeSet, manufacturerSet));
+                                    Wine wine = parseProduct(id, countrySet, grapeSet, manufacturerSet);
+                                    if(wine != null) {
+                                        wines.put(id, wine);
+                                    }
                                     metricsCollector.winesParsedSuccessfully(1);
                                 }
                             } catch (Exception ex) {
