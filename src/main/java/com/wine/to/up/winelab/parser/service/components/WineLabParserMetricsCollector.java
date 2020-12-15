@@ -26,14 +26,13 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
 
     private static final String PARSING_STARTED = "parsing_started_total";
     private static final String PARSING_COMPLETE = "parsing_complete_total";
-    private static final String PARSING_IN_PROGRESS = "parsing_in_progress";
     private static final String PARSING_DURATION = "parsing_process_duration_seconds";
     private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
     private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration_seconds";
-    private static final String WINE_PAGE_FETCHING_DURATION = "wine_page_fetching_duration";
+    private static final String WINE_PAGE_FETCHING_DURATION = "wine_page_fetching_duration_seconds";
     private static final String WINE_DETAILS_PARSING_DURATION = "wine_details_parsing_duration_seconds";
-    private static final String WINE_PAGE_PARSING_DURATION = "wine_page_parsing_duration";
-    private static final String IS_PARSING = "is_parsing";
+    private static final String WINE_PAGE_PARSING_DURATION = "wine_page_parsing_duration_seconds";
+    private static final String IS_PARSING = "parsing_in_progress";
     private static final String WINES_PARSED_UNSUCCESSFULLY = "wines_parsed_unsuccessfully";
     private static final String WINES_PARSED_SUCCESSFULLY = "wines_parsed_successfully";
     private static final String WINES_PUBLISHED_TO_KAFKA = "wines_published_to_kafka_count";
@@ -51,10 +50,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final Counter parsingCompleteCounter = Counter.build()
             .name(PARSING_COMPLETE)
             .help("Total number of parsing processes ever completed")
-            .register();
-    private static final Gauge parsingInProgressGauge = Gauge.build()
-            .name(PARSING_IN_PROGRESS)
-            .help("Total number of parsing processes currently in progress")
             .register();
     private static final Summary parsingDurationSummary = Summary.build()
             .name(PARSING_DURATION)
@@ -147,32 +142,32 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
     */
     public void timeParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         parsingDurationSummary.observe(milliTime);
         Metrics.summary(PARSING_DURATION).record(milliTime);
     }
 
 
     public void timeWineDetailsFetchingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         wineDetailsFetchingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_DETAILS_FETCHING_DURATION).record(milliTime);
     }
 
     public void timeWinePageFetchingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageFetchingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_PAGE_FETCHING_DURATION).record(milliTime);
     }
 
     public void timeWineDetailsParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         wineDetailsParsingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_DETAILS_PARSING_DURATION).record(milliTime);
     }
 
     public void timeWinePageParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageParsingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_PAGE_PARSING_DURATION).record(milliTime);
     }
