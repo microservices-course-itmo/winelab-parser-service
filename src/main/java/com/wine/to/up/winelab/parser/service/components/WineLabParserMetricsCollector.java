@@ -2,14 +2,12 @@ package com.wine.to.up.winelab.parser.service.components;
 
 import com.wine.to.up.commonlib.metrics.CommonMetricsCollector;
 import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Tag;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Summary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,7 +35,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String WINES_PARSED_SUCCESSFULLY = "wines_parsed_successfully";
     private static final String WINES_PUBLISHED_TO_KAFKA = "wines_published_to_kafka_count";
 
-    private static final String PARSING_COMPLETE_STATUS_TAG = "status";
+    private static final String PARSING_COMPLETE_STATUS = "status";
 
     public WineLabParserMetricsCollector() {
         super(SERVICE_NAME);
@@ -50,6 +48,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final Counter parsingCompleteCounter = Counter.build()
             .name(PARSING_COMPLETE)
             .help("Total number of parsing processes ever completed")
+            .labelNames(PARSING_COMPLETE_STATUS)
             .register();
     private static final Summary parsingDurationSummary = Summary.build()
             .name(PARSING_DURATION)
@@ -103,14 +102,12 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
 
     public void parsingCompleteSuccessful() {
-        Metrics.counter(PARSING_COMPLETE,
-                List.of(Tag.of(PARSING_COMPLETE_STATUS_TAG, "SUCCESS"))).increment();
+        Metrics.counter(PARSING_COMPLETE, PARSING_COMPLETE_STATUS, "SUCCESS").increment();
         parsingCompleteCounter.labels("SUCCESS").inc();
     }
 
     public void parsingCompleteFailed() {
-        Metrics.counter(PARSING_COMPLETE,
-                List.of(Tag.of(PARSING_COMPLETE_STATUS_TAG, "FAILED"))).increment();
+        Metrics.counter(PARSING_COMPLETE,PARSING_COMPLETE_STATUS, "FAILED").increment();
         parsingCompleteCounter.labels("FAILED").inc();
     }
     //private static final AtomicInteger isparsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
