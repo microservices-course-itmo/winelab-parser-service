@@ -147,32 +147,32 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
     */
     public void timeParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         parsingDurationSummary.observe(milliTime);
         Metrics.summary(PARSING_DURATION).record(milliTime);
     }
 
 
     public void timeWineDetailsFetchingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         wineDetailsFetchingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_DETAILS_FETCHING_DURATION).record(milliTime);
     }
 
     public void timeWinePageFetchingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageFetchingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_PAGE_FETCHING_DURATION).record(milliTime);
     }
 
     public void timeWineDetailsParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         wineDetailsParsingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_DETAILS_PARSING_DURATION).record(milliTime);
     }
 
     public void timeWinePageParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
+        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageParsingDurationSummary.observe(milliTime);
         Metrics.summary(WINE_PAGE_PARSING_DURATION).record(milliTime);
     }
