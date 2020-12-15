@@ -164,7 +164,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
 
     public void countWinesPublishedToKafka(double wineNum) {
-        Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment();
+        Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment(wineNum);
         winesPublishedToKafkaCounter.inc(wineNum);
     }
     public void isParsing(int v) {
