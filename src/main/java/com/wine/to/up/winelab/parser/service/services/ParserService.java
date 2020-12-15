@@ -371,6 +371,7 @@ public class ParserService {
                 catch (IOException ex) {
                     log.error("Error while parsing catalog page {} {}", url, ex);
                     eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED, page);
+                    break;
                 }
                 long fetchEnd = System.nanoTime();
                 metricsCollector.timeWinePageFetchingDuration(fetchEnd - fetchStart);
