@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String SERVICE_NAME = "winelab_parse_service";
 
-    private static final String PARSING_STARTED = "parsing_started_total";
-    private static final String PARSING_COMPLETE = "parsing_complete_total";
+    private static final String PARSING_STARTED = "parsing_started";
+    private static final String PARSING_COMPLETE = "parsing_complete";
     private static final String PARSING_DURATION = "parsing_process_duration_seconds";
     private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
     private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration_seconds";
