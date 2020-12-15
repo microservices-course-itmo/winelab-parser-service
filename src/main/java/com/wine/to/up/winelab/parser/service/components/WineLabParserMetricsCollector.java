@@ -26,7 +26,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
 
     private static final String PARSING_STARTED = "parsing_started_total";
     private static final String PARSING_COMPLETE = "parsing_complete_total";
-    private static final String PARSING_IN_PROGRESS = "parsing_in_progress";
     private static final String PARSING_DURATION = "parsing_process_duration_seconds";
     private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
     private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration_seconds";
@@ -51,10 +50,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final Counter parsingCompleteCounter = Counter.build()
             .name(PARSING_COMPLETE)
             .help("Total number of parsing processes ever completed")
-            .register();
-    private static final Gauge parsingInProgressGauge = Gauge.build()
-            .name(PARSING_IN_PROGRESS)
-            .help("Total number of parsing processes currently in progress")
             .register();
     private static final Summary parsingDurationSummary = Summary.build()
             .name(PARSING_DURATION)
