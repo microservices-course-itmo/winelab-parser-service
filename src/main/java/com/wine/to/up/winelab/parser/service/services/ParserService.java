@@ -187,8 +187,6 @@ public class ParserService {
     }
 
     private Wine parseProduct(int productID, Set<String> countrySet, Set<String> grapeSet, Set<String> manufacturerSet) throws IOException {
-        metricsCollector.parsingStarted(1);
-        metricsCollector.incParsingInProgress();
         long parseStart = System.nanoTime();
         long fetchStart = System.nanoTime();
 
@@ -279,7 +277,6 @@ public class ParserService {
 
         long parseEnd = System.nanoTime();
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
-        metricsCollector.decParsingInProgress();
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
         var lackAttributes = wine.lackAttributes();
         if (!lackAttributes.isEmpty()) {
@@ -294,6 +291,7 @@ public class ParserService {
      * @return map of parsed wines in format (product id, parsed wine object)
      */
     public Map<Integer, Wine> parseCatalogs() {
+        metricsCollector.parsingStarted();
         try {
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
@@ -309,8 +307,10 @@ public class ParserService {
             } else {
                 log.warn("Parsing completed with 0 wines being returned");
             }
+            metricsCollector.parsingCompleteSuccessful();
             return wines;
         } catch (IOException ex) {
+            metricsCollector.parsingCompleteFailed();
             eventLogger.error(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();

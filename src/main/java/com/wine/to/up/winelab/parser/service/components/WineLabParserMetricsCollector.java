@@ -2,14 +2,15 @@ package com.wine.to.up.winelab.parser.service.components;
 
 import com.wine.to.up.commonlib.metrics.CommonMetricsCollector;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tag;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Summary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -36,6 +37,8 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String WINES_PARSED_UNSUCCESSFULLY = "wines_parsed_unsuccessfully";
     private static final String WINES_PARSED_SUCCESSFULLY = "wines_parsed_successfully";
     private static final String WINES_PUBLISHED_TO_KAFKA = "wines_published_to_kafka_count";
+
+    private static final String PARSING_COMPLETE_STATUS_TAG = "status";
 
     public WineLabParserMetricsCollector() {
         super(SERVICE_NAME);
@@ -96,17 +99,27 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
             .name(WINES_PUBLISHED_TO_KAFKA)
             .help("Number of wines that have been sent to Kafka")
             .register();
+
     private static final AtomicLong micrometerTimeSinceLastSucceededParsingGauge = Metrics.gauge(TIME_SINCE_LAST_PARSING, new AtomicLong(0));
-    public void parsingStarted(int count) {
-        Metrics.counter(PARSING_STARTED).increment(count);
-        parsingStartedCounter.inc(count);
+
+    public void parsingStarted() {
+        Metrics.counter(PARSING_STARTED).increment();
+        parsingStartedCounter.inc();
     }
 
-    public void parsingComplete(int count) {
-        Metrics.counter(PARSING_COMPLETE).increment(count);
-        parsingCompleteCounter.inc(count);
+    public void parsingCompleteSuccessful() {
+        Metrics.counter(PARSING_COMPLETE,
+                List.of(Tag.of(PARSING_COMPLETE_STATUS_TAG, "SUCCESS"))).increment();
+        parsingCompleteCounter.labels("SUCCESS").inc();
+    }
+
+    public void parsingCompleteFailed() {
+        Metrics.counter(PARSING_COMPLETE,
+                List.of(Tag.of(PARSING_COMPLETE_STATUS_TAG, "FAILED"))).increment();
+        parsingCompleteCounter.labels("FAILED").inc();
     }
     //private static final AtomicInteger isparsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
+    /*
     public void incParsingInProgress() {
         parsingInProgressGauge.inc();
         //isparsingGauge.incrementAndGet();
@@ -114,13 +127,14 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         if (gauge != null) {
             gauge.getAndIncrement();
         }
-    }
+    }*/
+
     public static void timeSinceLastSucceededParse(long time) {
         // Metrics.gauge(TIME_SINCE_LAST_SUCCEEDED_PARSING, time);
         micrometerTimeSinceLastSucceededParsingGauge.set(time);
         timeSinceLastParsingGauge.set(time);
     }
-
+    /*
     public void decParsingInProgress() {
         parsingInProgressGauge.dec();
         //isparsingGauge.decrementAndGet();
@@ -131,7 +145,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
 
         timeSinceLastSucceededParse(System.currentTimeMillis());
     }
-
+    */
     public void timeParsingDuration(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toMillis(nanoTime);
         parsingDurationSummary.observe(milliTime);
