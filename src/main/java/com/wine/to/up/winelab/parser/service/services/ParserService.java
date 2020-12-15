@@ -315,7 +315,6 @@ public class ParserService {
             return wines;
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
-            eventLogger.error(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();
         }
@@ -553,6 +552,6 @@ public class ParserService {
             BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replace(" ", ""));
             wine.setOldPrice(oldPrice);
         }
-        return false;
+        return true;
     }
 }
