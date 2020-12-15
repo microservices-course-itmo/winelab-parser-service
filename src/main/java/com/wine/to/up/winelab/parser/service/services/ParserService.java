@@ -203,7 +203,7 @@ public class ParserService {
             name = document.selectFirst(PRODUCT_NAME_SELECTOR).ownText();
             wine.setName(name);
         } catch (NullPointerException ex) {
-            eventLogger.error(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
+            eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get name", productID);
             return null;
         }
@@ -213,7 +213,7 @@ public class ParserService {
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
         if(!fillPrices(wine, document, details)) {
-            eventLogger.error(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
+            eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
             return null;
         }
@@ -365,7 +365,13 @@ public class ParserService {
             } else {
                 long fetchStart = System.nanoTime();
                 url = String.format(CATALOG_NEXT_URL, nextPage.attr("href"));
-                document = getDocument(url);
+                try {
+                    document = getDocument(url);
+                }
+                catch (IOException ex) {
+                    log.error("Error while parsing catalog page {} {}", url, ex);
+                    eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED, page);
+                }
                 long fetchEnd = System.nanoTime();
                 metricsCollector.timeWinePageFetchingDuration(fetchEnd - fetchStart);
             }
