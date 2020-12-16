@@ -6,6 +6,7 @@ import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
+import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -140,12 +142,26 @@ public class ParserService {
     @Value("${parser.pattern.alcohol}")
     private String PATTERN_ALCOHOL;
 
+    private static final String PARSING_IN_PROGRESS_GAUGE = "parsing_in_progress";
+    private static final String PARSING_PROCESS_DURATION_SUMMARY = "parsing_process_duration";
+    private static final String TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE = "time_since_last_succeeded_parsing";
+
+    private final AtomicInteger parsingInProgress = new AtomicInteger(0);
+    private final AtomicLong lastSucceededParsingTime = new AtomicLong(0);
+
     private Long lastParse = null;
 
     private final WineLabParserMetricsCollector metricsCollector;
 
     public ParserService(WineLabParserMetricsCollector metricsCollector) {
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
+
+        Metrics.gauge(PARSING_IN_PROGRESS_GAUGE, parsingInProgress);
+        Metrics.gauge(
+                TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE,
+                lastSucceededParsingTime,
+                val -> val.get() == 0 ? Double.NaN : (System.currentTimeMillis() - val.get()) / 1000.0
+        );
     }
 
     /**
@@ -296,7 +312,7 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         metricsCollector.parsingStarted();
-        metricsCollector.isParsing(1);
+        //metricsCollector.isParsing(1);
         try {
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
@@ -313,11 +329,11 @@ public class ParserService {
                 log.warn("Parsing completed with 0 wines being returned");
             }
             metricsCollector.parsingCompleteSuccessful();
-            metricsCollector.isParsing(0);
+            //metricsCollector.isParsing(0);
             return wines;
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
-            metricsCollector.isParsing(0);
+            //metricsCollector.isParsing(0);
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();
         }
