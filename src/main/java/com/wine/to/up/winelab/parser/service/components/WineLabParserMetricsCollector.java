@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -79,6 +80,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
             .name(IS_PARSING)
             .help("Parsing is in progress")
             .register();
+    private static final AtomicInteger micrometerIsParsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
 
     private static final Counter winesParsedUnsuccessfullyCounter = Counter.build()
             .name(WINES_PARSED_UNSUCCESSFULLY)
@@ -173,9 +175,15 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment(wineNum);
         winesPublishedToKafkaCounter.inc(wineNum);
     }
-    public void isParsing(int v) {
-        Metrics.gauge(IS_PARSING, v);
-        isParsingGauge.set(v);
+
+    public void isParsing() {
+        micrometerIsParsingGauge.getAndIncrement();
+        isParsingGauge.inc();
+    }
+
+    public void isNotParsing() {
+        micrometerIsParsingGauge.getAndDecrement();
+        isParsingGauge.dec();
     }
 
     public void winesParsedSuccessfully(int count) {

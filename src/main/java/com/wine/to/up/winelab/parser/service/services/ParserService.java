@@ -145,7 +145,6 @@ public class ParserService {
     private static final String PARSING_PROCESS_DURATION_SUMMARY = "parsing_process_duration";
     private static final String TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE = "time_since_last_succeeded_parsing";
 
-    private final AtomicInteger parsingInProgress = new AtomicInteger(0);
     private final AtomicLong lastSucceededParsingTime = new AtomicLong(0);
 
     private Long lastParse = null;
@@ -304,8 +303,6 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         metricsCollector.parsingStarted();
-        parsingInProgress.incrementAndGet();
-        //metricsCollector.isParsing(1);
         try {
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
@@ -322,14 +319,10 @@ public class ParserService {
                 log.warn("Parsing completed with 0 wines being returned");
             }
             metricsCollector.parsingCompleteSuccessful();
-            parsingInProgress.decrementAndGet();
             lastSucceededParsingTime.set(System.currentTimeMillis());
-            //metricsCollector.isParsing(0);
             return wines;
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
-            parsingInProgress.decrementAndGet();
-            //metricsCollector.isParsing(0);
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();
         }

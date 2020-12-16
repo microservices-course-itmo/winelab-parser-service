@@ -31,8 +31,8 @@ public class UpdateService {
 
     public int updateCatalog() {
         long parseStart = System.nanoTime();
-        metricsCollector.isParsing(1);
-        Map<Integer, Wine> wines = parserService.parseCatalogs();
+        metricsCollector.isParsing();
+        Map<Integer, Wine> wines = parserService.parseCatalogPage("wine", 1);
         final int CHUNK_WINE_COUNT = 100;
         List<ParserApi.Wine> apiWines = wines.values()
                 .stream()
@@ -50,7 +50,7 @@ public class UpdateService {
         }
         long parseEnd = System.nanoTime();
         metricsCollector.timeParsingDuration(parseEnd - parseStart);
-        metricsCollector.isParsing(0);
+        metricsCollector.isNotParsing();
         return wines.size();
     }
 }
