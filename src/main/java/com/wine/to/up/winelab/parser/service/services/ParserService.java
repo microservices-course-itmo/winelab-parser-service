@@ -338,6 +338,7 @@ public class ParserService {
         int page = 1;
 
         while (!isLastPage) {
+            parseStart = System.nanoTime();
             document.select(CARD_SELECTOR)
                     .parallelStream()
                     .forEach(card -> {
@@ -363,6 +364,8 @@ public class ParserService {
             eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, page);
             page++;
             Element nextPage = document.select(NEXT_PAGE_SELECTOR).first();
+            long parseEnd = System.nanoTime();
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
             if (nextPage == null) {
                 isLastPage = true;
             } else {
@@ -380,8 +383,6 @@ public class ParserService {
                 metricsCollector.timeWinePageFetchingDuration(fetchEnd - fetchStart);
             }
         }
-        long parseEnd = System.nanoTime();
-        metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
     }
 
     public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
