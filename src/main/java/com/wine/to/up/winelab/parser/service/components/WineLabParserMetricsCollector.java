@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This Class expose methods for recording specific metrics
@@ -26,7 +25,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String PARSING_STARTED = "parsing_started";
     private static final String PARSING_COMPLETE = "parsing_complete";
     private static final String PARSING_DURATION = "parsing_process_duration_seconds";
-    private static final String TIME_SINCE_LAST_PARSING = "time_since_last_succeeded_parsing";
     private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration_seconds";
     private static final String WINE_PAGE_FETCHING_DURATION = "wine_page_fetching_duration_seconds";
     private static final String WINE_DETAILS_PARSING_DURATION = "wine_details_parsing_duration_seconds";
@@ -54,10 +52,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final Summary parsingDurationSummary = Summary.build()
             .name(PARSING_DURATION)
             .help("The duration of every parsing process completed so far")
-            .register();
-    private static final Gauge timeSinceLastParsingGauge = Gauge.build()
-            .name(TIME_SINCE_LAST_PARSING)
-            .help("The amount of time since the last successfully completed parsing process")
             .register();
     private static final Summary wineDetailsFetchingDurationSummary = Summary.build()
             .name(WINE_DETAILS_FETCHING_DURATION)
@@ -96,8 +90,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
             .help("Number of wines that have been sent to Kafka")
             .register();
 
-    private static final AtomicLong micrometerTimeSinceLastSucceededParsingGauge = Metrics.gauge(TIME_SINCE_LAST_PARSING, new AtomicLong(0));
-
     public void parsingStarted() {
         Metrics.counter(PARSING_STARTED).increment();
         parsingStartedCounter.inc();
@@ -112,34 +104,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.counter(PARSING_COMPLETE,PARSING_COMPLETE_STATUS, "FAILED").increment();
         parsingCompleteCounter.labels("FAILED").inc();
     }
-    //private static final AtomicInteger isparsingGauge = Metrics.gauge(IS_PARSING, new AtomicInteger(0));
-    /*
-    public void incParsingInProgress() {
-        parsingInProgressGauge.inc();
-        //isparsingGauge.incrementAndGet();
-        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
-        if (gauge != null) {
-            gauge.getAndIncrement();
-        }
-    }*/
 
-    public static void timeSinceLastSucceededParse(long time) {
-        // Metrics.gauge(TIME_SINCE_LAST_SUCCEEDED_PARSING, time);
-        micrometerTimeSinceLastSucceededParsingGauge.set(time);
-        timeSinceLastParsingGauge.set(time);
-    }
-    /*
-    public void decParsingInProgress() {
-        parsingInProgressGauge.dec();
-        //isparsingGauge.decrementAndGet();
-        AtomicInteger gauge = Metrics.gauge(PARSING_IN_PROGRESS, new AtomicInteger(0));
-        if (gauge != null) {
-            gauge.getAndDecrement();
-        }
-
-        timeSinceLastSucceededParse(System.currentTimeMillis());
-    }
-    */
     public void timeParsingDuration(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         parsingDurationSummary.observe(milliTime);

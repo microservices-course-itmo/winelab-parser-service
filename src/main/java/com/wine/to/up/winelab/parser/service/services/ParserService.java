@@ -6,6 +6,7 @@ import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
+import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -146,13 +147,18 @@ public class ParserService {
     private static final String TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE = "time_since_last_succeeded_parsing";
 
     private final AtomicLong lastSucceededParsingTime = new AtomicLong(0);
-
     private Long lastParse = null;
 
     private final WineLabParserMetricsCollector metricsCollector;
 
     public ParserService(WineLabParserMetricsCollector metricsCollector) {
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
+
+        Metrics.gauge(
+                TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE,
+                lastSucceededParsingTime,
+                val -> val.get() == 0 ? Double.NaN : (System.currentTimeMillis() - val.get()) / 1000.0
+        );
     }
 
     /**
@@ -219,7 +225,7 @@ public class ParserService {
 
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
-        if(!fillPrices(wine, document, details)) {
+        if (!fillPrices(wine, document, details)) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
             return null;
@@ -357,7 +363,7 @@ public class ParserService {
                             try {
                                 if (!wines.containsKey(id)) {
                                     Wine wine = parseProduct(id, countrySet, grapeSet, manufacturerSet);
-                                    if(wine != null) {
+                                    if (wine != null) {
                                         wines.put(id, wine);
                                     }
                                     metricsCollector.winesParsedSuccessfully(1);
@@ -381,8 +387,7 @@ public class ParserService {
                 url = String.format(CATALOG_NEXT_URL, nextPage.attr("href"));
                 try {
                     document = getDocument(url);
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     log.error("Error while parsing catalog page {} {}", url, ex);
                     eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED, page);
                     break;
@@ -561,8 +566,7 @@ public class ParserService {
         if (!newPriceString.isEmpty()) {
             BigDecimal newPrice = new BigDecimal(newPriceString);
             wine.setNewPrice(newPrice);
-        }
-        else {
+        } else {
             return false;
         }
 
