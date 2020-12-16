@@ -296,6 +296,7 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         metricsCollector.parsingStarted();
+        metricsCollector.isParsing(1);
         try {
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
@@ -312,9 +313,11 @@ public class ParserService {
                 log.warn("Parsing completed with 0 wines being returned");
             }
             metricsCollector.parsingCompleteSuccessful();
+            metricsCollector.isParsing(0);
             return wines;
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
+            metricsCollector.isParsing(0);
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();
         }
