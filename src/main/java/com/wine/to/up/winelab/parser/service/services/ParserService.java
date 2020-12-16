@@ -6,7 +6,6 @@ import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
-import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -155,13 +154,6 @@ public class ParserService {
 
     public ParserService(WineLabParserMetricsCollector metricsCollector) {
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
-
-        Metrics.gauge(PARSING_IN_PROGRESS_GAUGE, parsingInProgress);
-        Metrics.gauge(
-                TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE,
-                lastSucceededParsingTime,
-                val -> val.get() == 0 ? Double.NaN : (System.currentTimeMillis() - val.get()) / 1000.0
-        );
     }
 
     /**
@@ -312,6 +304,7 @@ public class ParserService {
      */
     public Map<Integer, Wine> parseCatalogs() {
         metricsCollector.parsingStarted();
+        parsingInProgress.incrementAndGet();
         //metricsCollector.isParsing(1);
         try {
             Map<Integer, Wine> wines = new HashMap<>();
@@ -329,10 +322,13 @@ public class ParserService {
                 log.warn("Parsing completed with 0 wines being returned");
             }
             metricsCollector.parsingCompleteSuccessful();
+            parsingInProgress.decrementAndGet();
+            lastSucceededParsingTime.set(System.currentTimeMillis());
             //metricsCollector.isParsing(0);
             return wines;
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
+            parsingInProgress.decrementAndGet();
             //metricsCollector.isParsing(0);
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();
