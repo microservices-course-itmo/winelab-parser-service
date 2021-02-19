@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.Objects;
 
 /**
  * The controller for parser REST endpoints
@@ -88,7 +88,8 @@ public class ParserController {
     /**
      * Endpoint for parsing single page of catalog
      *
-     * @param catalog catalog to be parsed (either "wine" for casual wine or "sparkling" for sparkling wine)
+     * @param catalog catalog to be parsed
+     *                (either "wine" for casual wine or "sparkling" for sparkling wine)
      * @param page    page of the catalog to be parsed
      * @return ResponseEntity
      */
