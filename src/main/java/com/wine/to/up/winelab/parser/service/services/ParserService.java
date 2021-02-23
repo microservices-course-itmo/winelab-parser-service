@@ -209,7 +209,8 @@ public class ParserService {
 
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
-        if (!fillPrices(wine, document, details)) {
+        fillPrices(wine, document, details);
+        if (wine.getNewPrice() == null) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
             return null;
@@ -442,13 +443,11 @@ public class ParserService {
         }
     }
 
-    private boolean fillPrices(Wine wine, Document document, Element details) {
+    private void fillPrices(Wine wine, Document document, Element details) {
         String newPriceString = details.attr(NEW_PRICE_SELECTOR);
         if (!newPriceString.isEmpty()) {
             BigDecimal newPrice = new BigDecimal(newPriceString);
             wine.setNewPrice(newPrice);
-        } else {
-            return false;
         }
 
         Element oldPriceSpan = document.selectFirst(OLD_PRICE_SELECTOR);
@@ -456,6 +455,5 @@ public class ParserService {
             BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replace(" ", ""));
             wine.setOldPrice(oldPrice);
         }
-        return true;
     }
 }
