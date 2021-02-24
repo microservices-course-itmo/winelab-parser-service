@@ -25,6 +25,8 @@ public class UpdateService {
     private ParserService parserService;
     @Autowired
     private WineLabParserMetricsCollector metricsCollector;
+    @Autowired
+    private StorageService storageService;
 
     @Value("${parser.address}")
     private String siteURL;
@@ -52,5 +54,19 @@ public class UpdateService {
         metricsCollector.timeParsingDuration(parseEnd - parseStart);
         metricsCollector.isNotParsing();
         return wines.size();
+    }
+
+    public void sendNextChunkToCatalog() {
+        List<ParserApi.Wine> apiWines = storageService.getNextChunk()
+                .stream()
+                .map(Wine::toParserWine)
+                .collect(Collectors.toList());
+        ParserApi.WineParsedEvent.Builder eventBuilder = ParserApi.WineParsedEvent.newBuilder()
+                .addAllWines(apiWines);
+        if (siteURL != null) {
+            eventBuilder.setShopLink(siteURL);
+        }
+        ParserApi.WineParsedEvent event = eventBuilder.build();
+        kafkaService.sendWineParsedEvent(event);
     }
 }
