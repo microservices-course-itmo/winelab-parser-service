@@ -21,8 +21,14 @@ public class KafkaService {
     }
 
     void sendWineParsedEvent(ParserApi.WineParsedEvent event) {
-        metricsCollector.countWinesPublishedToKafka(event.getWinesCount());
-        kafkaSendMessageService.sendMessage(event);
+        try {
+            metricsCollector.countWinesPublishedToKafka(event.getWinesCount());
+            kafkaSendMessageService.sendMessage(event);
+            log.info("Wine {} successfully sent to kafka!", event.getLink());
+        } catch(Exception exception) {
+            log.error("Error while sending wine to kafka! {}", exception.toString());
+        }
+        
     }
 
 }
