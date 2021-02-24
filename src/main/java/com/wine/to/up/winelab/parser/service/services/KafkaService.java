@@ -24,7 +24,7 @@ public class KafkaService {
         try {
             metricsCollector.countWinesPublishedToKafka(event.getWinesCount());
             kafkaSendMessageService.sendMessage(event);
-            log.info("Wine {} successfully sent to kafka!", event.getLink());
+            log.info("Wine successfully sent to kafka!");
         } catch(Exception exception) {
             log.error("Error while sending wine to kafka! {}", exception.toString());
         }
