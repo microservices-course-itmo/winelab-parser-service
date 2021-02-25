@@ -41,8 +41,8 @@ class UpdateJobTest {
 
     @Test
     void testUpdateJobDoesntThrow() {
-        UpdateWineLabJob job = new UpdateWineLabJob();
+        UpdateJob job = new UpdateJob();
         ReflectionTestUtils.setField(job, "updateService", updateService);
-        Assertions.assertDoesNotThrow(job::runJob);
+        Assertions.assertDoesNotThrow(job::parseCatalogs);
     }
 }

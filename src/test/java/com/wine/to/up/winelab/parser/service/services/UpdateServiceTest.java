@@ -19,6 +19,7 @@ class UpdateServiceTest {
     KafkaService mockedKafka;
     WineLabParserMetricsCollector metricsCollector;
     UpdateService updateService;
+    StorageService mockedStorage;
     ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
@@ -30,6 +31,8 @@ class UpdateServiceTest {
         ReflectionTestUtils.setField(updateService, "kafkaService", mockedKafka);
         ReflectionTestUtils.setField(updateService, "parserService", mockedParser);
         ReflectionTestUtils.setField(updateService, "metricsCollector", metricsCollector);
+        ReflectionTestUtils.setField(updateService, "storageService", mockedStorage);
+        ReflectionTestUtils.setField(updateService, "siteURL", "winelab.ru");
         Logger logger = (Logger) LoggerFactory.getLogger(UpdateService.class);
         listAppender = new ListAppender<>();
         listAppender.start();
@@ -38,7 +41,8 @@ class UpdateServiceTest {
 
     @Test
     void testUpdateDoesntThrow() {
-        Assertions.assertDoesNotThrow(updateService::updateCatalog);
+        Assertions.assertDoesNotThrow(updateService::sendAllToCatalog);
+        Assertions.assertDoesNotThrow(updateService::sendNextChunkToCatalog);
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }

@@ -1,8 +1,10 @@
 package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +14,19 @@ import static java.lang.StrictMath.ceil;
 
 @Service
 public class StorageService {
-    private List<Wine> wines;
+    private List<Wine> wines = new ArrayList<>();
     private LocalDateTime lastParsed;
-    private int chunkCount, chunkSize, lastChunk;
+    @Value("${storage.chunk.count}")
+    private int chunkCount;
+    private int chunkSize;
+    private int lastChunk;
 
     public StorageService() {}
+
+    @PostConstruct
+    private void postConstruct() {
+        this.setChunkCount(this.chunkCount);
+    }
 
     public void clearWines() {
         this.wines = new ArrayList<>();
@@ -29,11 +39,17 @@ public class StorageService {
         this.lastParsed = LocalDateTime.now();
     }
 
+    public void setWines(List<Wine> newWines) {
+        this.wines = newWines;
+        this.onChange();
+        this.lastParsed = LocalDateTime.now();
+    }
+
     public List<Wine> getAll() {
         return this.wines;
     }
 
-    public long size() {
+    public int size() {
         return this.wines.size();
     }
 
@@ -54,7 +70,7 @@ public class StorageService {
     }
 
     public void setChunkCount(int chunkCount) {
-        if(chunkCount <= 0) {
+        if (chunkCount <= 0) {
             throw new IllegalArgumentException("Chunk count can not be non-positive");
         }
         this.chunkCount = chunkCount;
@@ -63,10 +79,13 @@ public class StorageService {
     }
 
     public List<Wine> getNextChunk() throws IllegalArgumentException, IndexOutOfBoundsException {
-        if(this.chunkCount == 0) {
+        if (this.chunkCount == 0) {
             throw new IllegalStateException("Chunk count is not set");
         }
-        if(this.allWinesFetched()) {
+        if (this.wines.isEmpty()) {
+            throw new IllegalStateException("Wine list is empty");
+        }
+        if (this.allWinesFetched()) {
             throw new IndexOutOfBoundsException("All wines are already fetched");
         }
         int from = this.chunkSize * (this.lastChunk - 1);

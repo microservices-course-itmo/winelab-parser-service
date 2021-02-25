@@ -3,8 +3,9 @@ package com.wine.to.up.winelab.parser.service.controller;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
-import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.StorageService;
+import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,15 +33,17 @@ import java.util.stream.Collectors;
 @Configuration
 public class ParserController {
     private final ParserService parserService;
-    private final UpdateWineLabJob job;
     private final WineToCsvConverter converter;
     private final WineLabParserMetricsCollector metricsCollector;
+    private final StorageService storageService;
+    private final UpdateService updateService;
 
-    public ParserController(ParserService parserService, UpdateWineLabJob job, WineToCsvConverter converter ,WineLabParserMetricsCollector metricsCollector) {
+    public ParserController(ParserService parserService, WineToCsvConverter converter , WineLabParserMetricsCollector metricsCollector, StorageService storageService, UpdateService updateService) {
         this.parserService = parserService;
-        this.job = job;
         this.converter = converter;
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
+        this.storageService = storageService;
+        this.updateService = updateService;
     }
 
     /**
@@ -127,7 +131,10 @@ public class ParserController {
      */
     @GetMapping("/update")
     public ResponseEntity<Object> updateCatalogs() {
-        int count = job.runJob();
+        Map<Integer, Wine> wines = parserService.parseCatalogs();
+        storageService.setWines(new ArrayList<>(wines.values()));
+        int count = storageService.size();
+        updateService.sendAllToCatalog();
         return ResponseEntity.ok(String.format("Total %d wines sent", count));
     }
 

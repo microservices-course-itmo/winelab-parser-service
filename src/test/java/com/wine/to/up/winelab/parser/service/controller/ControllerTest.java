@@ -2,23 +2,17 @@ package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
-import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
-import com.wine.to.up.winelab.parser.service.services.KafkaService;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.StorageService;
+import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.util.NestedServletException;
@@ -31,23 +25,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @ExtendWith(MockitoExtension.class)
 class ControllerTest {
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
-    ParserService parserService;
-    KafkaService kafkaService;
-    UpdateWineLabJob updateWineLabJob;
+    private ParserService parserService;
     private WineLabParserMetricsCollector metricsCollector;
-    private  WineToCsvConverter converter;
+    private WineToCsvConverter converter;
     private ParserController parserController;
+    private StorageService storageService;
+    private UpdateService updateService;
 
     @BeforeEach
     public void init() {
         parserService = Mockito.mock(ParserService.class);
-        kafkaService = Mockito.mock(KafkaService.class);
-        updateWineLabJob = Mockito.mock(UpdateWineLabJob.class);
         converter = Mockito.mock(WineToCsvConverter.class);
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
-        parserController  = new ParserController(parserService, updateWineLabJob, converter, metricsCollector);
+        storageService = Mockito.mock(StorageService.class);
+        updateService = Mockito.mock(UpdateService.class);
+        parserController = new ParserController(parserService, converter, metricsCollector, storageService, updateService);
         mockMvc = MockMvcBuilders.standaloneSetup(parserController).build();
     }
 

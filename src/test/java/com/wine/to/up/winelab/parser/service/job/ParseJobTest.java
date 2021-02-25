@@ -8,6 +8,7 @@ import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.StorageService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,8 @@ import java.util.Map;
 class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
+    StorageService mockedStorageService;
+    StorageService storageService;
     WineLabParserMetricsCollector metricsCollector;
     ListAppender<ILoggingEvent> listAppender;
 
@@ -29,7 +32,9 @@ class ParseJobTest {
     public void init() {
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
         parserService = new ParserService(metricsCollector);
+        storageService = new StorageService();
         mockedParserService = Mockito.mock(ParserService.class);
+        mockedStorageService = Mockito.mock(StorageService.class);
         EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
@@ -89,8 +94,8 @@ class ParseJobTest {
     @Test
     void testParseJobDoesntThrow() {
         Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
-        ParseJob job = new ParseJob(mockedParserService);
-        Assertions.assertDoesNotThrow(job::parseCatalogs);
+        ParseJob job = new ParseJob(mockedParserService, mockedStorageService);
+        Assertions.assertDoesNotThrow(job::parseAndStoreCatalogs);
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }
