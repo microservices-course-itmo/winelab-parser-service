@@ -30,8 +30,6 @@ public class UpdateService {
     private String siteURL;
 
     public int updateCatalog() {
-        long parseStart = System.nanoTime();
-        metricsCollector.isParsing();
         Map<Integer, Wine> wines = parserService.parseCatalogs();
         final int CHUNK_WINE_COUNT = 100;
         List<ParserApi.Wine> apiWines = wines.values()
@@ -48,9 +46,6 @@ public class UpdateService {
             ParserApi.WineParsedEvent event = eventBuilder.build();
             kafkaService.sendWineParsedEvent(event);
         }
-        long parseEnd = System.nanoTime();
-        metricsCollector.timeParsingDuration(parseEnd - parseStart);
-        metricsCollector.isNotParsing();
         return wines.size();
     }
 }

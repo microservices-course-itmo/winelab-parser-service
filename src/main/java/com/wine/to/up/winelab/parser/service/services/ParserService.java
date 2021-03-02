@@ -261,6 +261,8 @@ public class ParserService {
      * @return map of parsed wines in format (product id, parsed wine object)
      */
     public Map<Integer, Wine> parseCatalogs() {
+        long parseStart = System.nanoTime();
+        metricsCollector.isParsing();
         metricsCollector.parsingStarted();
         try {
             Map<Integer, Wine> wines = new HashMap<>();
@@ -277,6 +279,8 @@ public class ParserService {
             } else {
                 log.warn("Parsing completed with 0 wines being returned");
             }
+            long parseEnd = System.nanoTime();
+            metricsCollector.timeParsingDuration(parseEnd - parseStart);
             metricsCollector.parsingCompleteSuccessful();
             lastSucceededParsingTime.set(System.currentTimeMillis());
             return wines;
@@ -284,6 +288,8 @@ public class ParserService {
             metricsCollector.parsingCompleteFailed();
             log.error("Error while parsing catalogs : ", ex);
             return new HashMap<>();
+        } finally {
+            metricsCollector.isNotParsing();
         }
     }
 
