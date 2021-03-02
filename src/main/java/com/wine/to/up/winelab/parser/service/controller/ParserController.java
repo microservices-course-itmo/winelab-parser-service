@@ -1,6 +1,5 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
-import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
@@ -33,13 +32,11 @@ public class ParserController {
     private final ParserService parserService;
     private final UpdateWineLabJob job;
     private final WineToCsvConverter converter;
-    private final WineLabParserMetricsCollector metricsCollector;
 
-    public ParserController(ParserService parserService, UpdateWineLabJob job, WineToCsvConverter converter ,WineLabParserMetricsCollector metricsCollector) {
+    public ParserController(ParserService parserService, UpdateWineLabJob job, WineToCsvConverter converter) {
         this.parserService = parserService;
         this.job = job;
         this.converter = converter;
-        this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
     }
 
     /**
@@ -97,7 +94,7 @@ public class ParserController {
     public ResponseEntity<Object> parseCatalogPage(
             @PathVariable(value = "catalog") String catalog,
             @PathVariable(value = "page") int page) {
-        if(page < 1){
+        if (page < 1) {
             log.warn("Couldn't parse {}s' catalog page {} : Page number must be positive", catalog, page);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

@@ -143,7 +143,6 @@ public class ParserService {
     private static final String TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE = "time_since_last_succeeded_parsing";
 
     private final AtomicLong lastSucceededParsingTime = new AtomicLong(0);
-    private Long lastParse = null;
 
     private final WineLabParserMetricsCollector metricsCollector;
 
@@ -267,11 +266,6 @@ public class ParserService {
             for (String catalog : CATALOGS.values()) {
                 parseCatalog(catalog, wines);
             }
-            long currentParse = System.nanoTime();
-            if (lastParse != null) {
-                //metricsCollector.timeSinceLastSucceededParse(currentParse - lastParse);
-            }
-            lastParse = currentParse;
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
             } else {

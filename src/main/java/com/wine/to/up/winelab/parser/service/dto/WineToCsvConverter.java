@@ -8,27 +8,27 @@ import java.util.stream.Collectors;
 
 @Component
 public class WineToCsvConverter {
-    private static Map<String, Function<Wine, Object>> fields;
+    private Map<String, Function<Wine, Object>> fields;
 
     public WineToCsvConverter() {
-        fields = new LinkedHashMap<>();
-        fields.put("NAME", Wine::getName);
-        fields.put("LINK", Wine::getLink);
-        fields.put("OLD_PRICE", Wine::getOldPrice);
-        fields.put("NEW_PRICE", Wine::getNewPrice);
-        fields.put("IMAGE", Wine::getImage);
-        fields.put("MANUFACTURER", Wine::getManufacturer);
-        fields.put("BRAND", Wine::getBrand);
-        fields.put("COUNTRY", Wine::getCountry);
-        fields.put("REGION", Wine::getRegion);
-        fields.put("VOLUME", Wine::getVolume);
-        fields.put("ALCOHOL_CONTENT", Wine::getAlcoholContent);
-        fields.put("SPARKLING", Wine::isSparkling);
-        fields.put("COLOR", Wine::getColor);
-        fields.put("SUGAR", Wine::getSugar);
-        fields.put("GRAPE_SORT", Wine::getGrapeSort);
-        fields.put("DESCRIPTION", Wine::getDescription);
-        fields.put("GASTRONOMY", Wine::getGastronomy);
+        this.fields = new LinkedHashMap<>();
+        this.fields.put("NAME", Wine::getName);
+        this.fields.put("LINK", Wine::getLink);
+        this.fields.put("OLD_PRICE", Wine::getOldPrice);
+        this.fields.put("NEW_PRICE", Wine::getNewPrice);
+        this.fields.put("IMAGE", Wine::getImage);
+        this.fields.put("MANUFACTURER", Wine::getManufacturer);
+        this.fields.put("BRAND", Wine::getBrand);
+        this.fields.put("COUNTRY", Wine::getCountry);
+        this.fields.put("REGION", Wine::getRegion);
+        this.fields.put("VOLUME", Wine::getVolume);
+        this.fields.put("ALCOHOL_CONTENT", Wine::getAlcoholContent);
+        this.fields.put("SPARKLING", Wine::isSparkling);
+        this.fields.put("COLOR", Wine::getColor);
+        this.fields.put("SUGAR", Wine::getSugar);
+        this.fields.put("GRAPE_SORT", Wine::getGrapeSort);
+        this.fields.put("DESCRIPTION", Wine::getDescription);
+        this.fields.put("GASTRONOMY", Wine::getGastronomy);
     }
 
     public String convert(Collection<Wine> wines) {
@@ -41,23 +41,18 @@ public class WineToCsvConverter {
     }
 
     private String getHeader() {
-        return toCsvString(new ArrayList<>(fields.keySet()));
+        return toCsvString(new ArrayList<>(this.fields.keySet()));
     }
 
     private String getWine(Wine wine) {
         List<Object> attributes = new ArrayList<>();
-        for (Function<Wine, Object> func : fields.values()) {
+        for (Function<Wine, Object> func : this.fields.values()) {
             attributes.add(func.apply(wine));
         }
         return toCsvString(attributes);
     }
 
     private String toCsvString(List<Object> list) {
-        return new StringBuilder(
-                list.stream()
-                        .map(s -> s == null ? "\"\"" : "\"" + s + "\"")
-                        .collect(Collectors.joining(",")))
-                .append("\n")
-                .toString();
+        return list.stream().map(s -> s == null ? "\"\"" : "\"" + s + "\"") .collect(Collectors.joining(",")) + "\n";
     }
 }
