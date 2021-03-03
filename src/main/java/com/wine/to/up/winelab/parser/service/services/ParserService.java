@@ -8,6 +8,7 @@ import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
 import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

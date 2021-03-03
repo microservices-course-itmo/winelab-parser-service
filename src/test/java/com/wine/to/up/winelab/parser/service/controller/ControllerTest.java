@@ -47,7 +47,7 @@ class ControllerTest {
         updateWineLabJob = Mockito.mock(UpdateWineLabJob.class);
         converter = Mockito.mock(WineToCsvConverter.class);
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
-        parserController  = new ParserController(parserService, updateWineLabJob, converter, metricsCollector);
+        parserController  = new ParserController(parserService, updateWineLabJob, converter);
         mockMvc = MockMvcBuilders.standaloneSetup(parserController).build();
     }
 
