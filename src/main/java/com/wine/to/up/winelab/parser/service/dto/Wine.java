@@ -42,6 +42,7 @@ public class Wine implements Serializable {
     private String grapeSort;
     private String description;
     private String gastronomy;
+    private boolean inStock;
 
     public ParserApi.Wine toParserWine() {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();

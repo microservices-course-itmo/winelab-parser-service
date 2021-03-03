@@ -92,6 +92,8 @@ public class ParserService {
     private String REGION_SELECTOR;
     @Value("${parser.product.sparkling}")
     private String SPARKLING_CATEGORY;
+    @Value("${parser.selector.product.in.stock}")
+    private String IN_STOCK_SELECTOR;
 
     @Value("${parser.product.address}")
     private String PRODUCT_PAGE_URL;
@@ -183,8 +185,7 @@ public class ParserService {
         Document document;
         try {
             document = getDocument(productURL);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.error("Could not get product page during parsing wine {}", productID);
             return null;
         }
@@ -193,6 +194,13 @@ public class ParserService {
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - fetchStart);
 
         Wine wine = new Wine();
+
+        Element inStock = document.selectFirst(IN_STOCK_SELECTOR);
+        if (inStock != null) {
+            wine.setInStock(true);
+        } else {
+            wine.setInStock(false);
+        }
 
         String name;
         try {
@@ -402,36 +410,29 @@ public class ParserService {
     }
 
     private void fillTags(Wine wine, Elements tags) {
-        for (Element tag: tags) {
+        for (Element tag : tags) {
             String url = java.net.URLDecoder.decode(tag.attr("href"), StandardCharsets.UTF_8);
             String key = url.split("(:)")[2];
             String value = tag.html();
             if (key.equals(COLOR_SELECTOR)) {
                 ParserApi.Wine.Color color = getColor(value);
                 wine.setColor(color);
-            }
-            else if (key.equals(ALCOHOL_SELECTOR)) {
+            } else if (key.equals(ALCOHOL_SELECTOR)) {
                 BigDecimal alcoholContent = new BigDecimal(value.substring(0, value.length() - 2));
                 wine.setAlcoholContent(alcoholContent);
-            }
-            else if (key.equals(SUGAR_SELECTOR)) {
+            } else if (key.equals(SUGAR_SELECTOR)) {
                 ParserApi.Wine.Sugar sugar = getSugar(value);
                 wine.setSugar(sugar);
-            }
-            else if (key.equals(VOLUME_SELECTOR)) {
+            } else if (key.equals(VOLUME_SELECTOR)) {
                 BigDecimal volume = new BigDecimal(value.substring(0, value.length() - 2));
                 wine.setVolume(volume);
-            }
-            else if (key.equals(GRAPE_SELECTOR)) {
+            } else if (key.equals(GRAPE_SELECTOR)) {
                 wine.setGrapeSort(value);
-            }
-            else if (key.equals(COUNTRY_SELECTOR)) {
+            } else if (key.equals(COUNTRY_SELECTOR)) {
                 wine.setCountry(value);
-            }
-            else if (key.equals(BRAND_SELECTOR)) {
+            } else if (key.equals(BRAND_SELECTOR)) {
                 wine.setBrand(value);
-            }
-            else if (key.equals(MANUFACTURER_SELECTOR)) {
+            } else if (key.equals(MANUFACTURER_SELECTOR)) {
                 wine.setManufacturer(value);
             }
         }
