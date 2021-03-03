@@ -63,6 +63,7 @@ public class CsvConverterTest {
         ReflectionTestUtils.setField(parserService, "ALCOHOL_SELECTOR", "AlcoholContent");
         ReflectionTestUtils.setField(parserService, "VOLUME_SELECTOR", "Capacity");
         ReflectionTestUtils.setField(parserService, "CATEGORY_SELECTOR", "category");
+        ReflectionTestUtils.setField(parserService, "IN_STOCK_SELECTOR", "div.product__page_prices_status.red");
         ReflectionTestUtils.setField(parserService, "WINES", new String[] {"вино","винный","шампанское","портвейн","глинтвейн","вермут","кагор","сангрия"});
         ReflectionTestUtils.setField(parserService, "SPARKLINGS", new String[] {"игрист","шампанское"});
         ReflectionTestUtils.setField(parserService, "REGIONS", new String[] {"бордо","венето","тоскана","риоха","кастилья ла манча","бургундия","долина луары",
