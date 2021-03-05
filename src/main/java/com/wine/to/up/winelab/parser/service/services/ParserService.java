@@ -5,6 +5,7 @@ import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.dto.WineLocalInfo;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
 import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +21,11 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Class containing methods for parsing product pages and catalog pages
@@ -46,8 +45,10 @@ public class ParserService {
     private String SITE_URL;
     @Value("${parser.protocol}")
     private String PROTOCOL;
-    @Value("#{${parser.cookies}}")
-    private Map<String, String> COOKIES;
+    @Value("${parser.cookie.key}")
+    private String COOKIE_KEY;
+    @Value("${parser.cookie.default.value}")
+    private String COOKIE_DEFAULT_VALUE;
     @Value("#{${parser.catalogs}}")
     private Map<String, String> CATALOGS;
     @Value("${parser.retries}")
@@ -132,6 +133,11 @@ public class ParserService {
     @Value("#{${parser.map.sugars}}")
     private Map<String, ParserApi.Wine.Sugar> SUGARS;
 
+    @Value("${parser.cities.default}")
+    private String DEFAULT_CITY;
+    @Value("#{${parser.cities}}")
+    private Map<String, String> CITIES;
+
 
     private Map<String, Function<Wine, Object>> tagGetters;
 
@@ -158,16 +164,21 @@ public class ParserService {
         );
     }
 
-    protected Document getDocument(String url) throws IOException {
+    protected Document getDocument(String url, String cookieValue) throws IOException {
+        Map<String, String> cookies = Map.of(COOKIE_KEY, cookieValue);
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
-                Document document = Jsoup.connect(url).cookies(COOKIES).get();
+                Document document = Jsoup.connect(url).cookies(cookies).get();
                 return document;
             } catch (IOException ex) {
                 log.warn("Couldn't get page {} on try {} : {}", url, count + 1, ex);
             }
         }
         throw new IOException(String.format("Couldn't get page %s", url));
+    }
+
+    protected Document getDocument(String url) throws IOException {
+        return getDocument(url, COOKIE_DEFAULT_VALUE);
     }
 
     /**
@@ -195,13 +206,6 @@ public class ParserService {
 
         Wine wine = new Wine();
 
-        Element inStock = document.selectFirst(IN_STOCK_SELECTOR);
-        if (inStock != null) {
-            wine.setInStock(true);
-        } else {
-            wine.setInStock(false);
-        }
-
         String name;
         try {
             name = document.selectFirst(PRODUCT_NAME_SELECTOR).ownText();
@@ -216,7 +220,7 @@ public class ParserService {
 
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
-        fillPrices(wine, document, details);
+        WineLocalInfo localInfo = getLocalInfo(document);
         if (wine.getNewPrice() == null) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
@@ -381,6 +385,14 @@ public class ParserService {
         }
     }
 
+    public List<WineLocalInfo> parseAllLocalInfo(int productID) {
+        return CITIES.entrySet().stream()
+                .map(v -> getLocalInfo(productID, v.getKey()))
+                .filter(Objects::nonNull)
+                .filter(v -> v.getNewPrice() != null)
+                .collect(Collectors.toList());
+    }
+
     /* Utility */
 
     private boolean isWine(String name) {
@@ -438,17 +450,47 @@ public class ParserService {
         }
     }
 
-    private void fillPrices(Wine wine, Document document, Element details) {
+    private WineLocalInfo getLocalInfo(Document document, String cityKey) {
+        WineLocalInfo info = new WineLocalInfo();
+
+        info.setCityName(CITIES.get(cityKey));
+
+        Element outOfStock = document.selectFirst(IN_STOCK_SELECTOR);
+        if (outOfStock != null) {
+            info.setInStock(false);
+        } else {
+            info.setInStock(true);
+        }
+
+        Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
+
         String newPriceString = details.attr(NEW_PRICE_SELECTOR);
         if (!newPriceString.isEmpty()) {
             BigDecimal newPrice = new BigDecimal(newPriceString);
-            wine.setNewPrice(newPrice);
+            info.setNewPrice(newPrice);
         }
 
         Element oldPriceSpan = document.selectFirst(OLD_PRICE_SELECTOR);
         if (oldPriceSpan != null) {
             BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replace(" ", ""));
-            wine.setOldPrice(oldPrice);
+            info.setOldPrice(oldPrice);
+        }
+        return info;
+    }
+
+    private WineLocalInfo getLocalInfo(Document document) {
+        return getLocalInfo(document, DEFAULT_CITY);
+    }
+
+    private WineLocalInfo getLocalInfo(int productID, String cityKey) {
+        final String productURL = String.format(PRODUCT_PAGE_URL, productID);
+        Document document;
+        try {
+            document = getDocument(productURL, cityKey);
+            return getLocalInfo(document, cityKey);
+        } catch (IOException e) {
+            log.error("Could not get product page during parsing wine {}", productID);
+            return null;
         }
     }
 }

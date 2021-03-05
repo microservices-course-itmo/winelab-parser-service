@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.dto.WineLocalInfo;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -132,8 +132,7 @@ public class ParserController {
      * Endpoint for parsing catalog and returning it in CSV format
      */
     @GetMapping("/catalogs/csv")
-    public ResponseEntity<Object> parseAsCsv()
-    {
+    public ResponseEntity<Object> parseAsCsv() {
         log.info("Parsing as CSV started!");
         Map<Integer, Wine> wines = parserService.parseCatalogs();
         if (wines.isEmpty()) {
@@ -143,4 +142,12 @@ public class ParserController {
         return ResponseEntity.ok(responseData);
     }
 
+    /**
+     * Endpoint to retrieve all city-specific data (is wine in stock and what price it has)
+     */
+    @GetMapping("/wine/local/{id}")
+    public ResponseEntity<List<WineLocalInfo>> parseWineLocalInfo(@PathVariable(value = "id") int productID) {
+        List<WineLocalInfo> info = parserService.parseAllLocalInfo(productID);
+        return ResponseEntity.ok(info);
+    }
 }
