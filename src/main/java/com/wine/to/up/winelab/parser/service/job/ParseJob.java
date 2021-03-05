@@ -24,7 +24,7 @@ public class ParseJob {
 
     @Scheduled(cron = "${job.cron.parse}")
     public void parseCatalogs() {
-        var dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         log.info("Catalogs parsing starter at {}", dateFormat.format(new Date()));
 

@@ -221,6 +221,9 @@ public class ParserService {
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
         WineLocalInfo localInfo = getLocalInfo(document);
+        wine.setInStock(localInfo.isInStock());
+        wine.setOldPrice(localInfo.getOldPrice());
+        wine.setNewPrice(localInfo.getNewPrice());
         if (wine.getNewPrice() == null) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
@@ -259,7 +262,7 @@ public class ParserService {
         long parseEnd = System.nanoTime();
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
-        var lackAttributes = wine.lackAttributes();
+        List<String> lackAttributes = wine.lackAttributes();
         if (!lackAttributes.isEmpty()) {
             lackAttributes.forEach(attribute -> eventLogger.info(WineLabParserNotableEvents.W_WINE_ATTRIBUTE_ABSENT, attribute, productURL));
         }
@@ -386,8 +389,8 @@ public class ParserService {
     }
 
     public List<WineLocalInfo> parseAllLocalInfo(int productID) {
-        return CITIES.entrySet().stream()
-                .map(v -> getLocalInfo(productID, v.getKey()))
+        return CITIES.keySet().stream()
+                .map(v -> getLocalInfo(productID, v))
                 .filter(Objects::nonNull)
                 .filter(v -> v.getNewPrice() != null)
                 .collect(Collectors.toList());
