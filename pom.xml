@@ -22,6 +22,7 @@
         <parser.common.api.version>0.2.2-SNAPSHOT</parser.common.api.version>
         <jsoup.version>1.13.1</jsoup.version>
         <mongodb.version>3.12.8</mongodb.version>
+        <spring.data.mongodb.version>3.1.5</spring.data.mongodb.version>
         <skipTests>true</skipTests>
     </properties>
 
@@ -81,6 +82,11 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>${mongodb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+            <version>${spring.data.mongodb.version}</version>
         </dependency>
     </dependencies>
 </project>
