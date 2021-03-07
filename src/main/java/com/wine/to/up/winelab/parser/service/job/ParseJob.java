@@ -1,15 +1,11 @@
 package com.wine.to.up.winelab.parser.service.job;
 
-import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 
 @Slf4j
@@ -17,23 +13,27 @@ import java.util.Map;
 @Configuration
 public class ParseJob {
     private final ParserService parserService;
+    private final UpdateService updateService;
 
-    public ParseJob(ParserService parserService) {
+    public ParseJob(ParserService parserService, UpdateService updateService) {
         this.parserService = parserService;
+        this.updateService = updateService;
     }
 
-    @Scheduled(cron = "${job.cron.parse}")
-    public void parseCatalogs() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final int SECONDS_IN_DAY = 60 * 60 * 24;
+    private final int HOURS_IN_DAY = 24;
 
-        log.info("Catalogs parsing starter at {}", dateFormat.format(new Date()));
+    private int currentPageNumber;
+    private int winePageCount;
+    private int sparklingPageCount;
 
-        try {
-            Map<Integer, Wine> wines = parserService.parseCatalogs();
-            log.info("Catalogs parsing finished successful at {}. {} objects parsed",
-                    dateFormat.format(new Date()), wines.size());
-        } catch (Exception ex) {
-            log.error("Catalogs parsing failed: ", ex);
-        }
+    @Scheduled(fixedRate = SECONDS_IN_DAY)
+    public void getCatalogPageCount() {
+        winePageCount = parserService.getCatalogPageCount("wine");
+        sparklingPageCount = parserService.getCatalogPageCount("sparkling");
+        currentPageNumber = 1;
+        // TODO останавливать старый taskScheduler и вызывать новый taskScheduler
+        //  от new SendPageToCatalogJob(parserService, updateService, winePageCount, sparklingPageCount)
+        //  с fixedRate = SECONDS_IN_DAY / (winePageCount + sparklingPageCount)
     }
 }

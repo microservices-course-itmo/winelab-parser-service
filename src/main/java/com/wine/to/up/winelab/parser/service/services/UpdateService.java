@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,12 +30,14 @@ public class UpdateService {
     @Value("${parser.address}")
     private String siteURL;
 
-    public int updateCatalog() {
-        long parseStart = System.nanoTime();
-        metricsCollector.isParsing();
+    public void updateCatalog() {
         Map<Integer, Wine> wines = parserService.parseCatalogs();
+        sendToKafka(new ArrayList<>(wines.values()));
+    }
+
+    public void sendToKafka(List<Wine> wines) {
         final int CHUNK_WINE_COUNT = 100;
-        List<ParserApi.Wine> apiWines = wines.values()
+        List<ParserApi.Wine> apiWines = wines
                 .stream()
                 .map(Wine::toParserWine)
                 .collect(Collectors.toList());
@@ -48,9 +51,5 @@ public class UpdateService {
             ParserApi.WineParsedEvent event = eventBuilder.build();
             kafkaService.sendWineParsedEvent(event);
         }
-        long parseEnd = System.nanoTime();
-        metricsCollector.timeParsingDuration(parseEnd - parseStart);
-        metricsCollector.isNotParsing();
-        return wines.size();
     }
 }
