@@ -16,7 +16,7 @@ public class SendPageToCatalogJob implements Runnable {
     private int winePageCount;
     private int sparklingPageCount;
 
-    SendPageToCatalogJob(ParserService parserService, UpdateService updateService, int winePageCount, int sparklingPageCount) {
+    public SendPageToCatalogJob(ParserService parserService, UpdateService updateService, int winePageCount, int sparklingPageCount) {
         this.parserService = parserService;
         this.updateService = updateService;
         this.currentPageNumber = 1;

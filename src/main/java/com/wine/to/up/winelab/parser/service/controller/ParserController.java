@@ -149,4 +149,34 @@ public class ParserController {
         List<WineLocalInfo> info = parserService.parseAllLocalInfo(productID);
         return ResponseEntity.ok(info);
     }
+
+    @GetMapping("/catalogs/{page}")
+    public ResponseEntity<Object> parseAndStoreCatalogPage(
+            @PathVariable(value = "page") int page) {
+        if (page < 1) {
+            log.warn("Catalog page ({}) number must be positive", page);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        int winePageCount = parserService.getCatalogPageCount("wine");
+        int sparklingPageCount = parserService.getCatalogPageCount("sparkling");
+        if(page > winePageCount + sparklingPageCount) {
+            log.warn("Page number ({}) exceeds catalog total page count ({})", page, winePageCount + sparklingPageCount);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        log.info("Parsing started!");
+        long begin = System.currentTimeMillis();
+        List<Wine> wines = parserService.getFromCatalogPage(page, winePageCount, sparklingPageCount);
+        long end = System.currentTimeMillis();
+        long timeElapsedTotal = end - begin;
+        log.info("Time elapsed total: {} ", String.format("%d min %d sec",
+                TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal),
+                TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
+        ));
+        List<String> responseData = wines.stream()
+                .map(Wine::toString)
+                .collect(Collectors.toList());
+        log.info("Total {} wines retrieved", wines.size());
+        return ResponseEntity.ok(responseData);
+    }
 }

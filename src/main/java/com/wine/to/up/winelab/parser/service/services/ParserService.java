@@ -444,7 +444,7 @@ public class ParserService {
 
             AtomicInteger failedCount = new AtomicInteger();
             document.select(CARD_SELECTOR)
-                    .parallelStream()
+                    .stream()
                     .forEach(card -> {
                         try {
                             String name = card.select(CATALOG_NAME_SELECTOR).last().html();
@@ -453,6 +453,7 @@ public class ParserService {
                                 Optional<Wine> oWine = repository.findById(id);
                                 Wine wine;
                                 if (oWine.isPresent()) {
+                                    log.debug("Wine {} was already stored in database", id);
                                     wine = oWine.get();
                                     setLocalInfoFromCard(wine, card);
                                     if (wine.isInStock()) {
@@ -460,6 +461,7 @@ public class ParserService {
                                         repository.save(wine);
                                     }
                                 } else {
+                                    log.debug("Wine {} was not stored in database previously", id);
                                     wine = parseProduct(id);
                                     wine.setLastInStock(LocalDateTime.now());
                                     repository.save(wine);

@@ -24,13 +24,13 @@ public class ParseJob {
     }
 
     private final int SECONDS_IN_DAY = 60 * 60 * 24;
-    private final int HOURS_IN_DAY = 24;
+    private final int MILLISECONDS_IN_SECOND = 1000;
 
     @Scheduled(fixedRate = SECONDS_IN_DAY)
     public void setPeriodicCatalogUpdateJob() {
         int winePageCount = parserService.getCatalogPageCount("wine");
         int sparklingPageCount = parserService.getCatalogPageCount("sparkling");
-        long period = SECONDS_IN_DAY / (winePageCount + sparklingPageCount);
+        long period = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY / (winePageCount + sparklingPageCount);
         taskScheduler.scheduleAtFixedRate(
                 new SendPageToCatalogJob(parserService, updateService, winePageCount, sparklingPageCount),
                 period
