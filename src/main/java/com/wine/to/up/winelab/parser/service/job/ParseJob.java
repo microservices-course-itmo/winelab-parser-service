@@ -28,7 +28,7 @@ public class ParseJob {
     private int sparklingPageCount;
 
     @Scheduled(fixedRate = SECONDS_IN_DAY)
-    public void getCatalogPageCount() {
+    public void setPeriodicCatalogUpdateJob() {
         winePageCount = parserService.getCatalogPageCount("wine");
         sparklingPageCount = parserService.getCatalogPageCount("sparkling");
         currentPageNumber = 1;

@@ -7,6 +7,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.repositories.WineRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import org.junit.jupiter.api.Assertions;
@@ -22,14 +23,18 @@ import java.util.Map;
 class ParseJobTest {
     ParserService mockedParserService;
     ParserService parserService;
+    UpdateService mockedUpdateService;
     WineLabParserMetricsCollector metricsCollector;
+    WineRepository repository;
     ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
     public void init() {
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
-        parserService = new ParserService(metricsCollector);
+        repository = Mockito.mock(WineRepository.class);
+        parserService = new ParserService(metricsCollector, repository);
         mockedParserService = Mockito.mock(ParserService.class);
+        mockedUpdateService = Mockito.mock(UpdateService.class);
         EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
@@ -90,8 +95,8 @@ class ParseJobTest {
     @Test
     void testParseJobDoesntThrow() {
         Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
-        ParseJob job = new ParseJob(mockedParserService);
-        Assertions.assertDoesNotThrow(job::parseCatalogs);
+        ParseJob job = new ParseJob(mockedParserService, mockedUpdateService);
+        Assertions.assertDoesNotThrow(job::setPeriodicCatalogUpdateJob);
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }

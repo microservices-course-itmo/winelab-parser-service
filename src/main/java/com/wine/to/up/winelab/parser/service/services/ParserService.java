@@ -54,6 +54,8 @@ public class ParserService {
     private Map<String, String> CATALOGS;
     @Value("${parser.retries}")
     private int MAX_RETRIES;
+    @Value("${parser.catalog.wines.per.page}")
+    private int WINES_PER_PAGE;
 
     @Value("${parser.selector.catalog.id}")
     private String ID_SELECTOR;
@@ -509,12 +511,12 @@ public class ParserService {
     /* Utility */
 
     public int getCatalogPageCount(String catalog) {
-        String url = String.format(CATALOG_PAGE_URL, catalog, 1);
+        String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), 1);
         try {
             Document document = getDocument(url);
             String countString = document.selectFirst(WINE_COUNT_SELECTOR).ownText();
-            int count = Integer.parseInt(countString.replace("[^0-9]+", ""));
-            return count;
+            int count = Integer.parseInt(countString.replaceAll("[^\\d.]", ""));
+            return (int) Math.ceil((double) count / WINES_PER_PAGE);
         }
         catch (IOException e) {
             log.error("Unable to get page {}", url);

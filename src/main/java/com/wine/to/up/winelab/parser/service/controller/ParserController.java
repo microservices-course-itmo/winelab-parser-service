@@ -123,9 +123,8 @@ public class ParserController {
      * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
      */
     @GetMapping("/update")
-    public ResponseEntity<Object> updateCatalogs() {
-        int count = job.runJob();
-        return ResponseEntity.ok(String.format("Total %d wines sent", count));
+    public void updateCatalogs() {
+        job.runJob();
     }
 
     /**
@@ -145,7 +144,7 @@ public class ParserController {
     /**
      * Endpoint to retrieve all city-specific data (is wine in stock and what price it has)
      */
-    @GetMapping("/wine/local/{id}")
+    @GetMapping("/product/local/{id}")
     public ResponseEntity<List<WineLocalInfo>> parseWineLocalInfo(@PathVariable(value = "id") int productID) {
         List<WineLocalInfo> info = parserService.parseAllLocalInfo(productID);
         return ResponseEntity.ok(info);

@@ -3,6 +3,7 @@ package com.wine.to.up.winelab.parser.service.dto;
 import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.repositories.WineRepository;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +17,13 @@ class WineTest {
     ParserService parserService;
     ParserService mockedParserService;
     WineLabParserMetricsCollector metricsCollector;
+    WineRepository repository;
 
     @BeforeEach
     public void init() {
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
-        parserService = new ParserService(metricsCollector);
+        repository = Mockito.mock(WineRepository.class);
+        parserService = new ParserService(metricsCollector, repository);
         mockedParserService = Mockito.mock(ParserService.class);
         EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
