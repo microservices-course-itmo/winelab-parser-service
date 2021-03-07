@@ -27,8 +27,14 @@ public class SendPageToCatalogJob implements Runnable {
     public void run() {
         try {
             List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, winePageCount, sparklingPageCount);
-            currentPageNumber++;
             updateService.sendToKafka(wines);
+            if(currentPageNumber <= winePageCount) {
+                log.info("Sent page {} of wines to catalog service", currentPageNumber);
+            }
+            else {
+                log.info("Sent page {} of sparkling wines to catalog service", currentPageNumber - winePageCount);
+            }
+            currentPageNumber++;
         } catch (Exception ex) {
             log.error("Catalog page {} parsing failed: {}", currentPageNumber, ex);
         }
