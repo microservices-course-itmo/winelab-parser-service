@@ -478,12 +478,12 @@ public class ParserService {
                         }
                     });
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageFetchingDuration(parseEnd - parseStart);
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
             log.info("Total failed-to-parse wines: {}", failedCount);
+            metricsCollector.winesParsedUnsuccessfully(failedCount.intValue());
         } catch (IndexOutOfBoundsException e) {
             log.error("Catalog page number exceeds total catalog page count");
         } catch (IOException e) {
-            metricsCollector.winesParsedUnsuccessfully(1);
             log.error("Exception occurred during catalog page parsing: {}", e.toString());
         }
         metricsCollector.isNotParsing();
