@@ -185,7 +185,6 @@ public class ParserService {
                 Document document = Jsoup.connect(url).cookies(cookies).get();
 
                 long fetchEnd = System.nanoTime();
-                metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - fetchStart);
 
                 return document;
             } catch (IOException ex) {
@@ -234,9 +233,12 @@ public class ParserService {
         try {
             document = getDocument(productURL, city);
         } catch (IOException e) {
-            log.error("Could not get product page during parsing wine {}", productID);
+            log.error("Could not get product page during parsing of wine {}", productID);
+            metricsCollector.winesParsedUnsuccessfully(1);
             return null;
         }
+        long fetchEnd = System.nanoTime();
+        metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - parseStart);
 
         Wine wine = parseBasicProductInfo(productID, document);
 
@@ -246,9 +248,11 @@ public class ParserService {
         if (wine.getNewPrice() == null) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
+            metricsCollector.winesParsedUnsuccessfully(1);
             return null;
         }
 
+        metricsCollector.winesParsedSuccessfully(1);
         long parseEnd = System.nanoTime();
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
@@ -366,11 +370,9 @@ public class ParserService {
                                     if (wine != null) {
                                         wines.put(id, wine);
                                     }
-                                    metricsCollector.winesParsedSuccessfully(1);
                                 }
                             } catch (Exception ex) {
                                 unsuccessfullCounter.incrementAndGet();
-                                metricsCollector.winesParsedUnsuccessfully(1);
                                 log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
@@ -435,12 +437,13 @@ public class ParserService {
 
     public List<Wine> getFromCatalogPage(int pageNumber, int winePageCount, int sparklingPageCount, String city) {
         List<Wine> wines = new ArrayList<>();
+        metricsCollector.isParsing();
         try {
             long parseStart = System.nanoTime();
             String url = getCatalogLinkByNumber(pageNumber, winePageCount, sparklingPageCount);
             Document document = getDocument(url, city);
-            long firstFetchEnd = System.nanoTime();
-            metricsCollector.timeWinePageFetchingDuration(firstFetchEnd - parseStart);
+            long fetchEnd = System.nanoTime();
+            metricsCollector.timeWinePageFetchingDuration(fetchEnd - parseStart);
 
             AtomicInteger failedCount = new AtomicInteger();
             document.select(CARD_SELECTOR)
@@ -474,12 +477,16 @@ public class ParserService {
                             failedCount.getAndIncrement();
                         }
                     });
+            long parseEnd = System.nanoTime();
+            metricsCollector.timeWinePageFetchingDuration(parseEnd - parseStart);
             log.info("Total failed-to-parse wines: {}", failedCount);
         } catch (IndexOutOfBoundsException e) {
             log.error("Catalog page number exceeds total catalog page count");
         } catch (IOException e) {
+            metricsCollector.winesParsedUnsuccessfully(1);
             log.error("Exception occurred during catalog page parsing: {}", e.toString());
         }
+        metricsCollector.isNotParsing();
         return wines;
     }
 
