@@ -29,7 +29,7 @@ public class ParseJob {
     private final int MILLISECONDS_IN_SECOND = 1000;
     private boolean firstTask = true;
 
-    @Scheduled(fixedRate = SECONDS_IN_DAY)
+    @Scheduled(fixedRate = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
     public void setPeriodicCatalogUpdateJob() {
         int winePageCount = parserService.getCatalogPageCount("wine");
         int sparklingPageCount = parserService.getCatalogPageCount("sparkling");
