@@ -9,3 +9,4 @@ services:
       - S_KAFKA_BOOTSTRAP_HOST=kafka:9092
     depends_on:
       - kafka
+      - mongodb

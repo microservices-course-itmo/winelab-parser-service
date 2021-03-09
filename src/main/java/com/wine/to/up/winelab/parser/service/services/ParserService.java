@@ -436,8 +436,8 @@ public class ParserService {
     }
 
     public List<Wine> getFromCatalogPage(int pageNumber, int winePageCount, int sparklingPageCount, String city) {
-        List<Wine> wines = new ArrayList<>();
         metricsCollector.isParsing();
+        List<Wine> wines = new ArrayList<>();
         try {
             long parseStart = System.nanoTime();
             String url = getCatalogLinkByNumber(pageNumber, winePageCount, sparklingPageCount);
@@ -480,11 +480,10 @@ public class ParserService {
             long parseEnd = System.nanoTime();
             metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
             log.info("Total failed-to-parse wines: {}", failedCount);
-            metricsCollector.winesParsedUnsuccessfully(failedCount.intValue());
         } catch (IndexOutOfBoundsException e) {
             log.error("Catalog page number exceeds total catalog page count");
         } catch (IOException e) {
-            log.error("Exception occurred during catalog page parsing: {}", e.toString());
+            log.error("Exception occurred during catalog page parsing: {}", e);
         }
         metricsCollector.isNotParsing();
         return wines;
