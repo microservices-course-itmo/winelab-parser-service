@@ -1,16 +1,11 @@
 package com.wine.to.up.winelab.parser.service.configuration;
 
-import com.wine.to.up.commonlib.messaging.BaseKafkaHandler;
-import com.wine.to.up.commonlib.messaging.KafkaMessageHandler;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
-import com.wine.to.up.winelab.parser.service.api.WineLabServiceApiProperties;
+import com.wine.to.up.parser.common.api.ParserCommonApiProperties;
+import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
-import com.wine.to.up.winelab.parser.service.dto.Wine;
-import com.wine.to.up.winelab.parser.service.messaging.WineTopicKafkaMessageHandler;
-import com.wine.to.up.winelab.parser.service.messaging.serialization.EventDeserializer;
 import com.wine.to.up.winelab.parser.service.messaging.serialization.EventSerializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -66,33 +61,6 @@ public class KafkaConfiguration {
         return properties;
     }
 
-
-    /**
-     * Creates consumer based on general properties.
-     * <p>
-     * Uses custom deserializer as the messages within single topic should be the same type. And
-     * the messages in different topics can have different types and require different deserializers
-     * <p>
-     * Binds the consumer of the topic with the object which is responsible for handling messages from
-     * this topic
-     * <p>
-     * From now on all the messages consumed from given topic will be delegate
-     * to {@link KafkaMessageHandler#handle(Object)} of the given handler
-     *
-     * @param consumerProperties is the general consumer properties. {@link #consumerProperties()}
-     * @param handler            which is responsible for handling messages from this topic
-     */
-    @Bean
-    BaseKafkaHandler<Wine> wineTopicMessagesHandler(Properties consumerProperties,
-                                                    WineLabServiceApiProperties wineLabServiceApiProperties,
-                                                    WineTopicKafkaMessageHandler handler) {
-        // set appropriate deserializer for value
-        consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventDeserializer.class.getName());
-
-        // bind consumer with topic name and with appropriate handler
-        return new BaseKafkaHandler<>(wineLabServiceApiProperties.getMessageSentEventsTopicName(), new KafkaConsumer<>(consumerProperties), handler);
-    }
-
     /**
      * Creates sender based on general properties. It helps to send single message to designated topic.
      * <p>
@@ -104,12 +72,12 @@ public class KafkaConfiguration {
      * @param metricsCollector            class encapsulating the logic of the metrics collecting and publishing
      */
     @Bean
-    KafkaMessageSender<Wine> wineTopicKafkaMessageSender(Properties producerProperties,
-                                                         WineLabServiceApiProperties wineLabServiceApiProperties,
-                                                         WineLabParserMetricsCollector metricsCollector) {
+    KafkaMessageSender<ParserApi.WineParsedEvent> wineTopicKafkaMessageSender(Properties producerProperties,
+                                                                              ParserCommonApiProperties wineLabServiceApiProperties,
+                                                                              WineLabParserMetricsCollector metricsCollector) {
         // set appropriate serializer for value
         producerProperties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, EventSerializer.class.getName());
 
-        return new KafkaMessageSender<>(new KafkaProducer<>(producerProperties), wineLabServiceApiProperties.getMessageSentEventsTopicName(), metricsCollector);
+        return new KafkaMessageSender<>(new KafkaProducer<>(producerProperties), wineLabServiceApiProperties.getWineParsedEventsTopicName(), metricsCollector);
     }
 }
