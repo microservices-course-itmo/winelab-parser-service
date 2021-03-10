@@ -91,9 +91,7 @@ public class ParserService {
 
     @Value("${parser.product.address}")
     private String PRODUCT_PAGE_URL;
-    private Map<String, String> cookies;
     @Value("#{${parser.catalogs}}")
-    private Map<String, String> catalogs;
     static final String IS_PARSING_PRODUCT = "product";
     static final String IS_PARSING_CATALOGS = "catalogs";
     static final String IS_PARSING_CATALOG = "catalog";
@@ -142,12 +140,9 @@ public class ParserService {
     @Value("${parser.pattern.alcohol}")
     private String PATTERN_ALCOHOL;
 
-    private static final String PARSING_IN_PROGRESS_GAUGE = "parsing_in_progress";
-    private static final String PARSING_PROCESS_DURATION_SUMMARY = "parsing_process_duration";
     private static final String TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE = "time_since_last_succeeded_parsing";
 
     private final AtomicLong lastSucceededParsingTime = new AtomicLong(0);
-    private Long lastParse = null;
 
     private final WineLabParserMetricsCollector metricsCollector;
 
@@ -259,7 +254,7 @@ public class ParserService {
 
         String description = document.selectFirst(DESCRIPTION_SELECTOR).html();
         wine.setDescription(description);
-        String searchURL = getLink(PROTOCOL, SITE_URL, productID, wine);
+        String searchURL = getLink(productID, wine);
         Document searchPage = null;
         boolean searchSuccessfull;
         try {
@@ -315,9 +310,6 @@ public class ParserService {
                 parseCatalog(catalog, wines);
             }
             long currentParse = System.nanoTime();
-            if (lastParse != null) {
-                //metricsCollector.timeSinceLastSucceededParse(currentParse - lastParse);
-            }
             lastParse = currentParse;
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
@@ -475,7 +467,7 @@ public class ParserService {
         return SUGARS.getOrDefault(sugar.toLowerCase(), null);
     }
 
-    private String getLink(String protocol, String siteURL, int productID, Wine wine) {
+    private String getLink(int productID, Wine wine) {
         StringBuffer query = new StringBuffer(String.format(Locale.US, SEARCH_QUERY_BASE, productID));
         if (wine.getBrand() != null) {
             query.append(String.format(Locale.US, SEARCH_QUERY_BRAND, wine.getBrand()));
