@@ -176,8 +176,6 @@ public class ParserService {
     }
 
     protected Document getDocument(String url, String cookieValue) throws IOException {
-        long parseStart = System.nanoTime();
-        long fetchStart = System.nanoTime();
 
         Map<String, String> cookies = Map.of(COOKIE_KEY, cookieValue);
         for (int count = 0; count < MAX_RETRIES; count++) {
