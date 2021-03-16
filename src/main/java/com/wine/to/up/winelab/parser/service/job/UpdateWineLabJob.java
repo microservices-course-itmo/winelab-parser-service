@@ -15,9 +15,9 @@ public class UpdateWineLabJob {
     private UpdateService updateService;
 
     /**
-     * Каждый день обновляет список вин
+     * обновляет список вин
      */
-//    @Scheduled(cron = "${job.cron.update}")
+
     public void runJob() {
         long startDate = System.currentTimeMillis();
         log.info("start UpdateWineLabJob run job method at {}", startDate);
