@@ -22,7 +22,7 @@ public class ClearDatabaseJob {
         this.repository = repository;
     }
 
-    @Scheduled(fixedRate = 1209600)
+    @Scheduled(fixedRateString = "${job.rate.clear.database}")
     public void clearOldWines() {
         List<Wine> winesToDelete = repository.findAll()
                 .stream()
