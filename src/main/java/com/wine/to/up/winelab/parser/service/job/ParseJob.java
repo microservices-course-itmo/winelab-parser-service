@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.job;
 
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +32,13 @@ public class ParseJob {
 
     @Scheduled(fixedRate = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
     public void setPeriodicCatalogUpdateJob() {
-        int winePageCount = parserService.getCatalogPageCount("wine");
-        int sparklingPageCount = parserService.getCatalogPageCount("sparkling");
-        long period = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY / (winePageCount + sparklingPageCount);
+        int moscowWinePageCount = parserService.getCatalogPageCount("wine", City.MOSCOW);
+        int moscowSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.MOSCOW);
+        int defaultWinePageCount = parserService.getCatalogPageCount("wine", City.defaultCity());
+        int defaultSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.defaultCity());
+        long period = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY /
+                (moscowWinePageCount + moscowSparklingPageCount +
+                        (City.values().length - 1) * (defaultWinePageCount + defaultSparklingPageCount));
         if (firstTask) {
             firstTask = false;
         }
@@ -48,7 +53,7 @@ public class ParseJob {
                 "ThreadPoolTaskScheduler");
         taskScheduler.initialize();
         taskScheduler.scheduleAtFixedRate(
-                new SendPageToCatalogJob(parserService, updateService, winePageCount, sparklingPageCount),
+                new SendPageToCatalogJob(parserService, updateService),
                 period
         );
         log.info("Created new job with period of {} seconds ", period);

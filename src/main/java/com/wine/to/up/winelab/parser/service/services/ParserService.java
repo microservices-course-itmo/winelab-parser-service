@@ -4,6 +4,7 @@ import com.wine.to.up.commonlib.annotations.InjectEventLogger;
 import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.dto.WineLocalInfo;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Class containing methods for parsing product pages and catalog pages
@@ -48,8 +50,6 @@ public class ParserService {
     private String PROTOCOL;
     @Value("${parser.cookie.key}")
     private String COOKIE_KEY;
-    @Value("${parser.cookie.default.value}")
-    private String COOKIE_DEFAULT_VALUE;
     @Value("#{${parser.catalogs}}")
     private Map<String, String> CATALOGS;
     @Value("${parser.retries}")
@@ -142,12 +142,6 @@ public class ParserService {
     @Value("#{${parser.map.sugars}}")
     private Map<String, ParserApi.Wine.Sugar> SUGARS;
 
-    @Value("${parser.cities.default}")
-    private String DEFAULT_CITY;
-    @Value("#{${parser.cities}}")
-    private Map<String, String> CITIES;
-
-
     private Map<String, Function<Wine, Object>> tagGetters;
 
     static final String IS_PARSING_PRODUCT = "product";
@@ -175,11 +169,11 @@ public class ParserService {
         );
     }
 
-    protected Document getDocument(String url, String cookieValue) throws IOException {
+    protected Document getDocument(String url, City city) throws IOException {
         long parseStart = System.nanoTime();
         long fetchStart = System.nanoTime();
 
-        Map<String, String> cookies = Map.of(COOKIE_KEY, cookieValue);
+        Map<String, String> cookies = Map.of(COOKIE_KEY, city.getCookie());
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
                 Document document = Jsoup.connect(url).cookies(cookies).get();
@@ -195,26 +189,16 @@ public class ParserService {
     }
 
     protected Document getDocument(String url) throws IOException {
-        return getDocument(url, COOKIE_DEFAULT_VALUE);
+        return getDocument(url, City.defaultCity());
     }
 
-    private String getCatalogLinkByNumber(int number, int wineCount, int sparklingCount) throws IndexOutOfBoundsException {
-        String catalogName;
-        if (number <= wineCount) {
-            catalogName = CATALOGS.get("wine");
-        }
-        else if (number <= wineCount + sparklingCount) {
-            catalogName = CATALOGS.get("sparkling");
-            number -= wineCount;
-        }
-        else {
-            throw new IndexOutOfBoundsException("Catalog page number exceeds total catalog page count");
-        }
+    private String getCatalogLinkByNumber(int number, String catalog) {
+        String catalogName = CATALOGS.get(catalog);
         return String.format(CATALOG_PAGE_URL, catalogName, number);
     }
 
     public Wine parseProduct(int productID) {
-        return parseProduct(productID, DEFAULT_CITY);
+        return parseProduct(productID, City.defaultCity());
     }
 
     /**
@@ -224,7 +208,7 @@ public class ParserService {
      * @param city      cookie value on website
      * @return parsed wine object
      */
-    public Wine parseProduct(int productID, String city) {
+    public Wine parseProduct(int productID, City city) {
         long parseStart = System.nanoTime();
 
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
@@ -245,6 +229,9 @@ public class ParserService {
         WineLocalInfo localInfo = getLocalInfo(document);
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
+        wine.setInStock(localInfo.isInStock());
+        wine.setLastInStock(LocalDateTime.now());
+        wine.setCity(city);
         if (wine.getNewPrice() == null) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             log.warn("Wine {} will not be parsed because could not get price", productID);
@@ -431,16 +418,16 @@ public class ParserService {
         }
     }
 
-    public List<Wine> getFromCatalogPage(int pageNumber, int winePageCount, int sparklingPageCount) {
-        return getFromCatalogPage(pageNumber, winePageCount, sparklingPageCount, DEFAULT_CITY);
+    public List<Wine> getFromCatalogPage(int pageNumber, String catalog) {
+        return getFromCatalogPage(pageNumber, catalog, City.defaultCity());
     }
 
-    public List<Wine> getFromCatalogPage(int pageNumber, int winePageCount, int sparklingPageCount, String city) {
+    public List<Wine> getFromCatalogPage(int pageNumber, String catalog, City city) {
         metricsCollector.isParsing();
         List<Wine> wines = new ArrayList<>();
         try {
             long parseStart = System.nanoTime();
-            String url = getCatalogLinkByNumber(pageNumber, winePageCount, sparklingPageCount);
+            String url = getCatalogLinkByNumber(pageNumber, catalog);
             Document document = getDocument(url, city);
             long fetchEnd = System.nanoTime();
             metricsCollector.timeWinePageFetchingDuration(fetchEnd - parseStart);
@@ -481,7 +468,7 @@ public class ParserService {
             metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
             log.info("Total failed-to-parse wines: {}", failedCount);
         } catch (IndexOutOfBoundsException e) {
-            log.error("Catalog page number exceeds total catalog page count");
+            log.error("Catalog page number exceeds total catalog page count", e);
         } catch (IOException e) {
             log.error("Exception occurred during catalog page parsing: {}", e);
         }
@@ -509,7 +496,7 @@ public class ParserService {
     }
 
     public List<WineLocalInfo> parseAllLocalInfo(int productID) {
-        return CITIES.keySet().stream()
+        return Stream.of(City.values())
                 .map(v -> getLocalInfo(productID, v))
                 .filter(Objects::nonNull)
                 .filter(v -> v.getNewPrice() != null)
@@ -518,10 +505,10 @@ public class ParserService {
 
     /* Utility */
 
-    public int getCatalogPageCount(String catalog) {
+    public int getCatalogPageCount(String catalog, City city) {
         String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), 1);
         try {
-            Document document = getDocument(url);
+            Document document = getDocument(url, city);
             String countString = document.selectFirst(WINE_COUNT_SELECTOR).ownText();
             int count = Integer.parseInt(countString.replaceAll("[^\\d.]", ""));
             return (int) Math.ceil((double) count / WINES_PER_PAGE);
@@ -587,10 +574,10 @@ public class ParserService {
         }
     }
 
-    private WineLocalInfo getLocalInfo(Document document, String cityKey) {
+    private WineLocalInfo getLocalInfo(Document document, City city) {
         WineLocalInfo info = new WineLocalInfo();
 
-        info.setCityName(CITIES.get(cityKey));
+        info.setCityName(city.toString());
 
         Element outOfStock = document.selectFirst(IN_STOCK_SELECTOR);
         if (outOfStock != null) {
@@ -616,15 +603,15 @@ public class ParserService {
     }
 
     private WineLocalInfo getLocalInfo(Document document) {
-        return getLocalInfo(document, DEFAULT_CITY);
+        return getLocalInfo(document, City.defaultCity());
     }
 
-    private WineLocalInfo getLocalInfo(int productID, String cityKey) {
+    private WineLocalInfo getLocalInfo(int productID, City city) {
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
         Document document;
         try {
-            document = getDocument(productURL, cityKey);
-            return getLocalInfo(document, cityKey);
+            document = getDocument(productURL, city);
+            return getLocalInfo(document, city);
         } catch (IOException e) {
             log.error("Could not get product page during parsing wine {}", productID);
             return null;

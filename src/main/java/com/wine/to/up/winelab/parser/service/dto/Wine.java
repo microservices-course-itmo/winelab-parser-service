@@ -44,6 +44,7 @@ public class Wine implements Serializable {
     private String grapeSort;
     private String description;
     private String gastronomy;
+    private City city;
     private boolean inStock;
     private LocalDateTime lastInStock;
 
@@ -65,6 +66,9 @@ public class Wine implements Serializable {
         updateValue(builder::addGrapeSort, this.grapeSort);
         updateValue(builder::setDescription, this.description);
         updateValue(builder::setGastronomy, this.gastronomy);
+        // TODO: раскомментить когда обновится ParserApi
+        //updateValue(builder::setCity, this.city, City::toString);
+        //updateValue(builder::setInStock, this.inStock, v -> v ? -1 : 0 );
         return builder.build();
     }
 
