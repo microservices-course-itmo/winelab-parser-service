@@ -34,8 +34,8 @@ public class Wine implements Serializable {
     private String country;
     private String region;
     // volume in liters
-    private BigDecimal volume;
-    private BigDecimal alcoholContent;
+    private BigDecimal capacity; // он же volume, он же объём
+    private BigDecimal strength; // он же alcoholContent, он же процентное содержание алкоголя
     // is wine sparkling
     private boolean sparkling;
     //should enums really be private? We can't access any methods that way.
@@ -59,8 +59,8 @@ public class Wine implements Serializable {
         updateValue(builder::setManufacturer, this.manufacturer);
         updateValue(builder::setCountry, this.country);
         updateValue(builder::addRegion, this.region);
-        updateValue(builder::setCapacity, this.volume, BigDecimal::floatValue);
-        updateValue(builder::setStrength, this.alcoholContent, BigDecimal::floatValue);
+        updateValue(builder::setCapacity, this.capacity, BigDecimal::floatValue);
+        updateValue(builder::setStrength, this.strength, BigDecimal::floatValue);
         updateValue(builder::setColor, this.color);
         updateValue(builder::setSugar, this.sugar);
         updateValue(builder::addGrapeSort, this.grapeSort);
