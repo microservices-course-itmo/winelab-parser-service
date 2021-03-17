@@ -4,6 +4,7 @@ import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsColl
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
