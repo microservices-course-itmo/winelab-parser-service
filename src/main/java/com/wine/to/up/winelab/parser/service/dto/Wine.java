@@ -52,8 +52,8 @@ public class Wine implements Serializable {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();
         updateValue(builder::setName, this.name);
         updateValue(builder::setLink, this.link);
-        updateValue(builder::setNewPrice, this.oldPrice, BigDecimal::floatValue);
-        updateValue(builder::setOldPrice, this.newPrice, BigDecimal::floatValue);
+        updateValue(builder::setOldPrice, this.oldPrice, BigDecimal::floatValue);
+        updateValue(builder::setNewPrice, this.newPrice, BigDecimal::floatValue);
         updateValue(builder::setImage, this.image);
         updateValue(builder::setBrand, this.brand);
         updateValue(builder::setManufacturer, this.manufacturer);

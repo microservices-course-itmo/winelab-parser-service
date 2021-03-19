@@ -38,7 +38,7 @@ public class ParseJob {
         int defaultSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.defaultCity());
         long period = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY /
                 (moscowWinePageCount + moscowSparklingPageCount +
-                        (City.values().length - 1) * (defaultWinePageCount + defaultSparklingPageCount));
+                        (City.values().length - 1) * (defaultWinePageCount + defaultSparklingPageCount) + 1);
         if (firstTask) {
             firstTask = false;
         }

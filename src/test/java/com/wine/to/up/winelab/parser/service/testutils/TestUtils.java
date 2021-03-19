@@ -12,9 +12,9 @@ public class TestUtils {
 
     public static void setParserServiceFields(ParserService parserService) {
         EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
+        ReflectionTestUtils.setField(parserService, "COOKIE_KEY", "currentRegion");
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
-        ReflectionTestUtils.setField(parserService, "COOKIES", Map.of("currentPos", "S734", "currentRegion", "RU-SPE"));
         ReflectionTestUtils.setField(parserService, "CATALOGS", Map.of("wine", "vino", "sparkling", "shampanskie-i-igristye-vina"));
         ReflectionTestUtils.setField(parserService, "ID_SELECTOR", "data-id");
         ReflectionTestUtils.setField(parserService, "CARD_SELECTOR", "div.container a.product_card");

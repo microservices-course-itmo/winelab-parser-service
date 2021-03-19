@@ -39,7 +39,7 @@ class ParserServiceTest {
         //Assertions.assertEquals(BigDecimal.valueOf(750), wine.getOldPrice());
         Assertions.assertEquals("https://winelab.ru/product/1009581", wine.getLink());
         //Assertions.assertEquals(BigDecimal.valueOf(675.0f), wine.getNewPrice());
-        Assertions.assertEquals("https://jmrkpxyvei.a.trbcdn.net/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ", wine.getImage());
+        Assertions.assertEquals("https://winelab.ru/medias/1009581.png-300Wx300H?context=bWFzdGVyfGltYWdlc3w0NTc2NXxpbWFnZS9wbmd8aW1hZ2VzL2hjOC9oMDcvODgzMjYxNzQ4MDIyMi5wbmd8NGUxN2NiMzk2YjUxOTVmOTBhOTcwMTAwY2I1YjljZWZhMTViY2ViODIzZTczYzgxYWE3YzlmYzEzZmVkMmM5ZQ", wine.getImage());
         Assertions.assertEquals("Berton Vineyards", wine.getManufacturer());
         Assertions.assertEquals("Berton Vinyard Foundstone", wine.getBrand());
         Assertions.assertEquals("Австралия", wine.getCountry());

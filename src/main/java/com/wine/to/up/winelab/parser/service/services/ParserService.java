@@ -283,7 +283,7 @@ public class ParserService {
         Element img = document.selectFirst(IMAGE_SELECTOR);
         if (img != null) {
             String image = img.attr("src");
-            wine.setImage(image);
+            wine.setImage(PROTOCOL + SITE_URL + image);
         }
 
         if (isSparkling(name)) {
@@ -589,15 +589,19 @@ public class ParserService {
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
 
         String newPriceString = details.attr(NEW_PRICE_SELECTOR);
+        BigDecimal newPrice = null;
         if (!newPriceString.isEmpty()) {
-            BigDecimal newPrice = new BigDecimal(newPriceString);
+            newPrice = new BigDecimal(newPriceString);
             info.setNewPrice(newPrice);
         }
 
         Element oldPriceSpan = document.selectFirst(OLD_PRICE_SELECTOR);
         if (oldPriceSpan != null) {
-            BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replace(" ", ""));
+            BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replaceAll("[^0-9]", ""));
             info.setOldPrice(oldPrice);
+        }
+        else {
+            info.setOldPrice(newPrice);
         }
         return info;
     }

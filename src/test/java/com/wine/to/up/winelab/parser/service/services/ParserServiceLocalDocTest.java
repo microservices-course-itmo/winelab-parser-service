@@ -44,7 +44,7 @@ public class ParserServiceLocalDocTest {
         Assertions.assertEquals(1243.0f, apiWine.getOldPrice());
         Assertions.assertEquals("https://winelab.ru/product/1014769", apiWine.getLink());
         Assertions.assertEquals(599.0f, apiWine.getNewPrice());
-        Assertions.assertEquals("https://jmrkpxyvei.a.trbcdn.net/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA", apiWine.getImage());
+        Assertions.assertEquals("https://winelab.ru/medias/1014769.png-300Wx300H?context=bWFzdGVyfGltYWdlc3wzMzQwMXxpbWFnZS9wbmd8aW1hZ2VzL2g4NC9oZWMvODgzMjY0NjkzODY1NC5wbmd8OTk3MDg5NjdlMTk4NzlhNWM2MWQ0YzBiZGNhZmFmNGM3ZDViYmU1NWJmMzgyNDUwNWY0ZmRiYjczODdmOTJhOA", apiWine.getImage());
         Assertions.assertEquals("Domaine Barons de Rothschild", apiWine.getManufacturer());
         Assertions.assertEquals("SAGA", apiWine.getBrand());
         Assertions.assertEquals("Франция", apiWine.getCountry());
