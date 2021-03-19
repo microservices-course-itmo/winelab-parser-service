@@ -555,13 +555,13 @@ public class ParserService {
                 wine.setColor(color);
             } else if (key.equals(ALCOHOL_SELECTOR)) {
                 BigDecimal alcoholContent = new BigDecimal(value.substring(0, value.length() - 2));
-                wine.setAlcoholContent(alcoholContent);
+                wine.setStrength(alcoholContent);
             } else if (key.equals(SUGAR_SELECTOR)) {
                 ParserApi.Wine.Sugar sugar = getSugar(value);
                 wine.setSugar(sugar);
             } else if (key.equals(VOLUME_SELECTOR)) {
                 BigDecimal volume = new BigDecimal(value.substring(0, value.length() - 2));
-                wine.setVolume(volume);
+                wine.setCapacity(volume);
             } else if (key.equals(GRAPE_SELECTOR)) {
                 wine.setGrapeSort(value);
             } else if (key.equals(COUNTRY_SELECTOR)) {
