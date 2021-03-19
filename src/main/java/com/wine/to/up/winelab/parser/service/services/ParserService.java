@@ -5,7 +5,9 @@ import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.dto.WineLocalInfo;
 import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
+import com.wine.to.up.winelab.parser.service.repositories.WineRepository;
 import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -21,13 +23,18 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Class containing methods for parsing product pages and catalog pages
@@ -39,7 +46,6 @@ import java.util.function.Function;
 @Configuration
 @PropertySource(value = "classpath:parser.properties", encoding = "Windows-1251")
 public class ParserService {
-
     @InjectEventLogger
     private EventLogger eventLogger;
 
@@ -47,12 +53,16 @@ public class ParserService {
     private String SITE_URL;
     @Value("${parser.protocol}")
     private String PROTOCOL;
-    @Value("#{${parser.cookies}}")
-    private Map<String, String> COOKIES;
+    @Value("${parser.cookie.key}")
+    private String COOKIE_KEY;
+    @Value("${parser.cookie.default.value}")
+    private String COOKIE_DEFAULT_VALUE;
     @Value("#{${parser.catalogs}}")
     private Map<String, String> CATALOGS;
     @Value("${parser.retries}")
     private int MAX_RETRIES;
+    @Value("${parser.catalog.wines.per.page}")
+    private int WINES_PER_PAGE;
 
     @Value("${parser.selector.catalog.id}")
     private String ID_SELECTOR;
@@ -68,6 +78,13 @@ public class ParserService {
     private String CATALOG_NEXT_URL;
     @Value("${parser.catalog.address.page}")
     private String CATALOG_PAGE_URL;
+    @Value("${parser.selector.catalog.count}")
+    private String WINE_COUNT_SELECTOR;
+
+    @Value("${parser.selector.catalog.card.in.stock}")
+    private String CARD_IN_STOCK_SELECTOR;
+    @Value("${parser.selector.catalog.card.price.old}")
+    private String CARD_OLD_PRICE_SELECTOR;
 
     @Value("${parser.selector.product.name}")
     private String PRODUCT_NAME_SELECTOR;
@@ -93,10 +110,11 @@ public class ParserService {
     private String REGION_SELECTOR;
     @Value("${parser.product.sparkling}")
     private String SPARKLING_CATEGORY;
+    @Value("${parser.selector.product.in.stock}")
+    private String IN_STOCK_SELECTOR;
 
     @Value("${parser.product.address}")
     private String PRODUCT_PAGE_URL;
-    private Map<String, String> cookies;
     @Value("#{${parser.catalogs}}")
     private Map<String, String> catalogs;
 
@@ -131,6 +149,11 @@ public class ParserService {
     @Value("#{${parser.map.sugars}}")
     private Map<String, ParserApi.Wine.Sugar> SUGARS;
 
+    @Value("${parser.cities.default}")
+    private String DEFAULT_CITY;
+    @Value("#{${parser.cities}}")
+    private Map<String, String> CITIES;
+
 
     private Map<String, Function<Wine, Object>> tagGetters;
 
@@ -146,9 +169,11 @@ public class ParserService {
     private final AtomicLong lastSucceededParsingTime = new AtomicLong(0);
 
     private final WineLabParserMetricsCollector metricsCollector;
+    private final WineRepository repository;
 
-    public ParserService(WineLabParserMetricsCollector metricsCollector) {
+    public ParserService(WineLabParserMetricsCollector metricsCollector, WineRepository repository) {
         this.metricsCollector = Objects.requireNonNull(metricsCollector, "Can't get metricsCollector");
+        this.repository = repository;
 
         Metrics.gauge(
                 TIME_SINCE_LAST_SUCCEEDED_PARSING_GAUGE,
@@ -157,10 +182,15 @@ public class ParserService {
         );
     }
 
-    protected Document getDocument(String url) throws IOException {
+    protected Document getDocument(String url, String cookieValue) throws IOException {
+
+        Map<String, String> cookies = Map.of(COOKIE_KEY, cookieValue);
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
-                Document document = Jsoup.connect(url).cookies(COOKIES).get();
+                Document document = Jsoup.connect(url).cookies(cookies).get();
+
+                long fetchEnd = System.nanoTime();
+
                 return document;
             } catch (IOException ex) {
                 log.warn("Couldn't get page {} on try {} : {}", url, count + 1, ex);
@@ -169,31 +199,79 @@ public class ParserService {
         throw new IOException(String.format("Couldn't get page %s", url));
     }
 
+    protected Document getDocument(String url) throws IOException {
+        return getDocument(url, COOKIE_DEFAULT_VALUE);
+    }
+
+    private String getCatalogLinkByNumber(int number, int wineCount, int sparklingCount) throws IndexOutOfBoundsException {
+        String catalogName;
+        if (number <= wineCount) {
+            catalogName = CATALOGS.get("wine");
+        }
+        else if (number <= wineCount + sparklingCount) {
+            catalogName = CATALOGS.get("sparkling");
+            number -= wineCount;
+        }
+        else {
+            throw new IndexOutOfBoundsException("Catalog page number exceeds total catalog page count");
+        }
+        return String.format(CATALOG_PAGE_URL, catalogName, number);
+    }
+
+    public Wine parseProduct(int productID) {
+        return parseProduct(productID, DEFAULT_CITY);
+    }
+
     /**
      * Parsing wine from winelab web site by the id given
      *
      * @param productID a product id on winelab.ru of wine to be parsed
+     * @param city      cookie value on website
      * @return parsed wine object
      */
-
-    public Wine parseProduct(int productID) {
+    public Wine parseProduct(int productID, String city) {
         long parseStart = System.nanoTime();
-        long fetchStart = System.nanoTime();
 
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
+
         Document document;
         try {
-            document = getDocument(productURL);
+            document = getDocument(productURL, city);
+        } catch (IOException e) {
+            log.error("Could not get product page during parsing of wine {}", productID);
+            metricsCollector.winesParsedUnsuccessfully(1);
+            return null;
         }
-        catch (IOException e) {
-            log.error("Could not get product page during parsing wine {}", productID);
+        long fetchEnd = System.nanoTime();
+        metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - parseStart);
+
+        Wine wine = parseBasicProductInfo(productID, document);
+
+        WineLocalInfo localInfo = getLocalInfo(document);
+        wine.setOldPrice(localInfo.getOldPrice());
+        wine.setNewPrice(localInfo.getNewPrice());
+        if (wine.getNewPrice() == null) {
+            eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
+            log.warn("Wine {} will not be parsed because could not get price", productID);
+            metricsCollector.winesParsedUnsuccessfully(1);
             return null;
         }
 
-        long fetchEnd = System.nanoTime();
-        metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - fetchStart);
+        metricsCollector.winesParsedSuccessfully(1);
+        long parseEnd = System.nanoTime();
+        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
+        eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
+        List<String> lackAttributes = wine.lackAttributes();
+        if (!lackAttributes.isEmpty()) {
+            lackAttributes.forEach(attribute -> eventLogger.info(WineLabParserNotableEvents.W_WINE_ATTRIBUTE_ABSENT, attribute, productURL));
+        }
+        return wine;
+    }
 
+    private Wine parseBasicProductInfo(int productID, Document document) {
         Wine wine = new Wine();
+
+        wine.setId(productID);
 
         String name;
         try {
@@ -205,16 +283,10 @@ public class ParserService {
             return null;
         }
 
+        final String productURL = String.format(PRODUCT_PAGE_URL, productID);
         wine.setLink(productURL);
 
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
-
-        fillPrices(wine, document, details);
-        if (wine.getNewPrice() == null) {
-            eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
-            log.warn("Wine {} will not be parsed because could not get price", productID);
-            return null;
-        }
 
         String brand = details.attr(BRAND_SELECTOR);
         if (!brand.isEmpty()) {
@@ -245,13 +317,6 @@ public class ParserService {
         String description = document.selectFirst(DESCRIPTION_SELECTOR).html();
         wine.setDescription(description);
 
-        long parseEnd = System.nanoTime();
-        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
-        eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
-        var lackAttributes = wine.lackAttributes();
-        if (!lackAttributes.isEmpty()) {
-            lackAttributes.forEach(attribute -> eventLogger.info(WineLabParserNotableEvents.W_WINE_ATTRIBUTE_ABSENT, attribute, productURL));
-        }
         return wine;
     }
 
@@ -310,11 +375,9 @@ public class ParserService {
                                     if (wine != null) {
                                         wines.put(id, wine);
                                     }
-                                    metricsCollector.winesParsedSuccessfully(1);
                                 }
                             } catch (Exception ex) {
                                 unsuccessfullCounter.incrementAndGet();
-                                metricsCollector.winesParsedUnsuccessfully(1);
                                 log.error("Error while parsing wine with id {} {}", id, ex);
                             }
                         }
@@ -365,7 +428,6 @@ public class ParserService {
                             }
                         }
                     });
-
             log.info("Total failed-to-parse wines: {}", count);
             return wines;
         } catch (IOException ex) {
@@ -374,7 +436,106 @@ public class ParserService {
         }
     }
 
+    public List<Wine> getFromCatalogPage(int pageNumber, int winePageCount, int sparklingPageCount) {
+        return getFromCatalogPage(pageNumber, winePageCount, sparklingPageCount, DEFAULT_CITY);
+    }
+
+    public List<Wine> getFromCatalogPage(int pageNumber, int winePageCount, int sparklingPageCount, String city) {
+        metricsCollector.isParsing();
+        List<Wine> wines = new ArrayList<>();
+        try {
+            long parseStart = System.nanoTime();
+            String url = getCatalogLinkByNumber(pageNumber, winePageCount, sparklingPageCount);
+            Document document = getDocument(url, city);
+            long fetchEnd = System.nanoTime();
+            metricsCollector.timeWinePageFetchingDuration(fetchEnd - parseStart);
+
+            AtomicInteger failedCount = new AtomicInteger();
+            document.select(CARD_SELECTOR)
+                    .stream()
+                    .forEach(card -> {
+                        try {
+                            String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                            if (isWine(name)) {
+                                int id = Integer.parseInt(card.attr(ID_SELECTOR));
+                                Optional<Wine> oWine = repository.findById(id);
+                                Wine wine;
+                                if (oWine.isPresent()) {
+                                    log.debug("Wine {} was already stored in database", id);
+                                    wine = oWine.get();
+                                    setLocalInfoFromCard(wine, card);
+                                    if (wine.isInStock()) {
+                                        wine.setLastInStock(LocalDateTime.now());
+                                        repository.save(wine);
+                                    }
+                                } else {
+                                    log.debug("Wine {} was not stored in database previously", id);
+                                    wine = parseProduct(id);
+                                    wine.setLastInStock(LocalDateTime.now());
+                                    repository.save(wine);
+                                }
+                                wines.add(wine);
+                            }
+                        }
+                        catch (Exception e) {
+                            log.error("Exception occured during price parsing for wine {}: {}", card.attr(ID_SELECTOR), e);
+                            failedCount.getAndIncrement();
+                        }
+                    });
+            long parseEnd = System.nanoTime();
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+            log.info("Total failed-to-parse wines: {}", failedCount);
+        } catch (IndexOutOfBoundsException e) {
+            log.error("Catalog page number exceeds total catalog page count");
+        } catch (IOException e) {
+            log.error("Exception occurred during catalog page parsing: {}", e);
+        }
+        metricsCollector.isNotParsing();
+        return wines;
+    }
+
+    private void setLocalInfoFromCard(Wine wine, Element card) {
+        boolean isInStock = (card.selectFirst(CARD_IN_STOCK_SELECTOR) != null);
+        wine.setInStock(isInStock);
+
+        String newPriceString = card.attr(NEW_PRICE_SELECTOR);
+        BigDecimal newPrice = new BigDecimal(newPriceString);
+        wine.setNewPrice(newPrice);
+
+        BigDecimal oldPrice;
+        if (isInStock) {
+            String oldPriceString = card.selectFirst(CARD_OLD_PRICE_SELECTOR).ownText().replace(" ", "");
+            oldPrice = new BigDecimal(oldPriceString);
+        }
+        else {
+            oldPrice = newPrice;
+        }
+        wine.setOldPrice(oldPrice);
+    }
+
+    public List<WineLocalInfo> parseAllLocalInfo(int productID) {
+        return CITIES.keySet().stream()
+                .map(v -> getLocalInfo(productID, v))
+                .filter(Objects::nonNull)
+                .filter(v -> v.getNewPrice() != null)
+                .collect(Collectors.toList());
+    }
+
     /* Utility */
+
+    public int getCatalogPageCount(String catalog) {
+        String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), 1);
+        try {
+            Document document = getDocument(url);
+            String countString = document.selectFirst(WINE_COUNT_SELECTOR).ownText();
+            int count = Integer.parseInt(countString.replaceAll("[^\\d.]", ""));
+            return (int) Math.ceil((double) count / WINES_PER_PAGE);
+        }
+        catch (IOException e) {
+            log.error("Unable to get page {}", url);
+            return 0;
+        }
+    }
 
     private boolean isWine(String name) {
         return Arrays.stream(WINES).reduce(false,
@@ -403,52 +564,75 @@ public class ParserService {
     }
 
     private void fillTags(Wine wine, Elements tags) {
-        for (Element tag: tags) {
+        for (Element tag : tags) {
             String url = java.net.URLDecoder.decode(tag.attr("href"), StandardCharsets.UTF_8);
             String key = url.split("(:)")[2];
             String value = tag.html();
             if (key.equals(COLOR_SELECTOR)) {
                 ParserApi.Wine.Color color = getColor(value);
                 wine.setColor(color);
-            }
-            else if (key.equals(ALCOHOL_SELECTOR)) {
+            } else if (key.equals(ALCOHOL_SELECTOR)) {
                 BigDecimal alcoholContent = new BigDecimal(value.substring(0, value.length() - 2));
                 wine.setAlcoholContent(alcoholContent);
-            }
-            else if (key.equals(SUGAR_SELECTOR)) {
+            } else if (key.equals(SUGAR_SELECTOR)) {
                 ParserApi.Wine.Sugar sugar = getSugar(value);
                 wine.setSugar(sugar);
-            }
-            else if (key.equals(VOLUME_SELECTOR)) {
+            } else if (key.equals(VOLUME_SELECTOR)) {
                 BigDecimal volume = new BigDecimal(value.substring(0, value.length() - 2));
                 wine.setVolume(volume);
-            }
-            else if (key.equals(GRAPE_SELECTOR)) {
+            } else if (key.equals(GRAPE_SELECTOR)) {
                 wine.setGrapeSort(value);
-            }
-            else if (key.equals(COUNTRY_SELECTOR)) {
+            } else if (key.equals(COUNTRY_SELECTOR)) {
                 wine.setCountry(value);
-            }
-            else if (key.equals(BRAND_SELECTOR)) {
+            } else if (key.equals(BRAND_SELECTOR)) {
                 wine.setBrand(value);
-            }
-            else if (key.equals(MANUFACTURER_SELECTOR)) {
+            } else if (key.equals(MANUFACTURER_SELECTOR)) {
                 wine.setManufacturer(value);
             }
         }
     }
 
-    private void fillPrices(Wine wine, Document document, Element details) {
+    private WineLocalInfo getLocalInfo(Document document, String cityKey) {
+        WineLocalInfo info = new WineLocalInfo();
+
+        info.setCityName(CITIES.get(cityKey));
+
+        Element outOfStock = document.selectFirst(IN_STOCK_SELECTOR);
+        if (outOfStock != null) {
+            info.setInStock(false);
+        } else {
+            info.setInStock(true);
+        }
+
+        Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);
+
         String newPriceString = details.attr(NEW_PRICE_SELECTOR);
         if (!newPriceString.isEmpty()) {
             BigDecimal newPrice = new BigDecimal(newPriceString);
-            wine.setNewPrice(newPrice);
+            info.setNewPrice(newPrice);
         }
 
         Element oldPriceSpan = document.selectFirst(OLD_PRICE_SELECTOR);
         if (oldPriceSpan != null) {
             BigDecimal oldPrice = new BigDecimal(oldPriceSpan.ownText().replace(" ", ""));
-            wine.setOldPrice(oldPrice);
+            info.setOldPrice(oldPrice);
+        }
+        return info;
+    }
+
+    private WineLocalInfo getLocalInfo(Document document) {
+        return getLocalInfo(document, DEFAULT_CITY);
+    }
+
+    private WineLocalInfo getLocalInfo(int productID, String cityKey) {
+        final String productURL = String.format(PRODUCT_PAGE_URL, productID);
+        Document document;
+        try {
+            document = getDocument(productURL, cityKey);
+            return getLocalInfo(document, cityKey);
+        } catch (IOException e) {
+            log.error("Could not get product page during parsing wine {}", productID);
+            return null;
         }
     }
 }

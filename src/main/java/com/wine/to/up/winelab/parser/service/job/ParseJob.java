@@ -1,16 +1,14 @@
 package com.wine.to.up.winelab.parser.service.job;
 
-import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
+import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 
 @Slf4j
@@ -18,23 +16,42 @@ import java.util.Map;
 @Configuration
 public class ParseJob {
     private final ParserService parserService;
+    private final UpdateService updateService;
+    private final WineLabParserMetricsCollector metricsCollector;
 
-    public ParseJob(ParserService parserService) {
+    public ParseJob(ParserService parserService, UpdateService updateService, WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
+        this.updateService = updateService;
+        this.metricsCollector = metricsCollector;
     }
 
-    @Scheduled(cron = "${job.cron.parse}")
-    public void parseCatalogs() {
-        var dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private ThreadPoolTaskScheduler taskScheduler;
+    private final int SECONDS_IN_DAY = 60 * 60 * 24;
+    private final int MILLISECONDS_IN_SECOND = 1000;
+    private boolean firstTask = true;
 
-        log.info("Catalogs parsing starter at {}", dateFormat.format(new Date()));
-
-        try {
-            Map<Integer, Wine> wines = parserService.parseCatalogs();
-            log.info("Catalogs parsing finished successful at {}. {} objects parsed",
-                    dateFormat.format(new Date()), wines.size());
-        } catch (Exception ex) {
-            log.error("Catalogs parsing failed: ", ex);
+    @Scheduled(fixedRate = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
+    public void setPeriodicCatalogUpdateJob() {
+        int winePageCount = parserService.getCatalogPageCount("wine");
+        int sparklingPageCount = parserService.getCatalogPageCount("sparkling");
+        long period = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY / (winePageCount + sparklingPageCount);
+        if (firstTask) {
+            firstTask = false;
         }
+        else {
+            metricsCollector.parsingCompleteSuccessful();
+            taskScheduler.destroy();
+        }
+        metricsCollector.parsingStarted();
+        taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(4);
+        taskScheduler.setThreadNamePrefix(
+                "ThreadPoolTaskScheduler");
+        taskScheduler.initialize();
+        taskScheduler.scheduleAtFixedRate(
+                new SendPageToCatalogJob(parserService, updateService, winePageCount, sparklingPageCount),
+                period
+        );
+        log.info("Created new job with period of {} seconds ", period);
     }
 }

@@ -27,3 +27,15 @@ services:
       - KAFKA_CFG_LOG_DIR=/bitnami/kafka/tmp/kafka-logs-1
     depends_on:
       - zookeeper
+  mongo:
+    image: mongo
+    restart: always
+    container_name: mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - 'mongodb_data:/data/db'
+
+volumes:
+  mongodb_data:
+    driver: local

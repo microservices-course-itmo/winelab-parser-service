@@ -1,6 +1,7 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.dto.WineLocalInfo;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
 import com.wine.to.up.winelab.parser.service.job.UpdateWineLabJob;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -123,17 +123,15 @@ public class ParserController {
      * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
      */
     @GetMapping("/update")
-    public ResponseEntity<Object> updateCatalogs() {
-        int count = job.runJob();
-        return ResponseEntity.ok(String.format("Total %d wines sent", count));
+    public void updateCatalogs() {
+        job.runJob();
     }
 
     /**
      * Endpoint for parsing catalog and returning it in CSV format
      */
     @GetMapping("/catalogs/csv")
-    public ResponseEntity<Object> parseAsCsv()
-    {
+    public ResponseEntity<Object> parseAsCsv() {
         log.info("Parsing as CSV started!");
         Map<Integer, Wine> wines = parserService.parseCatalogs();
         if (wines.isEmpty()) {
@@ -143,4 +141,42 @@ public class ParserController {
         return ResponseEntity.ok(responseData);
     }
 
+    /**
+     * Endpoint to retrieve all city-specific data (is wine in stock and what price it has)
+     */
+    @GetMapping("/product/local/{id}")
+    public ResponseEntity<List<WineLocalInfo>> parseWineLocalInfo(@PathVariable(value = "id") int productID) {
+        List<WineLocalInfo> info = parserService.parseAllLocalInfo(productID);
+        return ResponseEntity.ok(info);
+    }
+
+    @GetMapping("/catalogs/{page}")
+    public ResponseEntity<Object> parseAndStoreCatalogPage(
+            @PathVariable(value = "page") int page) {
+        if (page < 1) {
+            log.warn("Catalog page ({}) number must be positive", page);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        int winePageCount = parserService.getCatalogPageCount("wine");
+        int sparklingPageCount = parserService.getCatalogPageCount("sparkling");
+        if(page > winePageCount + sparklingPageCount) {
+            log.warn("Page number ({}) exceeds catalog total page count ({})", page, winePageCount + sparklingPageCount);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        log.info("Parsing started!");
+        long begin = System.currentTimeMillis();
+        List<Wine> wines = parserService.getFromCatalogPage(page, winePageCount, sparklingPageCount);
+        long end = System.currentTimeMillis();
+        long timeElapsedTotal = end - begin;
+        log.info("Time elapsed total: {} ", String.format("%d min %d sec",
+                TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal),
+                TimeUnit.MILLISECONDS.toSeconds(timeElapsedTotal) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeElapsedTotal))
+        ));
+        List<String> responseData = wines.stream()
+                .map(Wine::toString)
+                .collect(Collectors.toList());
+        log.info("Total {} wines retrieved", wines.size());
+        return ResponseEntity.ok(responseData);
+    }
 }

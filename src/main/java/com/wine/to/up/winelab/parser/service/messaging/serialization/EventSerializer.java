@@ -15,7 +15,7 @@ public class EventSerializer implements Serializer<ParserApi.WineParsedEvent> {
      */
     @Override
     public byte[] serialize(String topic, ParserApi.WineParsedEvent data) {
-        log.info("Serializing message from topic: {}. {}", topic, data);
+        log.info("Serializing message from topic: {}. ", topic);
         return data.toByteArray();
     }
 }

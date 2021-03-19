@@ -2,10 +2,12 @@ package com.wine.to.up.winelab.parser.service.dto;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import lombok.*;
+import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -17,14 +19,14 @@ import java.util.function.Function;
 @ToString
 @NoArgsConstructor
 public class Wine implements Serializable {
+    @Id
+    private int id;
     // wine name as it is on product page
     private String name;
+    private BigDecimal oldPrice;
+    private BigDecimal newPrice;
     // product page address
     private String link;
-    // price without discount in rubles
-    private BigDecimal oldPrice;
-    // new price accounting the discount
-    private BigDecimal newPrice;
     // product image
     private String image;
     private String manufacturer;
@@ -42,13 +44,15 @@ public class Wine implements Serializable {
     private String grapeSort;
     private String description;
     private String gastronomy;
+    private boolean inStock;
+    private LocalDateTime lastInStock;
 
     public ParserApi.Wine toParserWine() {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();
         updateValue(builder::setName, this.name);
         updateValue(builder::setLink, this.link);
-        updateValue(builder::setNewPrice, this.newPrice, BigDecimal::floatValue);
-        updateValue(builder::setOldPrice, this.oldPrice, BigDecimal::floatValue);
+        updateValue(builder::setNewPrice, this.oldPrice, BigDecimal::floatValue);
+        updateValue(builder::setOldPrice, this.newPrice, BigDecimal::floatValue);
         updateValue(builder::setImage, this.image);
         updateValue(builder::setBrand, this.brand);
         updateValue(builder::setManufacturer, this.manufacturer);
@@ -101,6 +105,5 @@ public class Wine implements Serializable {
         } catch(Exception exception) {
             return result;
         }
-
     }
 }
