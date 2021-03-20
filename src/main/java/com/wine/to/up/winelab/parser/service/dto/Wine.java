@@ -46,7 +46,7 @@ public class Wine implements Serializable {
     private String gastronomy;
     private City city;
     private boolean inStock;
-    private LocalDateTime lastInStock;
+    private LocalDateTime lastSeen;
 
     public ParserApi.Wine toParserWine() {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();

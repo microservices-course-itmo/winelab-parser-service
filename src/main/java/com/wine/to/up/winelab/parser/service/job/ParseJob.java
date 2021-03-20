@@ -56,6 +56,6 @@ public class ParseJob {
                 new SendPageToCatalogJob(parserService, updateService),
                 period
         );
-        log.info("Created new job with period of {} seconds ", period);
+        log.info("Created new job with period of {} seconds ", period / 1000);
     }
 }

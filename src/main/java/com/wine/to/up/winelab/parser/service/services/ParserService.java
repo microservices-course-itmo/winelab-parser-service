@@ -226,7 +226,7 @@ public class ParserService {
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
         wine.setInStock(localInfo.isInStock());
-        wine.setLastInStock(LocalDateTime.now());
+        wine.setLastSeen(LocalDateTime.now());
         wine.setCity(city);
         if (wine.getNewPrice() == null) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
@@ -439,17 +439,15 @@ public class ParserService {
                                 Optional<Wine> oWine = repository.findById(id);
                                 Wine wine;
                                 if (oWine.isPresent()) {
-                                    log.debug("Wine {} was already stored in database", id);
+                                    log.info("Wine {} was already stored in database", id);
                                     wine = oWine.get();
                                     setLocalInfoFromCard(wine, card);
-                                    if (wine.isInStock()) {
-                                        wine.setLastInStock(LocalDateTime.now());
-                                        repository.save(wine);
-                                    }
+                                    wine.setLastSeen(LocalDateTime.now());
+                                    repository.save(wine);
                                 } else {
-                                    log.debug("Wine {} was not stored in database previously", id);
+                                    log.info("Wine {} was not stored in database previously", id);
                                     wine = parseProduct(id);
-                                    wine.setLastInStock(LocalDateTime.now());
+                                    wine.setLastSeen(LocalDateTime.now());
                                     repository.save(wine);
                                 }
                                 wines.add(wine);
@@ -457,16 +455,20 @@ public class ParserService {
                         }
                         catch (Exception e) {
                             log.error("Exception occured during price parsing for wine {}: {}", card.attr(ID_SELECTOR), e);
+                            eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
                             failedCount.getAndIncrement();
                         }
                     });
             long parseEnd = System.nanoTime();
             metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+            eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
             log.info("Total failed-to-parse wines: {}", failedCount);
         } catch (IndexOutOfBoundsException e) {
+            eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Catalog page number exceeds total catalog page count", e);
         } catch (IOException e) {
-            log.error("Exception occurred during catalog page parsing: {}", e);
+            eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
+            log.error("Exception occurred during catalog page parsing", e);
         }
         metricsCollector.isNotParsing();
         return wines;

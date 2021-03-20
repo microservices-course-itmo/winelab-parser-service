@@ -26,7 +26,7 @@ public class ClearDatabaseJob {
     public void clearOldWines() {
         List<Wine> winesToDelete = repository.findAll()
                 .stream()
-                .filter(wine -> wine.getLastInStock()
+                .filter(wine -> wine.getLastSeen()
                         .plusDays(DAYS_BEFORE_DELETE)
                         .isBefore(LocalDateTime.now()))
                 .collect(Collectors.toList());
