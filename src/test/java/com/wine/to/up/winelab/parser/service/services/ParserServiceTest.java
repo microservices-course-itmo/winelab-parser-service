@@ -27,6 +27,7 @@ class ParserServiceTest {
     @BeforeEach
     void init() {
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
+        repository = Mockito.mock(WineRepository.class);
         parserService = new ParserService(metricsCollector, repository);
         mockedParserService = Mockito.mock(ParserService.class);
         TestUtils.setParserServiceFields(parserService);

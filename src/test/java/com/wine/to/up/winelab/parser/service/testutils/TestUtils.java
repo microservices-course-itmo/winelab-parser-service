@@ -13,6 +13,10 @@ public class TestUtils {
     public static void setParserServiceFields(ParserService parserService) {
         EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(parserService, "COOKIE_KEY", "currentRegion");
+        ReflectionTestUtils.setField(parserService, "WINES_PER_PAGE", 20);
+        ReflectionTestUtils.setField(parserService, "WINE_COUNT_SELECTOR", "div.catalog-products_sort > span.d-none.d-md-inline-block");
+        ReflectionTestUtils.setField(parserService, "CARD_IN_STOCK_SELECTOR", "div.product_card_price div.count_bottom.dark");
+        ReflectionTestUtils.setField(parserService, "CARD_OLD_PRICE_SELECTOR", "span.discount__value");
         ReflectionTestUtils.setField(parserService, "SITE_URL", "winelab.ru");
         ReflectionTestUtils.setField(parserService, "PROTOCOL", "https://");
         ReflectionTestUtils.setField(parserService, "CATALOGS", Map.of("wine", "vino", "sparkling", "shampanskie-i-igristye-vina"));
@@ -60,6 +64,7 @@ public class TestUtils {
                 "полусухое", ParserApi.Wine.Sugar.MEDIUM_DRY,
                 "полусладкое", ParserApi.Wine.Sugar.MEDIUM,
                 "сладкое", ParserApi.Wine.Sugar.SWEET));
+
         ReflectionTestUtils.setField(parserService, "MAX_RETRIES", 3);
         ReflectionTestUtils.setField(parserService, "eventLogger", eventLoggerMock);
     }

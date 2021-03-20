@@ -108,8 +108,6 @@ public class ParserService {
 
     @Value("${parser.product.address}")
     private String PRODUCT_PAGE_URL;
-    @Value("#{${parser.catalogs}}")
-    private Map<String, String> catalogs;
 
     @Value("${parser.selector.filter}")
     private String FILTER_SELECTOR;
@@ -141,8 +139,6 @@ public class ParserService {
     private Map<String, ParserApi.Wine.Color> COLORS;
     @Value("#{${parser.map.sugars}}")
     private Map<String, ParserApi.Wine.Sugar> SUGARS;
-
-    private Map<String, Function<Wine, Object>> tagGetters;
 
     static final String IS_PARSING_PRODUCT = "product";
     static final String IS_PARSING_CATALOGS = "catalogs";
