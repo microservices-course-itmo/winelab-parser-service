@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Configuration
 public class ClearDatabaseJob {
     private final WineRepository repository;
-    private final int DAYS_BEFORE_DELETE = 14;
+    private final int DAYS_BEFORE_DELETE = 7;
 
     public ClearDatabaseJob(WineRepository repository, ParseJob parseJob) {
         this.repository = repository;
