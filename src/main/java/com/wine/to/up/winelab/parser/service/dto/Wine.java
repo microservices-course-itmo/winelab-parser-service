@@ -36,7 +36,7 @@ public class Wine implements Serializable {
     // volume in liters
     private BigDecimal volume;
     private BigDecimal alcoholContent;
-    // is wine sparkling
+    // is wine sparkling?
     private boolean sparkling;
     //should enums really be private? We can't access any methods that way.
     private ParserApi.Wine.Color color;
