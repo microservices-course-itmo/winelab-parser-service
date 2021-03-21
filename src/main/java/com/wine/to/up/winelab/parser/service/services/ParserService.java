@@ -433,6 +433,7 @@ public class ParserService {
                     .stream()
                     .forEach(card -> {
                         try {
+                            long wineParseStart = System.nanoTime();
                             String name = card.select(CATALOG_NAME_SELECTOR).last().html();
                             if (isWine(name)) {
                                 int id = Integer.parseInt(card.attr(ID_SELECTOR));
@@ -443,8 +444,11 @@ public class ParserService {
                                     wine = oWine.get();
                                     setLocalInfoFromCard(wine, card);
                                     wine.setLastSeen(LocalDateTime.now());
-                                    eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                     repository.save(wine);
+                                    long wineParseEnd = System.nanoTime();
+                                    metricsCollector.timeWinePageFetchingDuration(0);
+                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart);
+                                    eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                 } else {
                                     log.info("Wine {} was not stored in database previously", id);
                                     wine = parseProduct(id);
