@@ -443,6 +443,7 @@ public class ParserService {
                                     wine = oWine.get();
                                     setLocalInfoFromCard(wine, card);
                                     wine.setLastSeen(LocalDateTime.now());
+                                    eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                     repository.save(wine);
                                 } else {
                                     log.info("Wine {} was not stored in database previously", id);
