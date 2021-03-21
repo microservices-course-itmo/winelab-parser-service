@@ -225,7 +225,7 @@ public class ParserService {
         WineLocalInfo localInfo = getLocalInfo(document);
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
-        wine.setInStock(localInfo.isInStock());
+        wine.setInStock(localInfo.getInStock());
         wine.setLastSeen(LocalDateTime.now());
         wine.setCity(city);
         if (wine.getNewPrice() == null) {
@@ -454,7 +454,7 @@ public class ParserService {
                             }
                         }
                         catch (Exception e) {
-                            log.error("Exception occured during price parsing for wine {}: {}", card.attr(ID_SELECTOR), e);
+                            log.error("Exception occured during price parsing for wine {}: ", card.attr(ID_SELECTOR), e);
                             eventLogger.warn(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
                             failedCount.getAndIncrement();
                         }
@@ -475,15 +475,20 @@ public class ParserService {
     }
 
     private void setLocalInfoFromCard(Wine wine, Element card) {
-        boolean isInStock = (card.selectFirst(CARD_IN_STOCK_SELECTOR) != null);
-        wine.setInStock(isInStock);
+        Element stockElement = card.selectFirst(CARD_IN_STOCK_SELECTOR);
+        if (stockElement != null) {
+            int stockCount = Integer.parseInt(stockElement.ownText().replaceAll("[^0-9]", ""));
+            wine.setInStock(stockCount);
+        } else {
+            wine.setInStock(0);
+        }
 
         String newPriceString = card.attr(NEW_PRICE_SELECTOR);
         BigDecimal newPrice = new BigDecimal(newPriceString);
         wine.setNewPrice(newPrice);
 
         BigDecimal oldPrice;
-        if (isInStock) {
+        if (wine.getInStock() != 0) {
             String oldPriceString = card.selectFirst(CARD_OLD_PRICE_SELECTOR).ownText().replace(" ", "");
             oldPrice = new BigDecimal(oldPriceString);
         }
@@ -577,11 +582,12 @@ public class ParserService {
 
         info.setCityName(city.toString());
 
-        Element outOfStock = document.selectFirst(IN_STOCK_SELECTOR);
-        if (outOfStock != null) {
-            info.setInStock(false);
+        Element stockElement = document.selectFirst(IN_STOCK_SELECTOR);
+        if (stockElement != null) {
+            int stockCount = Integer.parseInt(stockElement.ownText().replaceAll("[^0-9]", ""));
+            info.setInStock(stockCount);
         } else {
-            info.setInStock(true);
+            info.setInStock(0);
         }
 
         Element details = document.selectFirst(PRODUCT_DETAILS_SELECTOR);

@@ -24,6 +24,7 @@ public class ClearDatabaseJob {
 
     @Scheduled(fixedRateString = "${job.rate.clear.database}")
     public void clearOldWines() {
+        repository.deleteAll();
         List<Wine> winesToDelete = repository.findAll()
                 .stream()
                 .filter(wine -> wine.getLastSeen()
@@ -31,5 +32,6 @@ public class ClearDatabaseJob {
                         .isBefore(LocalDateTime.now()))
                 .collect(Collectors.toList());
         repository.deleteAll(winesToDelete);
+        log.info("Cleared database from old entries, total {} wines deleted", winesToDelete.size());
     }
 }
