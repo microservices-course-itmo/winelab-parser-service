@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Configuration
 public class ClearDatabaseJob {
     private final WineRepository repository;
-    private final int DAYS_BEFORE_DELETE = 14;
+    private final int DAYS_BEFORE_DELETE = 7;
 
     public ClearDatabaseJob(WineRepository repository, ParseJob parseJob) {
         this.repository = repository;
@@ -26,10 +26,11 @@ public class ClearDatabaseJob {
     public void clearOldWines() {
         List<Wine> winesToDelete = repository.findAll()
                 .stream()
-                .filter(wine -> wine.getLastInStock()
+                .filter(wine -> wine.getLastSeen()
                         .plusDays(DAYS_BEFORE_DELETE)
                         .isBefore(LocalDateTime.now()))
                 .collect(Collectors.toList());
         repository.deleteAll(winesToDelete);
+        log.info("Cleared database from old entries, total {} wines deleted", winesToDelete.size());
     }
 }
