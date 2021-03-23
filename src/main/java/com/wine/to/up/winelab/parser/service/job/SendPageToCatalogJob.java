@@ -44,53 +44,27 @@ public class SendPageToCatalogJob implements Runnable {
             log.info("Sent page {} of {} from {} to catalog service", currentPageNumber, currentCatalog, currentCity.toString());
             nextPage();
         } catch (IndexOutOfBoundsException ex) {
-            log.info("Parsing is finished.");
+            log.info("No more pages of {} from {} to be sent to catalog service", currentCatalog, currentCity.toString());
         } catch (Exception ex) {
             log.error("Catalog page {} parsing failed: {}", currentPageNumber, ex);
         }
     }
 
     private void nextPage() {
-        if (currentCity == City.MOSCOW) {
-            if (currentCatalog.equals("wine")) {
-                if (currentPageNumber < moscowWinePageCount) {
-                    currentPageNumber++;
-                }
-                else {
-                    currentPageNumber = 1;
-                    currentCatalog = "sparkling";
-                }
+        if (currentCatalog.equals("wine")) {
+            if (currentPageNumber < (currentCity == City.MOSCOW ? moscowWinePageCount : defaultWinePageCount)) {
+                currentPageNumber++;
+            } else {
+                currentPageNumber = 1;
+                currentCatalog = "sparkling";
             }
-            else {
-                if (currentPageNumber < moscowSparklingPageCount) {
-                    currentPageNumber++;
-                }
-                else {
-                    currentPageNumber = 1;
-                    currentCatalog = "wine";
-                    currentCity = City.values()[currentCity.ordinal() + 1];
-                }
-            }
-        }
-        else {
-            if (currentCatalog.equals("wine")) {
-                if (currentPageNumber < defaultWinePageCount) {
-                    currentPageNumber++;
-                }
-                else {
-                    currentPageNumber = 1;
-                    currentCatalog = "sparkling";
-                }
-            }
-            else {
-                if (currentPageNumber < defaultSparklingPageCount) {
-                    currentPageNumber++;
-                }
-                else {
-                    currentPageNumber = 1;
-                    currentCatalog = "wine";
-                    currentCity = City.values()[currentCity.ordinal() + 1];
-                }
+        } else {
+            if (currentPageNumber < (currentCity == City.MOSCOW ? moscowSparklingPageCount : defaultSparklingPageCount)) {
+                currentPageNumber++;
+            } else {
+                currentPageNumber = 1;
+                currentCatalog = "wine";
+                currentCity = City.values()[currentCity.ordinal() + 1];
             }
         }
     }

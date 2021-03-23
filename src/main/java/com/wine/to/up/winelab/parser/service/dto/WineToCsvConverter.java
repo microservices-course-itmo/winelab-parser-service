@@ -53,6 +53,6 @@ public class WineToCsvConverter {
     }
 
     private String toCsvString(List<Object> list) {
-        return list.stream().map(s -> s == null ? "\"\"" : "\"" + s + "\"") .collect(Collectors.joining(",")) + "\n";
+        return list.stream().map(s -> s == null ? "\"\"" : "\"" + s + "\"").collect(Collectors.joining(",")) + "\n";
     }
 }

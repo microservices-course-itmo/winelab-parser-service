@@ -19,6 +19,7 @@ public class ParseJob {
     private final ParserService parserService;
     private final UpdateService updateService;
     private final WineLabParserMetricsCollector metricsCollector;
+    private static final String SPARKLING = "sparkling";
 
     public ParseJob(ParserService parserService, UpdateService updateService, WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
@@ -34,16 +35,16 @@ public class ParseJob {
     @Scheduled(fixedRate = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
     public void setPeriodicCatalogUpdateJob() {
         int moscowWinePageCount = parserService.getCatalogPageCount("wine", City.MOSCOW);
-        int moscowSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.MOSCOW);
+        int moscowSparklingPageCount = parserService.getCatalogPageCount(SPARKLING, City.MOSCOW);
         int defaultWinePageCount = parserService.getCatalogPageCount("wine", City.defaultCity());
-        int defaultSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.defaultCity());
+        int defaultSparklingPageCount = parserService.getCatalogPageCount(SPARKLING, City.defaultCity());
         long period = MILLISECONDS_IN_SECOND * SECONDS_IN_DAY /
                 (moscowWinePageCount + moscowSparklingPageCount +
                         (City.values().length - 1) * (defaultWinePageCount + defaultSparklingPageCount) + 1);
+        long periodInSecs = period / 1000;
         if (firstTask) {
             firstTask = false;
-        }
-        else {
+        } else {
             metricsCollector.parsingCompleteSuccessful();
             taskScheduler.destroy();
         }
@@ -57,6 +58,6 @@ public class ParseJob {
                 new SendPageToCatalogJob(parserService, updateService),
                 period
         );
-        log.info("Created new job with period of {} seconds ", period / 1000);
+        log.info("Created new job with period of {} seconds ", periodInSecs);
     }
 }

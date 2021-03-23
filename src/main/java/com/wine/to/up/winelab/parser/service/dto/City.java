@@ -10,8 +10,7 @@ public enum City {
     NIZHNY_NOVGOROD_OBLAST("Нижегородская область", "RU-NIZ"),
     PRIMORSKY_KRAI("Приморский край", "RU-PRI"),
     SAKHALIN_OBLAST("Сахалинская область", "RU-SAK"),
-    KHABAROVSKY_KRAI("Хабаровский край", "RU-KHA"),
-    ;
+    KHABAROVSKY_KRAI("Хабаровский край", "RU-KHA");
 
     private String cityName;
     private String cookie;
@@ -29,6 +28,7 @@ public enum City {
         return cookie;
     }
 
+    @Override
     public String toString() {
         return cityName;
     }
