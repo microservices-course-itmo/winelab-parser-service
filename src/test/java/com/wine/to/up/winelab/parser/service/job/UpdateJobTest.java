@@ -29,7 +29,6 @@ class UpdateJobTest {
         mockedKafka = Mockito.mock(KafkaService.class);
         metricsCollector = Mockito.mock(WineLabParserMetricsCollector.class);
         updateService = new UpdateService();
-        EventLogger eventLoggerMock = Mockito.mock(EventLogger.class);
         ReflectionTestUtils.setField(updateService, "kafkaService", mockedKafka);
         ReflectionTestUtils.setField(updateService, "parserService", mockedParser);
         ReflectionTestUtils.setField(updateService, "metricsCollector", metricsCollector);

@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.job;
 
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
@@ -12,31 +13,60 @@ public class SendPageToCatalogJob implements Runnable {
     ParserService parserService;
     UpdateService updateService;
 
-    private int currentPageNumber;
-    private int winePageCount;
-    private int sparklingPageCount;
+    int moscowWinePageCount;
+    int moscowSparklingPageCount;
+    int defaultWinePageCount;
+    int defaultSparklingPageCount;
 
-    public SendPageToCatalogJob(ParserService parserService, UpdateService updateService, int winePageCount, int sparklingPageCount) {
+    int currentPageNumber;
+    City currentCity;
+    String currentCatalog;
+
+
+    public SendPageToCatalogJob(ParserService parserService, UpdateService updateService) {
         this.parserService = parserService;
         this.updateService = updateService;
+
+        this.moscowWinePageCount = parserService.getCatalogPageCount("wine", City.MOSCOW);
+        this.moscowSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.MOSCOW);
+        this.defaultWinePageCount = parserService.getCatalogPageCount("wine", City.defaultCity());
+        this.defaultSparklingPageCount = parserService.getCatalogPageCount("sparkling", City.defaultCity());
+
         this.currentPageNumber = 1;
-        this.winePageCount = winePageCount;
-        this.sparklingPageCount = sparklingPageCount;
+        this.currentCity = City.values()[0];
+        this.currentCatalog = "wine";
     }
 
     public void run() {
         try {
-            List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, winePageCount, sparklingPageCount);
+            List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, currentCatalog, currentCity);
             updateService.sendToKafka(wines);
-            if(currentPageNumber <= winePageCount) {
-                log.info("Sent page {} of wines to catalog service", currentPageNumber);
-            }
-            else {
-                log.info("Sent page {} of sparkling wines to catalog service", currentPageNumber - winePageCount);
-            }
-            currentPageNumber++;
+            log.info("Sent page {} of {} from {} to catalog service", currentPageNumber, currentCatalog, currentCity.toString());
+            nextPage();
+        } catch (IndexOutOfBoundsException ex) {
+            log.info("No more pages of {} from {} to be sent to catalog service", currentCatalog, currentCity.toString());
         } catch (Exception ex) {
             log.error("Catalog page {} parsing failed: {}", currentPageNumber, ex);
         }
     }
+
+    private void nextPage() {
+        if (currentCatalog.equals("wine")) {
+            if (currentPageNumber < (currentCity == City.MOSCOW ? moscowWinePageCount : defaultWinePageCount)) {
+                currentPageNumber++;
+            } else {
+                currentPageNumber = 1;
+                currentCatalog = "sparkling";
+            }
+        } else {
+            if (currentPageNumber < (currentCity == City.MOSCOW ? moscowSparklingPageCount : defaultSparklingPageCount)) {
+                currentPageNumber++;
+            } else {
+                currentPageNumber = 1;
+                currentCatalog = "wine";
+                currentCity = City.values()[currentCity.ordinal() + 1];
+            }
+        }
+    }
+
 }

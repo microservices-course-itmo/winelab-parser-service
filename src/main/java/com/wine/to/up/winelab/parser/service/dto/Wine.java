@@ -34,9 +34,9 @@ public class Wine implements Serializable {
     private String country;
     private String region;
     // volume in liters
-    private BigDecimal volume;
-    private BigDecimal alcoholContent;
-    // is wine sparkling?
+    private BigDecimal capacity; // он же volume, он же объём
+    private BigDecimal strength; // он же alcoholContent, он же процентное содержание алкоголя
+    // is wine sparkling
     private boolean sparkling;
     //should enums really be private? We can't access any methods that way.
     private ParserApi.Wine.Color color;
@@ -44,27 +44,30 @@ public class Wine implements Serializable {
     private String grapeSort;
     private String description;
     private String gastronomy;
-    private boolean inStock;
-    private LocalDateTime lastInStock;
+    private City city;
+    private int inStock;
+    private LocalDateTime lastSeen;
 
     public ParserApi.Wine toParserWine() {
         ParserApi.Wine.Builder builder = ParserApi.Wine.newBuilder();
         updateValue(builder::setName, this.name);
         updateValue(builder::setLink, this.link);
-        updateValue(builder::setNewPrice, this.oldPrice, BigDecimal::floatValue);
-        updateValue(builder::setOldPrice, this.newPrice, BigDecimal::floatValue);
+        updateValue(builder::setOldPrice, this.oldPrice, BigDecimal::floatValue);
+        updateValue(builder::setNewPrice, this.newPrice, BigDecimal::floatValue);
         updateValue(builder::setImage, this.image);
         updateValue(builder::setBrand, this.brand);
         updateValue(builder::setManufacturer, this.manufacturer);
         updateValue(builder::setCountry, this.country);
         updateValue(builder::addRegion, this.region);
-        updateValue(builder::setCapacity, this.volume, BigDecimal::floatValue);
-        updateValue(builder::setStrength, this.alcoholContent, BigDecimal::floatValue);
+        updateValue(builder::setCapacity, this.capacity, BigDecimal::floatValue);
+        updateValue(builder::setStrength, this.strength, BigDecimal::floatValue);
         updateValue(builder::setColor, this.color);
         updateValue(builder::setSugar, this.sugar);
         updateValue(builder::addGrapeSort, this.grapeSort);
         updateValue(builder::setDescription, this.description);
         updateValue(builder::setGastronomy, this.gastronomy);
+        updateValue(builder::setCity, this.city, City::toString);
+        updateValue(builder::setInStock, this.inStock);
         return builder.build();
     }
 

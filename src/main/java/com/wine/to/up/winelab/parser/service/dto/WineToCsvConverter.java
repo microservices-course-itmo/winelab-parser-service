@@ -21,8 +21,8 @@ public class WineToCsvConverter {
         this.fields.put("BRAND", Wine::getBrand);
         this.fields.put("COUNTRY", Wine::getCountry);
         this.fields.put("REGION", Wine::getRegion);
-        this.fields.put("VOLUME", Wine::getVolume);
-        this.fields.put("ALCOHOL_CONTENT", Wine::getAlcoholContent);
+        this.fields.put("VOLUME", Wine::getCapacity);
+        this.fields.put("ALCOHOL_CONTENT", Wine::getStrength);
         this.fields.put("SPARKLING", Wine::isSparkling);
         this.fields.put("COLOR", Wine::getColor);
         this.fields.put("SUGAR", Wine::getSugar);
@@ -53,6 +53,6 @@ public class WineToCsvConverter {
     }
 
     private String toCsvString(List<Object> list) {
-        return list.stream().map(s -> s == null ? "\"\"" : "\"" + s + "\"") .collect(Collectors.joining(",")) + "\n";
+        return list.stream().map(s -> s == null ? "\"\"" : "\"" + s + "\"").collect(Collectors.joining(",")) + "\n";
     }
 }

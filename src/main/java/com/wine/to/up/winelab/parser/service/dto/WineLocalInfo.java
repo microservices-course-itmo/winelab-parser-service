@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @ToString
 public class WineLocalInfo {
     private String cityName;
-    private boolean inStock;
+    private int inStock;
     private BigDecimal oldPrice;
     private BigDecimal newPrice;
 }
