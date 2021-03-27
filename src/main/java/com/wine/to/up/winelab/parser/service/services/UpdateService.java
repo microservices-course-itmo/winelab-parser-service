@@ -29,6 +29,7 @@ public class UpdateService {
 
     @Value("${parser.address}")
     private String siteURL;
+    private String parserName;
 
     public void updateCatalog() {
         Map<Integer, Wine> wines = parserService.parseCatalogs();
@@ -47,6 +48,9 @@ public class UpdateService {
                     .addAllWines(apiWines.subList(start, end));
             if (siteURL != null) {
                 eventBuilder.setShopLink(siteURL);
+            }
+            if (parserName != null) {
+                eventBuilder.setParserName(parserName);
             }
             ParserApi.WineParsedEvent event = eventBuilder.build();
             kafkaService.sendWineParsedEvent(event);
