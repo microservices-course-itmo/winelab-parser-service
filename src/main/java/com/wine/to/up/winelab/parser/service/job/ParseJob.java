@@ -1,8 +1,11 @@
 package com.wine.to.up.winelab.parser.service.job;
 
+import com.wine.to.up.commonlib.annotations.InjectEventLogger;
+import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
+import com.wine.to.up.winelab.parser.service.logging.WineLabParserNotableEvents;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +24,8 @@ import java.util.List;
 public class ParseJob {
     private final String WINE = "wine";
     private final String SPARKLING = "sparkling";
-
+    @InjectEventLogger
+    private EventLogger eventLogger;
     @Value("${parse.delay.successful}")
     long parseDelayAfterSuccess; // in minutes;
     @Value("${parse.delay.failed}")
@@ -68,6 +72,7 @@ public class ParseJob {
             unsuccessfulStreak = 0;
         } catch (Exception ex) {
             log.error("Catalog page {} parsing failed: {}", currentPageNumber, ex);
+            eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             unsuccessfulStreak += 1;
             if (unsuccessfulStreak >= 5) { // if page parsing failed 5 times in a row
                 onFailure();
