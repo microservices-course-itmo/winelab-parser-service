@@ -207,7 +207,6 @@ public class ParserService {
      */
     public Wine parseProduct(int productID, City city) {
         long parseStart = System.nanoTime();
-
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
 
         Document document;
@@ -222,7 +221,7 @@ public class ParserService {
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - parseStart);
 
         Wine wine = parseBasicProductInfo(productID, document);
-
+        eventLogger.info(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
         WineLocalInfo localInfo = getLocalInfo(document);
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
