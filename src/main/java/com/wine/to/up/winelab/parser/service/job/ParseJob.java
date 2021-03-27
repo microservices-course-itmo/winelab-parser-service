@@ -41,6 +41,7 @@ public class ParseJob {
     City currentCity;
     String currentCatalog;
     LocalDateTime timeToStartParsing;
+    boolean isParsing; // needed for metrics purposes only
 
     public ParseJob(ParserService parserService, UpdateService updateService, WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
@@ -53,6 +54,10 @@ public class ParseJob {
     public void parsePage() {
         if (!ready()) {
             return;
+        }
+        if (!isParsing) {
+            isParsing = true;
+            metricsCollector.parsingStarted();
         }
         try {
             List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, currentCatalog, currentCity);
@@ -117,6 +122,7 @@ public class ParseJob {
         this.currentPageNumber = 1;
         this.currentCity = City.values()[0];
         this.currentCatalog = WINE;
+        this.isParsing = false;
     }
 
     private boolean ready() {
