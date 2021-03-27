@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.wine.to.up.winelab.parser.service.dto.City;
+
 /**
  * This Class expose methods for recording specific metrics
  * It changes metrics of Micrometer and Prometheus simultaneously
@@ -33,11 +35,19 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String WINES_PARSED_UNSUCCESSFULLY = "wines_parsed_unsuccessfully";
     private static final String WINES_PARSED_SUCCESSFULLY = "wines_parsed_successfully";
     private static final String WINES_PUBLISHED_TO_KAFKA = "wines_published_to_kafka_count";
-
     private static final String PARSING_COMPLETE_STATUS = "status";
 
     public WineLabParserMetricsCollector() {
         super(SERVICE_NAME);
+        timeParsingDuration(0);
+        countWinesPublishedToKafka(0);
+        winesParsedUnsuccessfully(0);
+        timeParsingDuration(0);
+        winesParsedSuccessfully(0);
+        timeWineDetailsFetchingDuration(0);
+        timeWineDetailsParsingDuration(0);
+        timeWinePageParsingDuration(0);
+        timeWinePageFetchingDuration(0);
     }
 
     private static final Counter parsingStartedCounter = Counter.build()
@@ -101,7 +111,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
 
     public void parsingCompleteFailed() {
-        Metrics.counter(PARSING_COMPLETE,PARSING_COMPLETE_STATUS, "FAILED").increment();
+        Metrics.counter(PARSING_COMPLETE, PARSING_COMPLETE_STATUS, "FAILED").increment();
         parsingCompleteCounter.labels("FAILED").inc();
     }
 
@@ -124,12 +134,6 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.summary(WINE_PAGE_FETCHING_DURATION).record(milliTime);
     }
 
-    public void timeWineDetailsParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
-        wineDetailsParsingDurationSummary.observe(milliTime);
-        Metrics.summary(WINE_DETAILS_PARSING_DURATION).record(milliTime);
-    }
-
     public void timeWinePageParsingDuration(long nanoTime) {
         long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageParsingDurationSummary.observe(milliTime);
@@ -139,6 +143,12 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     public void countWinesPublishedToKafka(double wineNum) {
         Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment(wineNum);
         winesPublishedToKafkaCounter.inc(wineNum);
+    }
+
+    public void timeWineDetailsParsingDuration(long nanoTime) {
+        long secondsTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
+        wineDetailsParsingDurationSummary.observe(secondsTime);
+        Metrics.summary(WINE_DETAILS_PARSING_DURATION).record(secondsTime);
     }
 
     public void isParsing() {
