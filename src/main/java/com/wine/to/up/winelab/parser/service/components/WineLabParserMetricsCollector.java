@@ -48,6 +48,9 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         timeWineDetailsParsingDuration(0);
         timeWinePageParsingDuration(0);
         timeWinePageFetchingDuration(0);
+        parsingStarted();
+        parsingCompleteSuccessful();
+        parsingCompleteFailed();
     }
 
     private static final Counter parsingStartedCounter = Counter.build()
