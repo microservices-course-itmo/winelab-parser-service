@@ -18,7 +18,7 @@ public class ClearDatabaseJob {
     private final WineRepository repository;
     private final int DAYS_BEFORE_DELETE = 7;
 
-    public ClearDatabaseJob(WineRepository repository, ParseJob parseJob) {
+    public ClearDatabaseJob(WineRepository repository) {
         this.repository = repository;
     }
 

@@ -172,15 +172,10 @@ public class ParserService {
     }
 
     protected Document getDocument(String url, City city) throws IOException {
-        long parseStart = System.nanoTime();
-        long fetchStart = System.nanoTime();
-
         Map<String, String> cookies = Map.of(COOKIE_KEY, city.getCookie());
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
                 Document document = Jsoup.connect(url).cookies(cookies).get();
-
-                long fetchEnd = System.nanoTime();
 
                 return document;
             } catch (IOException ex) {
@@ -471,9 +466,13 @@ public class ParserService {
                         }
                     });
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
-            eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
-            log.info("Total failed-to-parse wines: {}", failedCount);
+            if (wines.isEmpty()) {
+                eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
+            } else {
+                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+                eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
+                log.info("Total failed-to-parse wines: {}", failedCount);
+            }
         } catch (IndexOutOfBoundsException e) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Catalog page number exceeds total catalog page count", e);
