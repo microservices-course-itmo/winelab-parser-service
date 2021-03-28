@@ -364,7 +364,7 @@ public class ParserService {
             page++;
             Element nextPage = document.select(NEXT_PAGE_SELECTOR).first();
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart,city);
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart, city);
             if (nextPage == null) {
                 isLastPage = true;
             } else {
@@ -419,7 +419,6 @@ public class ParserService {
     }
 
     public List<Wine> getFromCatalogPage(int pageNumber, String catalog, City city) {
-        metricsCollector.isParsing();
         List<Wine> wines = new ArrayList<>();
         try {
             long parseStart = System.nanoTime();
@@ -447,7 +446,7 @@ public class ParserService {
                                     repository.save(wine);
                                     long wineParseEnd = System.nanoTime();
                                     metricsCollector.timeWinePageFetchingDuration(0);
-                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart,city);
+                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart, city);
                                     eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                 } else {
                                     log.info("Wine {} was not stored in database previously", id);
@@ -468,7 +467,7 @@ public class ParserService {
             if (wines.isEmpty()) {
                 eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             } else {
-                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart,city);
+                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart, city);
                 eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
                 log.info("Total failed-to-parse wines: {}", failedCount);
             }

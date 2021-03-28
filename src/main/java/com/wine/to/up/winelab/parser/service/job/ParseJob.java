@@ -67,6 +67,9 @@ public class ParseJob {
             List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, currentCatalog, currentCity);
             if (wines.isEmpty()) {
                 unsuccessfulStreak += 1;
+                if (unsuccessfulStreak >= 5) { // if page parsing failed 5 times in a row
+                    onFailure();
+                }
             } else {
                 updateService.sendToKafka(wines);
                 log.info("Sent page {} of {} from {} to catalog service", currentPageNumber, currentCatalog, currentCity.toString());
