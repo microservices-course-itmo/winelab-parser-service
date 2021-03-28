@@ -39,6 +39,14 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
 
     public WineLabParserMetricsCollector() {
         super(SERVICE_NAME);
+        timeWineDetailsFetchingDuration(0);
+        timeWinePageFetchingDuration(0);
+        timeWinePageParsingDuration(0, City.defaultCity());
+        countWinesPublishedToKafka(0, City.defaultCity());
+        timeWineDetailsParsingDuration(0, City.defaultCity());
+        winesParsedSuccessfully(0);
+        winesParsedUnsuccessfully(0);
+
     }
 
     private static final Counter parsingStartedCounter = Counter.build()
@@ -128,18 +136,18 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     public void timeWinePageParsingDuration(long nanoTime, City city) {
         long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageParsingDurationSummary.observe(milliTime);
-        Metrics.summary(WINE_PAGE_PARSING_DURATION,"city", city.toString()).record(milliTime);
+        Metrics.summary(WINE_PAGE_PARSING_DURATION, "city", city.toString()).record(milliTime);
     }
 
     public void countWinesPublishedToKafka(double wineNum, City city) {
-        Metrics.counter(WINES_PUBLISHED_TO_KAFKA,"city", city.toString()).increment(wineNum);
+        Metrics.counter(WINES_PUBLISHED_TO_KAFKA, "city", city.toString()).increment(wineNum);
         winesPublishedToKafkaCounter.inc(wineNum);
     }
 
     public void timeWineDetailsParsingDuration(long nanoTime, City city) {
         long secondsTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         wineDetailsParsingDurationSummary.observe(secondsTime);
-        Metrics.summary(WINE_DETAILS_PARSING_DURATION,"city", city.toString()).record(secondsTime);
+        Metrics.summary(WINE_DETAILS_PARSING_DURATION, "city", city.toString()).record(secondsTime);
     }
 
     public void isParsing() {
