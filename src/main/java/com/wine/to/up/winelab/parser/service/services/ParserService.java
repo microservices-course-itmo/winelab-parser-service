@@ -237,7 +237,7 @@ public class ParserService {
 
         metricsCollector.winesParsedSuccessfully(1);
         long parseEnd = System.nanoTime();
-        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
+        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart,city);
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
         List<String> lackAttributes = wine.lackAttributes();
         if (!lackAttributes.isEmpty()) {
@@ -308,7 +308,7 @@ public class ParserService {
         try {
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
-                parseCatalog(catalog, wines);
+                parseCatalog(catalog, wines, City.defaultCity());
             }
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
@@ -325,7 +325,7 @@ public class ParserService {
         }
     }
 
-    private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
+    private void parseCatalog(String category, Map<Integer, Wine> wines, City city) throws IOException {
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
         Document document = getDocument(url);
@@ -364,7 +364,7 @@ public class ParserService {
             page++;
             Element nextPage = document.select(NEXT_PAGE_SELECTOR).first();
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart,city);
             if (nextPage == null) {
                 isLastPage = true;
             } else {
@@ -447,7 +447,7 @@ public class ParserService {
                                     repository.save(wine);
                                     long wineParseEnd = System.nanoTime();
                                     metricsCollector.timeWinePageFetchingDuration(0);
-                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart);
+                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart,city);
                                     eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                 } else {
                                     log.info("Wine {} was not stored in database previously", id);
@@ -468,7 +468,7 @@ public class ParserService {
             if (wines.isEmpty()) {
                 eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             } else {
-                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart,city);
                 eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
                 log.info("Total failed-to-parse wines: {}", failedCount);
             }
