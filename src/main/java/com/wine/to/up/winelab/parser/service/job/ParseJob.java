@@ -35,10 +35,7 @@ public class ParseJob {
     UpdateService updateService;
     WineLabParserMetricsCollector metricsCollector;
 
-    private int moscowWinePageCount;
-    private int moscowSparklingPageCount;
-    private int defaultWinePageCount;
-    private int defaultSparklingPageCount;
+    private int currentCatalogPageCount;
 
     private int unsuccessfulStreak;
     private int unsuccessfulTotal;
@@ -99,24 +96,25 @@ public class ParseJob {
 
     private boolean nextPage() {
         if (currentCatalog.equals(WINE)) {
-            return nextPageWhenWine((currentCity == City.MOSCOW ? moscowWinePageCount : defaultWinePageCount));
+            return nextPageWhenWine();
         } else {
-            return nextPageWhenSparkling((currentCity == City.MOSCOW ? moscowSparklingPageCount : defaultSparklingPageCount));
+            return nextPageWhenSparkling();
         }
     }
 
-    private boolean nextPageWhenWine(int pageCount) {
-        if (currentPageNumber < pageCount) {
+    private boolean nextPageWhenWine() {
+        if (currentPageNumber < currentCatalogPageCount) {
             currentPageNumber++;
         } else {
             currentPageNumber = 1;
             currentCatalog = SPARKLING;
+            currentCatalogPageCount = parserService.getCatalogPageCount(currentCatalog, currentCity);
         }
         return false;
     }
 
-    private boolean nextPageWhenSparkling(int pageCount) {
-        if (currentPageNumber < pageCount) {
+    private boolean nextPageWhenSparkling() {
+        if (currentPageNumber < currentCatalogPageCount) {
             currentPageNumber++;
         } else {
             if (currentCity.ordinal() + 1 == City.values().length) { // if last city on the list
@@ -125,21 +123,18 @@ public class ParseJob {
             currentPageNumber = 1;
             currentCatalog = WINE;
             currentCity = City.values()[currentCity.ordinal() + 1];
+            currentCatalogPageCount = parserService.getCatalogPageCount(currentCatalog, currentCity);
         }
         return false;
     }
 
     private void reset() {
-        this.moscowWinePageCount = parserService.getCatalogPageCount(WINE, City.MOSCOW);
-        this.moscowSparklingPageCount = parserService.getCatalogPageCount(SPARKLING, City.MOSCOW);
-        this.defaultWinePageCount = parserService.getCatalogPageCount(WINE, City.defaultCity());
-        this.defaultSparklingPageCount = parserService.getCatalogPageCount(SPARKLING, City.defaultCity());
-
         this.unsuccessfulStreak = 0;
         this.unsuccessfulTotal = 0;
         this.currentPageNumber = 1;
         this.currentCity = City.values()[0];
         this.currentCatalog = WINE;
+        this.currentCatalogPageCount = parserService.getCatalogPageCount(currentCatalog, currentCity);
         this.isParsing = false;
     }
 
