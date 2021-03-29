@@ -35,17 +35,17 @@ public class ParseJob {
     UpdateService updateService;
     WineLabParserMetricsCollector metricsCollector;
 
-    int moscowWinePageCount;
-    int moscowSparklingPageCount;
-    int defaultWinePageCount;
-    int defaultSparklingPageCount;
+    private int moscowWinePageCount;
+    private int moscowSparklingPageCount;
+    private int defaultWinePageCount;
+    private int defaultSparklingPageCount;
 
-    int unsuccessfulStreak;
-    int currentPageNumber;
-    City currentCity;
-    String currentCatalog;
-    LocalDateTime timeToStartParsing;
-    boolean isParsing; // needed for metrics purposes only
+    private int unsuccessfulStreak;
+    private int currentPageNumber;
+    private City currentCity;
+    private String currentCatalog;
+    private LocalDateTime timeToStartParsing;
+    private boolean isParsing; // needed for metrics purposes only
 
     public ParseJob(ParserService parserService, UpdateService updateService, WineLabParserMetricsCollector metricsCollector) {
         this.parserService = parserService;
