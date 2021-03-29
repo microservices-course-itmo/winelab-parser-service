@@ -67,6 +67,7 @@ public class ParseJob {
             List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, currentCatalog, currentCity);
             if (wines.isEmpty()) {
                 unsuccessfulStreak += 1;
+                log.warn("Fails in a row: {}", unsuccessfulStreak);
                 if (unsuccessfulStreak >= 5) { // if page parsing failed 5 times in a row
                     onFailure();
                 }
@@ -82,6 +83,7 @@ public class ParseJob {
             log.error("Catalog page {} parsing failed: {}", currentPageNumber, ex);
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             unsuccessfulStreak += 1;
+            log.warn("Fails in a row: {}", unsuccessfulStreak);
             if (unsuccessfulStreak >= 5) { // if page parsing failed 5 times in a row
                 onFailure();
             }
