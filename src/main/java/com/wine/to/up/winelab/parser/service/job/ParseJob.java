@@ -41,6 +41,7 @@ public class ParseJob {
     private int defaultSparklingPageCount;
 
     private int unsuccessfulStreak;
+    private int unsuccessfulTotal;
     private int currentPageNumber;
     private City currentCity;
     private String currentCatalog;
@@ -66,25 +67,31 @@ public class ParseJob {
         try {
             List<Wine> wines = parserService.getFromCatalogPage(currentPageNumber, currentCatalog, currentCity);
             if (wines.isEmpty()) {
-                unsuccessfulStreak += 1;
+                unsuccessfulStreak++;
+                unsuccessfulTotal++;
                 log.warn("Fails in a row: {}", unsuccessfulStreak);
-                if (unsuccessfulStreak >= 5) { // if page parsing failed 5 times in a row
+                if (unsuccessfulTotal >= 20) { // if page parsing failed 5 times in a row
                     onFailure();
                 }
+                if (unsuccessfulStreak >= 3) { // couldn't get catalog page 3 times in a row
+                    unsuccessfulStreak = 0;
+                    nextPage();
+                }
             } else {
+                unsuccessfulStreak = 0;
                 updateService.sendToKafka(wines);
                 log.info("Sent page {} of {} from {} to catalog service", currentPageNumber, currentCatalog, currentCity.toString());
                 if (nextPage()) { // if all wines are parsed
                     onSuccess();
                 }
             }
-            unsuccessfulStreak = 0;
         } catch (Exception ex) {
             log.error("Catalog page {} parsing failed: {}", currentPageNumber, ex);
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
-            unsuccessfulStreak += 1;
+            unsuccessfulStreak++;
+            unsuccessfulTotal++;
             log.warn("Fails in a row: {}", unsuccessfulStreak);
-            if (unsuccessfulStreak >= 5) { // if page parsing failed 5 times in a row
+            if (unsuccessfulStreak >= 20) {
                 onFailure();
             }
         }
@@ -129,6 +136,7 @@ public class ParseJob {
         this.defaultSparklingPageCount = parserService.getCatalogPageCount(SPARKLING, City.defaultCity());
 
         this.unsuccessfulStreak = 0;
+        this.unsuccessfulTotal = 0;
         this.currentPageNumber = 1;
         this.currentCity = City.values()[0];
         this.currentCatalog = WINE;

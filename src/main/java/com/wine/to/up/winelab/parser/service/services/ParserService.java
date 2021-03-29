@@ -215,13 +215,13 @@ public class ParserService {
         } catch (IOException e) {
             log.error("Could not get product page during parsing of wine {}", productID);
             metricsCollector.winesParsedUnsuccessfully(1);
+            eventLogger.info(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             return null;
         }
         long fetchEnd = System.nanoTime();
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - parseStart);
 
         Wine wine = parseBasicProductInfo(productID, document);
-        eventLogger.info(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
         WineLocalInfo localInfo = getLocalInfo(document);
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
@@ -478,7 +478,6 @@ public class ParserService {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Exception occurred during catalog page parsing", e);
         }
-        metricsCollector.isNotParsing();
         return wines;
     }
 
