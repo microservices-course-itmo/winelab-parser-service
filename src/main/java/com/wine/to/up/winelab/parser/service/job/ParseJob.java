@@ -70,7 +70,7 @@ public class ParseJob {
                 unsuccessfulStreak++;
                 unsuccessfulTotal++;
                 log.warn("Fails in a row: {}", unsuccessfulStreak);
-                if (unsuccessfulTotal >= 20) { // if page parsing failed 5 times in a row
+                if (unsuccessfulTotal >= 20) { // if page parsing failed 20 times total
                     onFailure();
                 }
                 if (unsuccessfulStreak >= 3) { // couldn't get catalog page 3 times in a row
