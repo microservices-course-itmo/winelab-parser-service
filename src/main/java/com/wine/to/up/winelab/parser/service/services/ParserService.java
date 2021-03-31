@@ -172,15 +172,10 @@ public class ParserService {
     }
 
     protected Document getDocument(String url, City city) throws IOException {
-        long parseStart = System.nanoTime();
-        long fetchStart = System.nanoTime();
-
         Map<String, String> cookies = Map.of(COOKIE_KEY, city.getCookie());
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
                 Document document = Jsoup.connect(url).cookies(cookies).get();
-
-                long fetchEnd = System.nanoTime();
 
                 return document;
             } catch (IOException ex) {
@@ -212,7 +207,6 @@ public class ParserService {
      */
     public Wine parseProduct(int productID, City city) {
         long parseStart = System.nanoTime();
-
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
 
         Document document;
@@ -221,13 +215,13 @@ public class ParserService {
         } catch (IOException e) {
             log.error("Could not get product page during parsing of wine {}", productID);
             metricsCollector.winesParsedUnsuccessfully(1);
+            eventLogger.info(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             return null;
         }
         long fetchEnd = System.nanoTime();
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - parseStart);
 
         Wine wine = parseBasicProductInfo(productID, document);
-
         WineLocalInfo localInfo = getLocalInfo(document);
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
@@ -243,7 +237,7 @@ public class ParserService {
 
         metricsCollector.winesParsedSuccessfully(1);
         long parseEnd = System.nanoTime();
-        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
+        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart,city);
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
         List<String> lackAttributes = wine.lackAttributes();
         if (!lackAttributes.isEmpty()) {
@@ -314,7 +308,7 @@ public class ParserService {
         try {
             Map<Integer, Wine> wines = new HashMap<>();
             for (String catalog : CATALOGS.values()) {
-                parseCatalog(catalog, wines);
+                parseCatalog(catalog, wines, City.defaultCity());
             }
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
@@ -331,7 +325,7 @@ public class ParserService {
         }
     }
 
-    private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
+    private void parseCatalog(String category, Map<Integer, Wine> wines, City city) throws IOException {
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
         Document document = getDocument(url);
@@ -370,7 +364,7 @@ public class ParserService {
             page++;
             Element nextPage = document.select(NEXT_PAGE_SELECTOR).first();
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart, city);
             if (nextPage == null) {
                 isLastPage = true;
             } else {
@@ -379,7 +373,7 @@ public class ParserService {
                 try {
                     document = getDocument(url);
                 } catch (IOException ex) {
-                    log.error("Error while parsing catalog page {} {}", url, ex);
+                    log.error("Error while parsing catalog page {}", url, ex);
                     eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED, page);
                     break;
                 }
@@ -425,7 +419,6 @@ public class ParserService {
     }
 
     public List<Wine> getFromCatalogPage(int pageNumber, String catalog, City city) {
-        metricsCollector.isParsing();
         List<Wine> wines = new ArrayList<>();
         try {
             long parseStart = System.nanoTime();
@@ -453,7 +446,7 @@ public class ParserService {
                                     repository.save(wine);
                                     long wineParseEnd = System.nanoTime();
                                     metricsCollector.timeWinePageFetchingDuration(0);
-                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart);
+                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart, city);
                                     eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                 } else {
                                     log.info("Wine {} was not stored in database previously", id);
@@ -471,9 +464,13 @@ public class ParserService {
                         }
                     });
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
-            eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
-            log.info("Total failed-to-parse wines: {}", failedCount);
+            if (wines.isEmpty()) {
+                eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
+            } else {
+                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart, city);
+                eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
+                log.info("Total failed-to-parse wines: {}", failedCount);
+            }
         } catch (IndexOutOfBoundsException e) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Catalog page number exceeds total catalog page count", e);
@@ -481,7 +478,6 @@ public class ParserService {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Exception occurred during catalog page parsing", e);
         }
-        metricsCollector.isNotParsing();
         return wines;
     }
 

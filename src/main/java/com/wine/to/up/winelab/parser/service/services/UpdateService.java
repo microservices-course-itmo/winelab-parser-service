@@ -2,6 +2,7 @@ package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ public class UpdateService {
 
     @Value("${parser.address}")
     private String siteURL;
+    private String parserName;
 
     public void updateCatalog() {
         Map<Integer, Wine> wines = parserService.parseCatalogs();
@@ -48,8 +50,11 @@ public class UpdateService {
             if (siteURL != null) {
                 eventBuilder.setShopLink(siteURL);
             }
+            if (parserName != null) {
+                eventBuilder.setParserName(parserName);
+            }
             ParserApi.WineParsedEvent event = eventBuilder.build();
-            kafkaService.sendWineParsedEvent(event);
+            kafkaService.sendWineParsedEvent(event, City.defaultCity());
         }
     }
 }
