@@ -67,7 +67,7 @@ public class Wine implements Serializable {
         updateValue(builder::setDescription, this.description);
         updateValue(builder::setGastronomy, this.gastronomy);
         updateValue(builder::setCity, this.city, City::toString);
-        updateValue(builder::setInStock, this.inStock);
+        updateValue(builder::setInStock, Integer.toString(this.inStock));
         return builder.build();
     }
 
