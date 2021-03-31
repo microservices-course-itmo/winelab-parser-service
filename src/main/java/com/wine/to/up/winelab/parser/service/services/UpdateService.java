@@ -33,8 +33,8 @@ public class UpdateService {
     private String parserName;
 
     public void updateCatalog() {
-        Map<Integer, Wine> wines = parserService.parseCatalogs();
-        sendToKafka(new ArrayList<>(wines.values()));
+        List<Wine> wines = parserService.parseCatalogs();
+        sendToKafka(wines);
     }
 
     public void sendToKafka(List<Wine> wines) {

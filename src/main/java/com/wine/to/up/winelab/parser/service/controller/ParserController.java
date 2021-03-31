@@ -64,7 +64,7 @@ public class ParserController {
         log.info("Parsing started!");
         long begin = System.currentTimeMillis();
 
-        Map<Integer, Wine> wines = parserService.parseCatalogs();
+        List<Wine> wines = parserService.parseCatalogs();
         long end = System.currentTimeMillis();
         long timeElapsedTotal = end - begin;
         log.info("Time elapsed total: {} ", String.format("%d min %d sec",
@@ -75,7 +75,7 @@ public class ParserController {
         if (wines.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        List<String> responseData = wines.values()
+        List<String> responseData = wines
                 .stream()
                 .map(Wine::toString)
                 .collect(Collectors.toList());
@@ -100,7 +100,7 @@ public class ParserController {
         }
         log.info("Parsing started!");
         long begin = System.currentTimeMillis();
-        Map<Integer, Wine> wines = parserService.parseCatalogPage(catalog, page);
+        List<Wine> wines = parserService.parseCatalogPage(catalog, page);
         long end = System.currentTimeMillis();
         long timeElapsedTotal = end - begin;
         log.info("Time elapsed total: {} ", String.format("%d min %d sec",
@@ -112,7 +112,7 @@ public class ParserController {
         long quantity = TimeUnit.MINUTES.toMillis(1) * (wines.size()) / timeElapsedTotal;
         log.info("Wines parsed quantity every minute {} ", quantity);
         log.info("Parsing done! Total {} wines parsed", wines.size());
-        List<String> responseData = wines.values()
+        List<String> responseData = wines
                 .stream()
                 .map(Wine::toString)
                 .collect(Collectors.toList());
@@ -133,11 +133,11 @@ public class ParserController {
     @GetMapping("/catalogs/csv")
     public ResponseEntity<Object> parseAsCsv() {
         log.info("Parsing as CSV started!");
-        Map<Integer, Wine> wines = parserService.parseCatalogs();
+        List<Wine> wines = parserService.parseCatalogs();
         if (wines.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        String responseData = converter.convert(wines.values());
+        String responseData = converter.convert(wines);
         return ResponseEntity.ok(responseData);
     }
 

@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.util.NestedServletException;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -66,7 +67,7 @@ class ControllerTest {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Thread.sleep(10);
-                return Map.of();
+                return List.of();
             }
         });
         Assertions.assertDoesNotThrow(() -> mockMvc.perform(get("/parser/catalogs/wine/1")));

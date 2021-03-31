@@ -45,7 +45,7 @@ class ParseJobTest {
 
     @Test
     void testParseJobDoesntThrow() {
-        Mockito.when(mockedParserService.parseCatalogs()).thenReturn(Map.of());
+        Mockito.when(mockedParserService.parseCatalogs()).thenReturn(List.of());
         ParseJob job = new ParseJob(mockedParserService, mockedUpdateService, metricsCollector);
         Assertions.assertDoesNotThrow(job::parsePage);
         List<ILoggingEvent> logsList = listAppender.list;

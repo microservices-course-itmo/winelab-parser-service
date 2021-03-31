@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -303,12 +301,12 @@ public class ParserService {
      *
      * @return map of parsed wines in format (product id, parsed wine object)
      */
-    public Map<Integer, Wine> parseCatalogs() {
+    public List<Wine> parseCatalogs(City city) {
         metricsCollector.parsingStarted();
         try {
-            Map<Integer, Wine> wines = new HashMap<>();
+            List<Wine> wines = new ArrayList<>();
             for (String catalog : CATALOGS.values()) {
-                parseCatalog(catalog, wines, City.defaultCity());
+                parseCatalog(catalog, wines, city);
             }
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
@@ -321,11 +319,19 @@ public class ParserService {
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
             log.error("Error while parsing catalogs : ", ex);
-            return new HashMap<>();
+            return new ArrayList<>();
         }
     }
 
-    private void parseCatalog(String category, Map<Integer, Wine> wines, City city) throws IOException {
+    public List<Wine> parseCatalogs() {
+        List<Wine> wines = new ArrayList<>();
+        for (City city : City.values()) {
+            wines.addAll(parseCatalogs(city));
+        }
+        return wines;
+    }
+
+    private void parseCatalog(String category, List<Wine> wines, City city) throws IOException {
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
         Document document = getDocument(url);
@@ -348,11 +354,9 @@ public class ParserService {
                             allCounter.incrementAndGet();
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
-                                if (!wines.containsKey(id)) {
-                                    Wine wine = parseProduct(id);
-                                    if (wine != null) {
-                                        wines.put(id, wine);
-                                    }
+                                Wine wine = parseProduct(id);
+                                if (wine != null) {
+                                    wines.add(wine);
                                 }
                             } catch (Exception ex) {
                                 unsuccessfullCounter.incrementAndGet();
@@ -383,11 +387,11 @@ public class ParserService {
         }
     }
 
-    public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
+    public List<Wine> parseCatalogPage(String catalog, int page) {
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
         try {
             Document document = getDocument(url);
-            Map<Integer, Wine> wines = new HashMap<>();
+            List<Wine> wines = new ArrayList<>();
             AtomicInteger count = new AtomicInteger();
 
             document.select(CARD_SELECTOR)
@@ -397,9 +401,7 @@ public class ParserService {
                         if (isWine(name)) {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
-                                if (!wines.containsKey(id)) {
-                                    wines.put(id, parseProduct(id));
-                                }
+                                wines.add(parseProduct(id));
                             } catch (Exception ex) {
                                 count.incrementAndGet();
                                 log.error("Error while parsing wine with id {} {}", id, ex);
@@ -410,7 +412,7 @@ public class ParserService {
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing {} catalog's page {} : ", catalog, page, ex);
-            return new HashMap<>();
+            return new ArrayList<>();
         }
     }
 
@@ -591,8 +593,14 @@ public class ParserService {
 
         Element stockElement = document.selectFirst(IN_STOCK_SELECTOR);
         if (stockElement != null) {
-            int stockCount = Integer.parseInt(stockElement.ownText().replaceAll("[^0-9]", ""));
-            info.setInStock(stockCount);
+            String stockCountString = stockElement.ownText().replaceAll("[^0-9]", "");
+            if(stockCountString.isEmpty()) {
+                info.setInStock(0);
+            }
+            else {
+                int stockCount = Integer.parseInt(stockCountString);
+                info.setInStock(stockCount);
+            }
         } else {
             info.setInStock(0);
         }
