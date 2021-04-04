@@ -561,7 +561,7 @@ public class ParserService {
         for (Element tag : tags) {
             String url = java.net.URLDecoder.decode(tag.attr("href"), StandardCharsets.UTF_8);
             String key = url.split("(:)")[2];
-            String value = tag.html();
+            String value = tag.html().trim();
             if (key.equals(COLOR_SELECTOR)) {
                 ParserApi.Wine.Color color = getColor(value);
                 wine.setColor(color);
