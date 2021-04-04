@@ -287,10 +287,10 @@ public class ParserService {
         Elements tags = document.select(PRODUCT_TAG_SELECTOR);
         fillTags(wine, tags);
 
-        String gastronomy = document.selectFirst(GASTRONOMY_SELECTOR).html();
+        String gastronomy = document.selectFirst(GASTRONOMY_SELECTOR).text();
         wine.setGastronomy(gastronomy);
 
-        String description = document.selectFirst(DESCRIPTION_SELECTOR).html();
+        String description = document.selectFirst(DESCRIPTION_SELECTOR).text();
         wine.setDescription(description);
 
         return wine;
@@ -349,7 +349,7 @@ public class ParserService {
             document.select(CARD_SELECTOR)
                     .parallelStream()
                     .forEach(card -> {
-                        String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                        String name = card.select(CATALOG_NAME_SELECTOR).last().text();
                         if (isWine(name)) {
                             allCounter.incrementAndGet();
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
@@ -397,7 +397,7 @@ public class ParserService {
             document.select(CARD_SELECTOR)
                     .parallelStream()
                     .forEach(card -> {
-                        String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                        String name = card.select(CATALOG_NAME_SELECTOR).last().text();
                         if (isWine(name)) {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
@@ -435,7 +435,7 @@ public class ParserService {
                     .forEach(card -> {
                         try {
                             long wineParseStart = System.nanoTime();
-                            String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                            String name = card.select(CATALOG_NAME_SELECTOR).last().text();
                             if (isWine(name)) {
                                 int id = Integer.parseInt(card.attr(ID_SELECTOR));
                                 Optional<Wine> oWine = repository.findById(id);
@@ -561,7 +561,7 @@ public class ParserService {
         for (Element tag : tags) {
             String url = java.net.URLDecoder.decode(tag.attr("href"), StandardCharsets.UTF_8);
             String key = url.split("(:)")[2];
-            String value = tag.html().trim();
+            String value = tag.text();
             if (key.equals(COLOR_SELECTOR)) {
                 ParserApi.Wine.Color color = getColor(value);
                 wine.setColor(color);
