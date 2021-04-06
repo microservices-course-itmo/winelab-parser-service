@@ -122,10 +122,7 @@ public class ParserController {
      */
     @GetMapping("/update")
     public void updateCatalogs(@RequestParam(required = false) String city) {
-            job.runJob(city != null
-                    ? Optional.of(City.valueOf(city))
-                    : Optional.empty()
-            );
+            job.runJob(Optional.ofNullable(City.valueOf(city)));
     }
 
     /**

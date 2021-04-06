@@ -23,9 +23,20 @@ public class UpdateWineLabJob {
 
     public void runJob(Optional<City> city) {
         long startDate = System.currentTimeMillis();
-        log.info("start UpdateWineLabJob run job method at {} for city {}", startDate, city.toString());
+        log.info("start UpdateWineLabJob run job method at {} for {} city",
+                startDate,
+                city.isPresent()
+                        ? city.get().toString()
+                        : "all"
+                );
         updateService.updateCatalog(city);
-        log.info("end UpdateWineLabJob run job method at {} duration = {} city = {}", System.currentTimeMillis(), (System.currentTimeMillis() - startDate), city.toString());
+        log.info("end UpdateWineLabJob run job method at {} duration = {} city = {}",
+                System.currentTimeMillis(),
+                (System.currentTimeMillis() - startDate),
+                city.isPresent()
+                        ? city.get().toString()
+                        : "all"
+        );
     }
 
 }

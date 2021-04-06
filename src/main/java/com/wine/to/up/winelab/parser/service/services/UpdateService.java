@@ -33,7 +33,7 @@ public class UpdateService {
 
 
     public void updateCatalog(Optional<City> city) {
-        List<Wine> wines;
+        List<Wine> wines = {};
         if(city.isPresent())
              wines = parserService.parseCatalogs(city.get());
         else
