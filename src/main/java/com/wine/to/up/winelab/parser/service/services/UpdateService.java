@@ -33,11 +33,12 @@ public class UpdateService {
 
 
     public void updateCatalog(Optional<City> city) {
-        List<Wine> wines = {};
-        if(city.isPresent())
-             wines = parserService.parseCatalogs(city.get());
-        else
-             wines = parserService.parseCatalogs();
+        List<Wine> wines;
+        if(city.isPresent()) {
+            wines = parserService.parseCatalogs(city.get());
+        } else {
+            wines = parserService.parseCatalogs();
+        }
         sendToKafka(wines);
     }
 
