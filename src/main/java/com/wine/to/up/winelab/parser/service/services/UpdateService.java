@@ -10,9 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.Integer.min;
@@ -34,6 +32,11 @@ public class UpdateService {
 
     public void updateCatalog() {
         List<Wine> wines = parserService.parseCatalogs();
+        sendToKafka(wines);
+    }
+
+    public void updateCatalog(City city) {
+        List<Wine> wines = parserService.parseCatalogs(city);
         sendToKafka(wines);
     }
 
