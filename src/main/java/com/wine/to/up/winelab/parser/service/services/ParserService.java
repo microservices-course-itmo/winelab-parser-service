@@ -173,7 +173,11 @@ public class ParserService {
         Map<String, String> cookies = Map.of(COOKIE_KEY, city.getCookie());
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
-                Document document = Jsoup.connect(url).cookies(cookies).get();
+                Document document = Jsoup
+                        .connect(url)
+                        .maxBodySize(0)
+                        .cookies(cookies)
+                        .get();
 
                 return document;
             } catch (IOException ex) {
