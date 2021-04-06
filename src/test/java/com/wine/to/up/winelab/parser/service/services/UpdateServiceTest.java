@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 class UpdateServiceTest {
     ParserService mockedParser;
@@ -38,7 +39,7 @@ class UpdateServiceTest {
 
     @Test
     void testUpdateDoesntThrow() {
-        Assertions.assertDoesNotThrow(updateService::updateCatalog);
+        Assertions.assertDoesNotThrow(() -> updateService.updateCatalog(Optional.empty()));
         List<ILoggingEvent> logsList = listAppender.list;
         Assertions.assertFalse(logsList.stream().anyMatch(it -> it.getLevel() == Level.ERROR));
     }

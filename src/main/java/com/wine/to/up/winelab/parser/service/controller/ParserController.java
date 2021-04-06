@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -121,10 +122,10 @@ public class ParserController {
      */
     @GetMapping("/update")
     public void updateCatalogs(@RequestParam(required = false) String city) {
-        if (city != null)
-            job.runJob();
-        else
-            job.runJob(City.valueOf(city));
+            job.runJob(city != null
+                    ? Optional.of(City.valueOf(city))
+                    : Optional.empty()
+            );
     }
 
     /**

@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Integer.min;
@@ -30,13 +31,13 @@ public class UpdateService {
     private String siteURL;
     private String parserName;
 
-    public void updateCatalog() {
-        List<Wine> wines = parserService.parseCatalogs();
-        sendToKafka(wines);
-    }
 
-    public void updateCatalog(City city) {
-        List<Wine> wines = parserService.parseCatalogs(city);
+    public void updateCatalog(Optional<City> city) {
+        List<Wine> wines;
+        if(city.isPresent())
+             wines = parserService.parseCatalogs(city.get());
+        else
+             wines = parserService.parseCatalogs();
         sendToKafka(wines);
     }
 
