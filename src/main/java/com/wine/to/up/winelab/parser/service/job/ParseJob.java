@@ -52,7 +52,7 @@ public class ParseJob {
         this.reset();
     }
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelayString = "${job.rate.update.page}")
     public void parsePage() {
         if (!ready()) {
             return;
