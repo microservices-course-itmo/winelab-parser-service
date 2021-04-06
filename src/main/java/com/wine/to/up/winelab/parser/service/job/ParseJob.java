@@ -66,13 +66,16 @@ public class ParseJob {
             if (wines.isEmpty()) {
                 unsuccessfulStreak++;
                 unsuccessfulTotal++;
-                log.warn("Fails in a row: {}", unsuccessfulStreak);
+                log.warn("Failed to parse page {} of {}s catalog for {}. Fails in a row: {}. Total fails: {}",
+                        currentPageNumber, currentCatalog, currentCity, unsuccessfulStreak, unsuccessfulTotal);
                 if (unsuccessfulTotal >= 20) { // if page parsing failed 20 times total
                     onFailure();
                 }
                 if (unsuccessfulStreak >= 3) { // couldn't get catalog page 3 times in a row
                     unsuccessfulStreak = 0;
-                    nextPage();
+                    if(nextPage()) {
+                        onSuccess();
+                    }
                 }
             } else {
                 unsuccessfulStreak = 0;
