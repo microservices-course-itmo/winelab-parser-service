@@ -232,7 +232,9 @@ public class ParserService {
             metricsCollector.winesParsedUnsuccessfully(1);
             return null;
         }
-
+        if (wine.getBrand() == null) {
+            wine.setBrand(wine.getManufacturer());
+        }
         metricsCollector.winesParsedSuccessfully(1);
         long parseEnd = System.nanoTime();
         metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart,city);
