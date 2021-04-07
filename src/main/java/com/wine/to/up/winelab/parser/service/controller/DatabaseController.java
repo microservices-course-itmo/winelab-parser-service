@@ -1,29 +1,38 @@
-package com.wine.to.up.winelab.parser.service.job;
+package com.wine.to.up.winelab.parser.service.controller;
 
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.repositories.WineRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RestController
+@RequestMapping("/database")
 @Slf4j
-@Component
 @Configuration
-public class ClearDatabaseJob {
-    private final WineRepository repository;
-    private final int DAYS_BEFORE_DELETE = 7;
+public class DatabaseController {
 
-    public ClearDatabaseJob(WineRepository repository) {
+    private final int DAYS_BEFORE_DELETE = 7;
+    private final WineRepository repository;
+
+    public DatabaseController(WineRepository repository) {
         this.repository = repository;
     }
 
-    @Scheduled(fixedRateString = "${job.rate.clear.database}")
-    public void clearOldWines() {
+    @PutMapping("/clear")
+    public void clearDatabase() {
+        repository.deleteAll();
+        log.info("Database was cleared");
+    }
+
+    @PutMapping("/clear/old")
+    public void clearOld() {
         List<Wine> winesToDelete = repository.findAll()
                 .stream()
                 .filter(wine -> wine.getLastSeen()

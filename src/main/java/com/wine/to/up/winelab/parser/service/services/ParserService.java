@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -172,15 +170,14 @@ public class ParserService {
     }
 
     protected Document getDocument(String url, City city) throws IOException {
-        long parseStart = System.nanoTime();
-        long fetchStart = System.nanoTime();
-
         Map<String, String> cookies = Map.of(COOKIE_KEY, city.getCookie());
         for (int count = 0; count < MAX_RETRIES; count++) {
             try {
-                Document document = Jsoup.connect(url).cookies(cookies).get();
-
-                long fetchEnd = System.nanoTime();
+                Document document = Jsoup
+                        .connect(url)
+                        .maxBodySize(0)
+                        .cookies(cookies)
+                        .get();
 
                 return document;
             } catch (IOException ex) {
@@ -212,7 +209,6 @@ public class ParserService {
      */
     public Wine parseProduct(int productID, City city) {
         long parseStart = System.nanoTime();
-
         final String productURL = String.format(PRODUCT_PAGE_URL, productID);
 
         Document document;
@@ -221,13 +217,13 @@ public class ParserService {
         } catch (IOException e) {
             log.error("Could not get product page during parsing of wine {}", productID);
             metricsCollector.winesParsedUnsuccessfully(1);
+            eventLogger.info(WineLabParserNotableEvents.W_WINE_DETAILS_PARSING_FAILED);
             return null;
         }
         long fetchEnd = System.nanoTime();
         metricsCollector.timeWineDetailsFetchingDuration(fetchEnd - parseStart);
 
         Wine wine = parseBasicProductInfo(productID, document);
-
         WineLocalInfo localInfo = getLocalInfo(document);
         wine.setOldPrice(localInfo.getOldPrice());
         wine.setNewPrice(localInfo.getNewPrice());
@@ -240,10 +236,12 @@ public class ParserService {
             metricsCollector.winesParsedUnsuccessfully(1);
             return null;
         }
-
+        if (wine.getBrand() == null) {
+            wine.setBrand(wine.getManufacturer());
+        }
         metricsCollector.winesParsedSuccessfully(1);
         long parseEnd = System.nanoTime();
-        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart);
+        metricsCollector.timeWineDetailsParsingDuration(parseEnd - parseStart,city);
         eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
         List<String> lackAttributes = wine.lackAttributes();
         if (!lackAttributes.isEmpty()) {
@@ -295,10 +293,10 @@ public class ParserService {
         Elements tags = document.select(PRODUCT_TAG_SELECTOR);
         fillTags(wine, tags);
 
-        String gastronomy = document.selectFirst(GASTRONOMY_SELECTOR).html();
+        String gastronomy = document.selectFirst(GASTRONOMY_SELECTOR).text();
         wine.setGastronomy(gastronomy);
 
-        String description = document.selectFirst(DESCRIPTION_SELECTOR).html();
+        String description = document.selectFirst(DESCRIPTION_SELECTOR).text();
         wine.setDescription(description);
 
         return wine;
@@ -309,12 +307,12 @@ public class ParserService {
      *
      * @return map of parsed wines in format (product id, parsed wine object)
      */
-    public Map<Integer, Wine> parseCatalogs() {
+    public List<Wine> parseCatalogs(City city) {
         metricsCollector.parsingStarted();
         try {
-            Map<Integer, Wine> wines = new HashMap<>();
+            List<Wine> wines = new ArrayList<>();
             for (String catalog : CATALOGS.values()) {
-                parseCatalog(catalog, wines);
+                parseCatalog(catalog, wines, city);
             }
             if (wines.size() > 0) {
                 log.info("Parsing done! Total {} wines parsed", wines.size());
@@ -327,11 +325,19 @@ public class ParserService {
         } catch (IOException ex) {
             metricsCollector.parsingCompleteFailed();
             log.error("Error while parsing catalogs : ", ex);
-            return new HashMap<>();
+            return new ArrayList<>();
         }
     }
 
-    private void parseCatalog(String category, Map<Integer, Wine> wines) throws IOException {
+    public List<Wine> parseCatalogs() {
+        List<Wine> wines = new ArrayList<>();
+        for (City city : City.values()) {
+            wines.addAll(parseCatalogs(city));
+        }
+        return wines;
+    }
+
+    private void parseCatalog(String category, List<Wine> wines, City city) throws IOException {
         long parseStart = System.nanoTime();
         String url = String.format(CATALOG_START_URL, category);
         Document document = getDocument(url);
@@ -349,16 +355,14 @@ public class ParserService {
             document.select(CARD_SELECTOR)
                     .parallelStream()
                     .forEach(card -> {
-                        String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                        String name = card.select(CATALOG_NAME_SELECTOR).last().text();
                         if (isWine(name)) {
                             allCounter.incrementAndGet();
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
-                                if (!wines.containsKey(id)) {
-                                    Wine wine = parseProduct(id);
-                                    if (wine != null) {
-                                        wines.put(id, wine);
-                                    }
+                                Wine wine = parseProduct(id);
+                                if (wine != null) {
+                                    wines.add(wine);
                                 }
                             } catch (Exception ex) {
                                 unsuccessfullCounter.incrementAndGet();
@@ -370,7 +374,7 @@ public class ParserService {
             page++;
             Element nextPage = document.select(NEXT_PAGE_SELECTOR).first();
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
+            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart, city);
             if (nextPage == null) {
                 isLastPage = true;
             } else {
@@ -379,7 +383,7 @@ public class ParserService {
                 try {
                     document = getDocument(url);
                 } catch (IOException ex) {
-                    log.error("Error while parsing catalog page {} {}", url, ex);
+                    log.error("Error while parsing catalog page {}", url, ex);
                     eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED, page);
                     break;
                 }
@@ -389,23 +393,21 @@ public class ParserService {
         }
     }
 
-    public Map<Integer, Wine> parseCatalogPage(String catalog, int page) {
+    public List<Wine> parseCatalogPage(String catalog, int page) {
         final String url = String.format(CATALOG_PAGE_URL, CATALOGS.get(catalog), page);
         try {
             Document document = getDocument(url);
-            Map<Integer, Wine> wines = new HashMap<>();
+            List<Wine> wines = new ArrayList<>();
             AtomicInteger count = new AtomicInteger();
 
             document.select(CARD_SELECTOR)
                     .parallelStream()
                     .forEach(card -> {
-                        String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                        String name = card.select(CATALOG_NAME_SELECTOR).last().text();
                         if (isWine(name)) {
                             int id = Integer.parseInt(card.attr(ID_SELECTOR));
                             try {
-                                if (!wines.containsKey(id)) {
-                                    wines.put(id, parseProduct(id));
-                                }
+                                wines.add(parseProduct(id));
                             } catch (Exception ex) {
                                 count.incrementAndGet();
                                 log.error("Error while parsing wine with id {} {}", id, ex);
@@ -416,7 +418,7 @@ public class ParserService {
             return wines;
         } catch (IOException ex) {
             log.error("Error while parsing {} catalog's page {} : ", catalog, page, ex);
-            return new HashMap<>();
+            return new ArrayList<>();
         }
     }
 
@@ -425,7 +427,6 @@ public class ParserService {
     }
 
     public List<Wine> getFromCatalogPage(int pageNumber, String catalog, City city) {
-        metricsCollector.isParsing();
         List<Wine> wines = new ArrayList<>();
         try {
             long parseStart = System.nanoTime();
@@ -440,7 +441,7 @@ public class ParserService {
                     .forEach(card -> {
                         try {
                             long wineParseStart = System.nanoTime();
-                            String name = card.select(CATALOG_NAME_SELECTOR).last().html();
+                            String name = card.select(CATALOG_NAME_SELECTOR).last().text();
                             if (isWine(name)) {
                                 int id = Integer.parseInt(card.attr(ID_SELECTOR));
                                 Optional<Wine> oWine = repository.findById(id);
@@ -453,7 +454,7 @@ public class ParserService {
                                     repository.save(wine);
                                     long wineParseEnd = System.nanoTime();
                                     metricsCollector.timeWinePageFetchingDuration(0);
-                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart);
+                                    metricsCollector.timeWinePageParsingDuration(wineParseEnd - wineParseStart, city);
                                     eventLogger.info(WineLabParserNotableEvents.I_WINE_DETAILS_PARSED);
                                 } else {
                                     log.info("Wine {} was not stored in database previously", id);
@@ -471,9 +472,13 @@ public class ParserService {
                         }
                     });
             long parseEnd = System.nanoTime();
-            metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart);
-            eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
-            log.info("Total failed-to-parse wines: {}", failedCount);
+            if (wines.isEmpty()) {
+                eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
+            } else {
+                metricsCollector.timeWinePageParsingDuration(parseEnd - parseStart, city);
+                eventLogger.info(WineLabParserNotableEvents.I_WINES_PAGE_PARSED, pageNumber);
+                log.info("Total failed-to-parse wines: {}", failedCount);
+            }
         } catch (IndexOutOfBoundsException e) {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Catalog page number exceeds total catalog page count", e);
@@ -481,7 +486,6 @@ public class ParserService {
             eventLogger.warn(WineLabParserNotableEvents.W_WINE_PAGE_PARSING_FAILED);
             log.error("Exception occurred during catalog page parsing", e);
         }
-        metricsCollector.isNotParsing();
         return wines;
     }
 
@@ -563,7 +567,7 @@ public class ParserService {
         for (Element tag : tags) {
             String url = java.net.URLDecoder.decode(tag.attr("href"), StandardCharsets.UTF_8);
             String key = url.split("(:)")[2];
-            String value = tag.html();
+            String value = tag.text();
             if (key.equals(COLOR_SELECTOR)) {
                 ParserApi.Wine.Color color = getColor(value);
                 wine.setColor(color);
@@ -595,8 +599,14 @@ public class ParserService {
 
         Element stockElement = document.selectFirst(IN_STOCK_SELECTOR);
         if (stockElement != null) {
-            int stockCount = Integer.parseInt(stockElement.ownText().replaceAll("[^0-9]", ""));
-            info.setInStock(stockCount);
+            String stockCountString = stockElement.ownText().replaceAll("[^0-9]", "");
+            if(stockCountString.isEmpty()) {
+                info.setInStock(0);
+            }
+            else {
+                int stockCount = Integer.parseInt(stockCountString);
+                info.setInStock(stockCount);
+            }
         } else {
             info.setInStock(0);
         }

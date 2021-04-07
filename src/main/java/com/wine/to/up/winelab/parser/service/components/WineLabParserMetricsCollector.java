@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.wine.to.up.winelab.parser.service.dto.City;
+
 /**
  * This Class expose methods for recording specific metrics
  * It changes metrics of Micrometer and Prometheus simultaneously
@@ -22,8 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String SERVICE_NAME = "winelab_parse_service";
 
-    private static final String PARSING_STARTED = "parsing_started";
-    private static final String PARSING_COMPLETE = "parsing_complete";
+    private static final String PARSING_STARTED = "parsing_started_total";
+    private static final String PARSING_COMPLETE = "parsing_complete_total";
     private static final String PARSING_DURATION = "parsing_process_duration_seconds";
     private static final String WINE_DETAILS_FETCHING_DURATION = "wine_details_fetching_duration_seconds";
     private static final String WINE_PAGE_FETCHING_DURATION = "wine_page_fetching_duration_seconds";
@@ -33,11 +35,18 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     private static final String WINES_PARSED_UNSUCCESSFULLY = "wines_parsed_unsuccessfully";
     private static final String WINES_PARSED_SUCCESSFULLY = "wines_parsed_successfully";
     private static final String WINES_PUBLISHED_TO_KAFKA = "wines_published_to_kafka_count";
-
     private static final String PARSING_COMPLETE_STATUS = "status";
 
     public WineLabParserMetricsCollector() {
         super(SERVICE_NAME);
+        timeWineDetailsFetchingDuration(0);
+        timeWinePageFetchingDuration(0);
+        timeWinePageParsingDuration(0, City.defaultCity());
+        countWinesPublishedToKafka(0, City.defaultCity());
+        timeWineDetailsParsingDuration(0, City.defaultCity());
+        winesParsedSuccessfully(0);
+        winesParsedUnsuccessfully(0);
+
     }
 
     private static final Counter parsingStartedCounter = Counter.build()
@@ -101,7 +110,7 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
     }
 
     public void parsingCompleteFailed() {
-        Metrics.counter(PARSING_COMPLETE,PARSING_COMPLETE_STATUS, "FAILED").increment();
+        Metrics.counter(PARSING_COMPLETE, PARSING_COMPLETE_STATUS, "FAILED").increment();
         parsingCompleteCounter.labels("FAILED").inc();
     }
 
@@ -124,21 +133,21 @@ public class WineLabParserMetricsCollector extends CommonMetricsCollector {
         Metrics.summary(WINE_PAGE_FETCHING_DURATION).record(milliTime);
     }
 
-    public void timeWineDetailsParsingDuration(long nanoTime) {
-        long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
-        wineDetailsParsingDurationSummary.observe(milliTime);
-        Metrics.summary(WINE_DETAILS_PARSING_DURATION).record(milliTime);
-    }
-
-    public void timeWinePageParsingDuration(long nanoTime) {
+    public void timeWinePageParsingDuration(long nanoTime, City city) {
         long milliTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
         winePageParsingDurationSummary.observe(milliTime);
-        Metrics.summary(WINE_PAGE_PARSING_DURATION).record(milliTime);
+        Metrics.summary(WINE_PAGE_PARSING_DURATION, "city", city.toString()).record(milliTime);
     }
 
-    public void countWinesPublishedToKafka(double wineNum) {
-        Metrics.counter(WINES_PUBLISHED_TO_KAFKA).increment(wineNum);
+    public void countWinesPublishedToKafka(double wineNum, City city) {
+        Metrics.counter(WINES_PUBLISHED_TO_KAFKA, "city", city.toString()).increment(wineNum);
         winesPublishedToKafkaCounter.inc(wineNum);
+    }
+
+    public void timeWineDetailsParsingDuration(long nanoTime, City city) {
+        long secondsTime = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
+        wineDetailsParsingDurationSummary.observe(secondsTime);
+        Metrics.summary(WINE_DETAILS_PARSING_DURATION, "city", city.toString()).record(secondsTime);
     }
 
     public void isParsing() {

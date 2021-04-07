@@ -2,6 +2,7 @@ package com.wine.to.up.winelab.parser.service.services;
 
 import com.wine.to.up.parser.common.api.schema.ParserApi;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Integer.min;
@@ -29,10 +29,17 @@ public class UpdateService {
 
     @Value("${parser.address}")
     private String siteURL;
+    private String parserName;
 
-    public void updateCatalog() {
-        Map<Integer, Wine> wines = parserService.parseCatalogs();
-        sendToKafka(new ArrayList<>(wines.values()));
+
+    public void updateCatalog(Optional<City> city) {
+        List<Wine> wines;
+        if(city.isPresent()) {
+            wines = parserService.parseCatalogs(city.get());
+        } else {
+            wines = parserService.parseCatalogs();
+        }
+        sendToKafka(wines);
     }
 
     public void sendToKafka(List<Wine> wines) {
@@ -48,8 +55,11 @@ public class UpdateService {
             if (siteURL != null) {
                 eventBuilder.setShopLink(siteURL);
             }
+            if (parserName != null) {
+                eventBuilder.setParserName(parserName);
+            }
             ParserApi.WineParsedEvent event = eventBuilder.build();
-            kafkaService.sendWineParsedEvent(event);
+            kafkaService.sendWineParsedEvent(event, City.defaultCity());
         }
     }
 }

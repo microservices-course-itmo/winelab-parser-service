@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -82,9 +83,9 @@ class ParserServiceTest {
     */
     @Test
     void testParseCatalogPageNotEmpty() {
-        Map<Integer, Wine> wines = parserService.parseCatalogPage("wine", 1);
+        List<Wine> wines = parserService.parseCatalogPage("wine", 1);
         Assertions.assertFalse(wines.isEmpty());
-        Assertions.assertFalse(wines.values().stream().anyMatch(Objects::isNull));
+        Assertions.assertFalse(wines.stream().anyMatch(Objects::isNull));
     }
 
 }
