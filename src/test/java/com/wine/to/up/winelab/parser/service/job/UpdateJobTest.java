@@ -3,7 +3,6 @@ package com.wine.to.up.winelab.parser.service.job;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.winelab.parser.service.components.WineLabParserMetricsCollector;
 import com.wine.to.up.winelab.parser.service.services.KafkaService;
 import com.wine.to.up.winelab.parser.service.services.ParserService;
@@ -14,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Optional;
 
 
 class UpdateJobTest {
@@ -42,6 +43,6 @@ class UpdateJobTest {
     void testUpdateJobDoesntThrow() {
         UpdateWineLabJob job = new UpdateWineLabJob();
         ReflectionTestUtils.setField(job, "updateService", updateService);
-        Assertions.assertDoesNotThrow(job::runJob);
+        Assertions.assertDoesNotThrow(() -> job.runJob(Optional.empty()));
     }
 }

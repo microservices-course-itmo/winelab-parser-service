@@ -1,10 +1,13 @@
 package com.wine.to.up.winelab.parser.service.job;
 
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.services.UpdateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -18,11 +21,22 @@ public class UpdateWineLabJob {
      * обновляет список вин
      */
 
-    public void runJob() {
+    public void runJob(Optional<City> city) {
         long startDate = System.currentTimeMillis();
-        log.info("start UpdateWineLabJob run job method at {}", startDate);
-        updateService.updateCatalog();
-        log.info("end UpdateWineLabJob run job method at {} duration = {} ", System.currentTimeMillis(), (System.currentTimeMillis() - startDate));
+        log.info("start UpdateWineLabJob run job method at {} for {} city",
+                startDate,
+                city.isPresent()
+                        ? city.get().toString()
+                        : "all"
+                );
+        updateService.updateCatalog(city);
+        log.info("end UpdateWineLabJob run job method at {} duration = {} city = {}",
+                System.currentTimeMillis(),
+                (System.currentTimeMillis() - startDate),
+                city.isPresent()
+                        ? city.get().toString()
+                        : "all"
+        );
     }
 
 }

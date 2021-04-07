@@ -1,5 +1,6 @@
 package com.wine.to.up.winelab.parser.service.controller;
 
+import com.wine.to.up.winelab.parser.service.dto.City;
 import com.wine.to.up.winelab.parser.service.dto.Wine;
 import com.wine.to.up.winelab.parser.service.dto.WineLocalInfo;
 import com.wine.to.up.winelab.parser.service.dto.WineToCsvConverter;
@@ -9,13 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -123,8 +121,8 @@ public class ParserController {
      * Endpoint for parsing all the wine-related catalogs and sending the result to kafka
      */
     @GetMapping("/update")
-    public void updateCatalogs() {
-        job.runJob();
+    public void updateCatalogs(@RequestParam(required = false) String city) {
+            job.runJob(Optional.ofNullable(City.valueOf(city)));
     }
 
     /**
